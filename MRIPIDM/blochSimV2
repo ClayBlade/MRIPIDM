@@ -1,0 +1,138 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Constants
+GAM = 42.58e6  # [Hz/T] Gyromagnetic ratio for proton
+M0 = 2.5e-6     # Equilibrium magnetization
+
+# Simulation parameters
+FOV = 0.2  # 20 cm field of view
+Nx, Ny = 32, 32
+x = np.linspace(-FOV/2, FOV/2, Nx)
+y = np.linspace(-FOV/2, FOV/2, Ny)
+xx, yy = np.meshgrid(x, y, indexing='ij')
+
+
+# Time parameters
+dt = 1e-6  # 1 us time step
+Nt = 1024
+t = np.arange(Nt) * dt
+
+# Relaxation times
+T1 = 0.8  # seconds
+T2 = 0.1  # seconds
+
+# RF pulse (hard 90 degree pulse)
+flip_angle = 90  # degrees
+rf_dur = 256e-6
+rf_steps = int(rf_dur / dt)
+B1_amp = flip_angle / (360 * GAM * rf_dur)  # Tesla
+B1 = np.zeros(Nt, dtype=complex)
+B1[:rf_steps] = B1_amp  # Apply RF in x-direction
+
+# Gradient waveforms
+Gx = np.zeros(Nt)
+Gy = np.zeros(Nt)
+readout_start, readout_end = 400, 900
+Gx[readout_start:readout_end] = 0.02  # T/m readout gradient
+Gy[350] = 0.03  # phase encoding blip
+
+# Magnetization arrays
+Mx = np.random.uniform(low = 2.5e-6, high = 3e-6, size = (Nx, Ny))
+My = np.random.uniform(low = 2.5e-6, high = 3e-6, size = (Nx, Ny))
+Mz = M0 * np.ones((Nx, Ny))
+
+# K-space collection
+
+kspace = np.zeros((Nx, Ny), dtype = 'complex')
+Gy_amps = np.linspace(-0.03, 0.03, Ny)
+kx = 0
+ky = 0
+kx_max = 0
+ky_max = 0
+
+for i in range(Nt):
+    kx_max += Gx[i]
+    ky_max += Gy[i]
+
+kx_max = kx_max * GAM * dt
+ky_max = ky_max * GAM * dt
+
+
+
+# Time loop for Bloch simulation
+for n, Gy_amp in enumerate(Gy_amps): #For each y line in kspace
+    Mx = np.zeros((Nx, Ny))
+    My = np.zeros((Nx, Ny))
+    Mz = M0 * np.ones((Nx, Ny))
+    Gy = np.zeros(Nt)
+
+    Gy[350] = Gy_amp  # Use varying Gy_amp in each TR
+
+
+
+
+    for i in range(Nt): #For x line in kspace
+        # Fields
+        Bx_rf = np.real(B1[i])
+        By_rf = np.imag(B1[i])
+        Bz_grad = Gx[i]*xx + Gy[i]*yy
+
+        Bx = Bx_rf * np.ones_like(xx)
+        By = By_rf * np.ones_like(yy)
+        Bz = Bz_grad
+
+        # Rotation axis and angle
+        Bmag = np.sqrt(Bx**2 + By**2 + Bz**2)
+        angle = -2 * np.pi * GAM * Bmag * dt
+        with np.errstate(divide='ignore', invalid='ignore'):
+            bx = np.where(Bmag != 0, Bx / Bmag, 0)
+            by = np.where(Bmag != 0, By / Bmag, 0)
+            bz = np.where(Bmag != 0, Bz / Bmag, 0)
+
+        # Rodrigues' rotation
+        c = np.cos(angle)
+        s = np.sin(angle)
+        dot = bx*Mx + by*My + bz*Mz
+        Mx_rot = Mx * c + s * (by * Mz - bz * My) + (1 - c) * dot * bx
+        My_rot = My * c + s * (bz * Mx - bx * Mz) + (1 - c) * dot * by
+        Mz_rot = Mz * c + s * (bx * My - by * Mx) + (1 - c) * dot * bz
+
+        # Relaxation
+        Mx = Mx_rot * np.exp(-dt / T2)
+        My = My_rot * np.exp(-dt / T2)
+        Mz = Mz_rot * np.exp(-dt / T1) + M0 * (1 - np.exp(-dt / T1))
+
+        # Signal acquisition
+        if readout_start <= i < readout_end:
+            kx += GAM * Gx[i] * dt
+            ky += GAM * Gy[i] * dt
+
+            print(f"kx: {kx}, ky: {ky}")
+
+            delta_kx = 1 / FOV
+            delta_ky = 1 / FOV
+
+
+            kx_idx = int(kx / kx_max)
+            #kx_idx = np.clip(kx_idx, 0, Nx - 1)
+            ky_idx = int(ky / ky_max)
+
+            phase = np.exp(-1j * 2 * np.pi * (kx_idx * xx + ky_idx * yy))
+            Mxy = Mx + 1j * My
+            s_t = np.sum(Mxy * phase)
+            kspace[kx_idx, ky_idx] = s_t
+            print(f"kx_idx: {kx_idx}, ky_idx: {ky_idx}, s_t: {s_t}")
+            print("------------")
+
+# Reshape and reconstruct
+
+
+kspace = np.reshape(kspace, (Ny, Nx)) 
+image = np.fft.ifft2(np.fft.ifftshift(kspace, axes=1))
+
+# Display result
+plt.imshow(np.abs(image), cmap='gray')
+plt.title("Reconstructed Image")
+plt.colorbar()
+plt.show()
