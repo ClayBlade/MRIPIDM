@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cuda_runtime.h>
+#include "BlochKernel.h" 
 #include "BlochKernelGMGPU.cu" // Your kernel file
 
 #define CHECK_CUDA(call) { \
