@@ -67,8 +67,8 @@ int main() {
     CHECK_CUDA(cudaMalloc(&d_b_Mz, sizeof(float) * totalSpins));
 
     // Launch CUDA kernel
-    dim3 blockDim(0, 0, 0);
-    dim3 gridDim(0, 0, 0);
+    dim3 blockDim(1, 1, 1);
+    dim3 gridDim(1, 1, 1);
     size_t sharedMemSize = SeqLen * (5 + 3 * TxCoilNum) * sizeof(float);
 
     BlochKernelNormalGPU<<<gridDim, blockDim, sharedMemSize>>>(
