@@ -284,7 +284,7 @@ BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, float *d_T1, float 
 			}
 		}
 	}
-	std::cout << *p_d_Mx, *p_d_My, *p_d_Mz << std::endl;	
+	printf( *p_d_Mx, *p_d_My, *p_d_Mz);	
 }
 
 #endif
