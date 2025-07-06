@@ -11,6 +11,12 @@
     } \
 }
 
+float *d_b_Mx, *d_b_My, *d_b_Mz, *d_Sy, *d_Sx, *d_Sig, *d_RxCoilx, *d_RxCoily, *d_TxCoilpe, *d_TxCoilmg;
+float *d_Gxgrid, *d_Gygrid, *d_Gzgrid, *d_dWRnd, *d_dB0, *d_Buffer;
+float *d_Mx, *d_My, *d_Mz, *d_K, *d_T2, *d_T1, *d_Rho, *d_TypeFlag;
+float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, SpinNum, SpinMxZ, SpinMxY, SpinMxX;
+double *d_CS;
+
 int main() {
     SpinMxX = 1;
     SpinMxY = 1;
@@ -66,15 +72,11 @@ int main() {
     size_t sharedMemSize = SeqLen * (5 + 3 * TxCoilNum) * sizeof(float);
 
     BlochKernelNormalGPU<<<gridDim, blockDim, sharedMemSize>>>(
-        Gyro,
-        d_CS, d_TypeFlag, d_Rho, d_T1, d_T2, d_K, d_Mz, d_My, d_Mx, d_Buffer,
-        d_dB0, d_dWRnd, d_Gzgrid, d_Gygrid, d_Gxgrid, d_TxCoilmg, d_TxCoilpe,
-        d_RxCoilx, d_RxCoily, d_Sig, RxCoilDefault, TxCoilDefault,
-        d_Sx, d_Sy, rfRef, SignalLen, SBufferLen,
-        0, // RunMode
-        SeqLen,
-        d_b_Mz, d_b_My, d_b_Mx,
-        SpinMxX, SpinMxY, SpinMxZ, SpinNum, TypeNum, TxCoilNum, RxCoilNum, SeqLen
+         Gyro,  d_CS,  d_Rho,  d_T1, d_T2,  d_Mz,  d_My,  d_Mx,
+		d_dB0,  d_dWRnd,  d_Gzgrid,  d_Gygrid,  d_Gxgrid,  d_TxCoilmg,  d_TxCoilpe,  d_RxCoilx,  d_RxCoily, 
+		d_Sig,  RxCoilDefault,  TxCoilDefault,
+		*d_Sx,  *d_Sy,  rfRef,  SignalLen,  SBufferLen,
+		SpinMxX,  SpinMxY,  SpinMxZ,  SpinNum,  TypeNum,  TxCoilNum,  RxCoilNum,  SeqLen
     );
 
     CHECK_CUDA(cudaDeviceSynchronize());
