@@ -75,7 +75,7 @@ int main() {
          Gyro,  d_CS,  d_Rho,  d_T1, d_T2,  d_Mz,  d_My,  d_Mx,
 		d_dB0,  d_dWRnd,  d_Gzgrid,  d_Gygrid,  d_Gxgrid,  d_TxCoilmg,  d_TxCoilpe,  d_RxCoilx,  d_RxCoily, 
 		d_Sig,  RxCoilDefault,  TxCoilDefault,
-		*d_Sx,  *d_Sy,  rfRef,  SignalLen,  SBufferLen,
+		d_Sx,  d_Sy,  rfRef,  SignalLen,  SBufferLen,
 		SpinMxX,  SpinMxY,  SpinMxZ,  SpinNum,  TypeNum,  TxCoilNum,  RxCoilNum,  SeqLen
     );
 
