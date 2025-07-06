@@ -2,6 +2,7 @@
 
 #ifndef _BLOCH_KERNEL_GPU_H_
 #define _BLOCH_KERNEL_GPU_H_
+#include <stdio.h>
 #define PI 3.14159265358979323846f
 
 
@@ -283,7 +284,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 			}
 		}
 	}
-	printf("Mx: %f, My: %f, Mz: %f\n", *p_d_Mx, *p_d_My, *p_d_Mz);
+	print("Mx: %f, My: %f, Mz: %f\n", *p_d_Mx, *p_d_My, *p_d_Mz);
 }
 
 #endif
