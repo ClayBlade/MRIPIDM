@@ -14,6 +14,7 @@
 float *d_b_Mx, *d_b_My, *d_b_Mz, *d_Sy, *d_Sx, *d_Sig, *d_RxCoilx, *d_RxCoily, *d_TxCoilpe, *d_TxCoilmg;
 float *d_Gxgrid, *d_Gygrid, *d_Gzgrid, *d_dWRnd, *d_dB0, *d_Buffer;
 float *d_Mx, *d_My, *d_Mz, *d_K, *d_T2, *d_T1, *d_Rho, *d_TypeFlag, *d_CS;
+float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, SpinNum, SpinMxZ, SpinMxY, SpinMxX
 
 int main() {
     SpinMxX = 1;
