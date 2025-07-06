@@ -2,6 +2,7 @@
 
 #ifndef _BLOCH_KERNEL_GPU_H_
 #define _BLOCH_KERNEL_GPU_H_
+float PI = 3.1415;
 
 __global__ void
 BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, float *d_T1, float *d_T2, float *d_Mz, float *d_My, float *d_Mx,
