@@ -2,6 +2,7 @@
 
 #ifndef _BLOCH_KERNEL_GPU_H_
 #define _BLOCH_KERNEL_GPU_H_
+#define PI 3.14159265358979323846f
 
 
 __global__ void
