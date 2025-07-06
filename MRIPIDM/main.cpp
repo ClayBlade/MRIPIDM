@@ -70,7 +70,7 @@ int main() {
     dim3 gridDim(1, 1, 1);
     size_t sharedMemSize = SeqLen * (5 + 3 * TxCoilNum) * sizeof(float);
 
-    BlochKernelGMGPU<<<gridDim, blockDim, sharedMemSize>>>(
+    BlochKernelNormalGPU<<<gridDim, blockDim, sharedMemSize>>>(
         Gyro,
         d_CS, d_TypeFlag, d_Rho, d_T1, d_T2, d_K, d_Mz, d_My, d_Mx, d_Buffer,
         d_dB0, d_dWRnd, d_Gzgrid, d_Gygrid, d_Gxgrid, d_TxCoilmg, d_TxCoilpe,
