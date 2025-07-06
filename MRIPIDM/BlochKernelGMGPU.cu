@@ -36,7 +36,36 @@ BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, float *d_T1, float 
 	/* matrix dim */
 	int SpinMxNum	 = SpinMxX * SpinMxY;
 	int SpinMxAllNum = SpinMxX * SpinMxY * SpinMxZ;
-
+	
+	/* signal counter*/
+	int Signalptr;
+	
+	/* dt buffer */
+	float dt;
+	float ExpdtT2;
+	float ExpdtT1;
+	float M0dtT1;
+	
+	
+	
+	/* multi-Tx  variables */
+	float rfAmpSum; 
+	float rfAmp;
+	float rfPhase;
+	float rfFreq;
+	float buffer1;
+	float buffer2;
+	float buffer3;
+	float buffer4;
+	
+	/* spin variables */
+	float Mx, My, Mz;
+	float T1, T2, Rho, dWRnd;
+	float Gzgrid, Gygrid, Gxgrid, dB0;
+	
+	/* temporary  variables */
+	float dW, sinAlpha, sinBeta, sinPhi, cosAlpha, cosBeta, cosPhi, Alpha, Beta;
+	float bufferMz, bufferMy, bufferMx;
 	
 	/* loop through slice <- spins <- species */
 	for (int t=0; t < TypeNum; t++){
