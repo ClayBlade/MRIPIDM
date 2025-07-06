@@ -11,88 +11,14 @@
     } \
 }
 
-float *d_b_Mx, *d_b_My, *d_b_Mz;
-float  *d_Buffer;
-float *d_K, *d_TypeFlag;
+float *d_b_Mx, *d_b_My, *d_b_Mz, *d_Sy, *d_Sx, *d_Sig, *d_RxCoilx, *d_RxCoily, *d_TxCoilpe, *d_TxCoilmg;
+float *d_Gxgrid, *d_Gygrid, *d_Gzgrid, *d_dWRnd, *d_dB0, *d_Buffer;
+float *d_Mx, *d_My, *d_Mz, *d_K, *d_T2, *d_T1, *d_Rho, *d_TypeFlag;
 float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, SpinNum, SpinMxZ, SpinMxY, SpinMxX;
-
+double *d_CS;
 
 int main() {
-
-    float *d_Mz = NULL;
-    cudaMalloc( (void**) &d_Mz, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_Mz, Mz, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
     
-    float *d_My = NULL;
-    cudaMalloc( (void**) &d_My, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_My, My, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_Mx = NULL;
-    cudaMalloc( (void**) &d_Mx, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_Mx, Mx, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_dWRnd = NULL;
-    cudaMalloc( (void**) &d_dWRnd, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_dWRnd, dWRnd, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_Rho = NULL;
-    cudaMalloc( (void**) &d_Rho, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_Rho, Rho, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_T1 = NULL;
-    cudaMalloc( (void**) &d_T1, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_T1, T1, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_T2 = NULL;
-    cudaMalloc( (void**) &d_T2, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_T2, T2, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_Gzgrid = NULL;
-    cudaMalloc( (void**) &d_Gzgrid, SpinMxNum * SpinMxSliceNum * sizeof(float)) ;
-	cudaMemcpy( d_Gzgrid, Gzgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_Gygrid = NULL;
-    cudaMalloc( (void**) &d_Gygrid, SpinMxNum * SpinMxSliceNum * sizeof(float)) ;
-	cudaMemcpy( d_Gygrid, Gygrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_Gxgrid = NULL;
-    cudaMalloc( (void**) &d_Gxgrid, SpinMxNum * SpinMxSliceNum * sizeof(float)) ;
-	cudaMemcpy( d_Gxgrid, Gxgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice ) ;
-    
-    float *d_dB0 = NULL;
-    cudaMalloc( (void**) &d_dB0, SpinMxNum * SpinMxSliceNum * sizeof(float)) ;
-	cudaMemcpy( d_dB0, dB0, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice ) ;
-
-    float *d_TxCoilmg = NULL;
-    cudaMalloc( (void**) &d_TxCoilmg, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float)) ;
-	cudaMemcpy( d_TxCoilmg, TxCoilmg, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-
-    float *d_TxCoilpe = NULL;
-    cudaMalloc( (void**) &d_TxCoilpe, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float)) ;
-	cudaMemcpy( d_TxCoilpe, TxCoilpe, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-	
-	float *d_RxCoilx = NULL;
-    cudaMalloc( (void**) &d_RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float)) ;
-	cudaMemcpy( d_RxCoilx, RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-
-	float *d_RxCoily = NULL;
-    cudaMalloc( (void**) &d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float)) ;
-	cudaMemcpy( d_RxCoily, RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
-	
-    double *d_CS = NULL;
-    cudaMalloc( (void**) &d_CS, *TypeNum * sizeof(double)) ;
-	cudaMemcpy( d_CS, CS, *TypeNum * sizeof(double), cudaMemcpyHostToDevice ) ;
-	
-    /* allocate device memory for GPU execution sequence*/
-    float *d_Sig = NULL;
-    cudaMalloc( (void**) &d_Sig, (5+3*(*TxCoilNum)) * MaxutsStep * sizeof(float)) ;
-
-    /**/
-    float *d_Sx = NULL;
-    cudaMalloc( (void**) &d_Sx, SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)) ;
-    float *d_Sy = NULL;
-    cudaMalloc( (void**) &d_Sy, SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)) ;
-
     SpinMxX = 0;
     SpinMxY = 0;
     SpinMxZ = 0;
