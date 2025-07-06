@@ -18,9 +18,9 @@ float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, 
 double *d_CS;
 
 int main() {
-    SpinMxX = 11;
-    SpinMxY = 12;
-    SpinMxZ = 15;
+    SpinMxX = 0;
+    SpinMxY = 0;
+    SpinMxZ = 0;
     SpinNum = 12;
     TypeNum = 10;
     TxCoilNum = 125;
@@ -67,8 +67,8 @@ int main() {
     CHECK_CUDA(cudaMalloc(&d_b_Mz, sizeof(float) * totalSpins));
 
     // Launch CUDA kernel
-    dim3 blockDim(10, 10, 1);
-    dim3 gridDim(10, 1, 1);
+    dim3 blockDim(0, 0, 0);
+    dim3 gridDim(0, 0, 0);
     size_t sharedMemSize = SeqLen * (5 + 3 * TxCoilNum) * sizeof(float);
 
     BlochKernelNormalGPU<<<gridDim, blockDim, sharedMemSize>>>(
