@@ -12,25 +12,23 @@
 }
 
 int main() {
-    const int SpinMxX = 1;
-    const int SpinMxY = 1;
-    const int SpinMxZ = 1;
-    const int SpinNum = 1;
-    const int TypeNum = 1;
-    const int TxCoilNum = 1;
-    const int RxCoilNum = 1;
-    const int SeqLen = 1;
-    const int SignalLen = 1;
-    const int SBufferLen = 1;
+    SpinMxX = 1;
+    SpinMxY = 1;
+    SpinMxZ = 1;
+    SpinNum = 1;
+    TypeNum = 1;
+    TxCoilNum = 1;
+    RxCoilNum = 1;
+    SeqLen = 1;
+    SignalLen = 1;
+    SBufferLen = 1;
 
-    const int totalSpins = SpinMxX * SpinMxY * SpinMxZ * SpinNum * TypeNum;
+    totalSpins = SpinMxX * SpinMxY * SpinMxZ * SpinNum * TypeNum;
 
-    float *d_Mx, *d_My, *d_Mz;
     CHECK_CUDA(cudaMalloc(&d_Mx, sizeof(float) * totalSpins));
     CHECK_CUDA(cudaMalloc(&d_My, sizeof(float) * totalSpins));
     CHECK_CUDA(cudaMalloc(&d_Mz, sizeof(float) * totalSpins));
 
-    float *d_Rho, *d_T1, *d_T2, *d_K, *d_dB0, *d_dWRnd;
     CHECK_CUDA(cudaMalloc(&d_Rho, sizeof(float) * totalSpins));
     CHECK_CUDA(cudaMalloc(&d_T1, sizeof(float) * totalSpins));
     CHECK_CUDA(cudaMalloc(&d_T2, sizeof(float) * totalSpins));
@@ -43,9 +41,7 @@ int main() {
     float RxCoilDefault = 1.0f, TxCoilDefault = 1.0f;
     float rfRef = 0;
 
-    float *d_CS, *d_TypeFlag, *d_Buffer, *d_Sig, *d_Sx, *d_Sy;
-    float *d_Gzgrid, *d_Gygrid, *d_Gxgrid, *d_TxCoilmg, *d_TxCoilpe, *d_RxCoilx, *d_RxCoily;
-    float *d_b_Mx, *d_b_My, *d_b_Mz;
+
 
     CHECK_CUDA(cudaMalloc(&d_CS, sizeof(double) * TypeNum));
     CHECK_CUDA(cudaMalloc(&d_TypeFlag, sizeof(double) * TypeNum));

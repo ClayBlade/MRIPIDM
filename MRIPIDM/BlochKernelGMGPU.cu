@@ -46,7 +46,33 @@ BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, float *d_T1, float 
 	float ExpdtT1;
 	float M0dtT1;
 	
+	/* matrix pointers */
+	float *p_d_Mz;
+	float *p_d_My;
+	float *p_d_Mx;
+	float *p_d_dWRnd;
+	float *p_d_Rho;
+	float *p_d_T1;
+	float *p_d_T2;
+	float *p_d_Gzgrid;
+	float *p_d_Gygrid;
+	float *p_d_Gxgrid;
+	float *p_d_dB0;
+	float *p_d_TxCoilmg;
+	float *p_d_TxCoilpe;
+	float *p_d_RxCoilx;
+	float *p_d_RxCoily;
+	float *p_d_Sx;
+	float *p_d_Sy;
 	
+	float *p_d_rfAmp;
+	float *p_d_rfPhase;
+	float *p_d_rfFreq;
+	float *p_d_GzAmp;
+	float *p_d_GyAmp;
+	float *p_d_GxAmp;
+	float *p_d_dt;
+	float *p_d_ADC;
 	
 	/* multi-Tx  variables */
 	float rfAmpSum; 
