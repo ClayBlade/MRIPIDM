@@ -18,15 +18,15 @@ float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, 
 double *d_CS;
 
 int main() {
-    SpinMxX = 1;
-    SpinMxY = 1;
-    SpinMxZ = 1;
-    SpinNum = 1;
-    TypeNum = 1;
+    SpinMxX = 11;
+    SpinMxY = 12;
+    SpinMxZ = 15;
+    SpinNum = 12;
+    TypeNum = 10;
     TxCoilNum = 1;
     RxCoilNum = 1;
-    SeqLen = 1;
-    SignalLen = 1;
+    SeqLen = 25;
+    SignalLen = 24;
     SBufferLen = 1;
 
     totalSpins = SpinMxX * SpinMxY * SpinMxZ * SpinNum * TypeNum;
