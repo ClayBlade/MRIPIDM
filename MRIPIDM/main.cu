@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cuda_runtime.h>
 #include <math.h> 
 #include "BlochKernelGMGPU.h" // Your kernel file
