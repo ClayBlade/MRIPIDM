@@ -21,11 +21,12 @@ float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, 
 double *d_CS;
 
 int main() {
-    std::ifstream inputFile("data.json");
+    std::ifstream inputFile("/MRIPIDMoutput/labeledSpaceJSON/1.pkl.json");
 
     json j;
+    inputFile >> j; 
 
-    std::int g = j["Gyro"];
+    float g = j["Gyro"];
 
     std::cout << "Gyro: " << g << std::endl;
 
