@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include <math.h> 
 #include "BlochKernelGMGPU.h" // Your kernel file
-#include <nlohmann/json.hpp>
+#include "json.hpp" 
 
 using json = nlohmann::json; 
 
