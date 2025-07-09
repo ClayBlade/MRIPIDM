@@ -96,3 +96,6 @@ int main() {
 
     return 0;
 }
+
+%VCtl.CS: VObj.ChemShift = 0, VCtl.B0 = ?
+%VCtl.TRNum=VCtl.FirstPhNum*VCtl.SecondPhNum : VCtl.FirstPhNum = VCtl.ResPhase, VCtl.ResPhase = VCtl.ResPhase - mod(VCtl.ResPhase,2), VCtl.SecondPhNum = VCtl.SliceNum;
