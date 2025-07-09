@@ -10,9 +10,9 @@ import pickle
 for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data/MR Brain Segmentation Challenge 2018 Data/test/test"):
     segmentation_path = rf"D:/Users/clayt/NotDownloads/3d medical Diffusion data/MR Brain Segmentation Challenge 2018 Data/test/test/{folder}/segm.nii.gz"
 
-    sucess, segNode = slicer.util.loadSegmentation(segmentation_path, returnNode=True)
+    success, segNode = slicer.util.loadSegmentation(segmentation_path, returnNode=True)
 
-    if not sucess:
+    if not success:
         raise RuntimeError("Failed to load segmentation.")
 
     labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode", "TempLabelmap")
@@ -64,23 +64,27 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
         "xSize" : xSize,
         "ySize" : ySize,
         "zSize" : zSize,
-        "Mx" : Mx,
-        "My" : My,     
-        "Mz" : Mz,
-        "T1" : T1,
-        "T2" : T2,
-        "T2star" : T2star,
-        "Rho" : Rho
+        "Mx" : Mx.tolist(),
+        "My" : My.tolist(),     
+        "Mz" : Mz.tolist(),
+        "T1" : T1.tolist(),
+        "T2" : T2.tolist(),
+        "T2star" : T2star.tolist(),
+        "Rho" : Rho.tolist()
     }
 
-    with open(rf"D:/Projects/MRIPIDM/output/labeledSpace/{folder}.pkl", "wb") as f:
+    with open(rf"D:/Projects/MRIPIDMoutput/labeledSpace/{folder}.pkl", "wb") as f:
         pickle.dump(data_obj, f)
+
+
+    slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
+    slicer.mrmlScene.RemoveNode(segNode)
 
 for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data/MR Brain Segmentation Challenge 2018 Data/training/training"):
     segmentation_path = rf"D:/Users/clayt/NotDownloads/3d medical Diffusion data/MR Brain Segmentation Challenge 2018 Data/training/training/{folder}/segm.nii.gz"
-    sucess, segNode = slicer.util.loadSegmentation(segmentation_path, returnNode=True)
+    success, segNode = slicer.util.loadSegmentation(segmentation_path, returnNode=True)
 
-    if not sucess:
+    if not success:
         raise RuntimeError("Failed to load segmentation.")
 
     labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode", "TempLabelmap")
@@ -131,14 +135,17 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
         "xSize" : xSize,
         "ySize" : ySize,
         "zSize" : zSize,
-        "Mx" : Mx,
-        "My" : My,     
-        "Mz" : Mz,
-        "T1" : T1,
-        "T2" : T2,
-        "T2star" : T2star,
-        "Rho" : Rho
+        "Mx" : Mx.tolist(),
+        "My" : My.tolist(),     
+        "Mz" : Mz.tolist(),
+        "T1" : T1.tolist(),
+        "T2" : T2.tolist(),
+        "T2star" : T2star.tolist(),
+        "Rho" : Rho.tolist()
     }
 
-    with open(rf"D:/Projects/MRIPIDM/output/labeledSpace/{folder}.pkl", "wb") as f:
+    with open(rf"D:/Projects/MRIPIDMoutput/labeledSpace/{folder}.pkl", "wb") as f:
         pickle.dump(data_obj, f)
+
+    slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
+    slicer.mrmlScene.RemoveNode(segNode)

@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <math.h> 
 #include "BlochKernelGMGPU.h" // Your kernel file
+#include "json.hpp"
 
 #define CHECK_CUDA(call) { \
     cudaError_t err = call; \
