@@ -4,6 +4,8 @@
 #include "BlochKernelGMGPU.h" // Your kernel file
 #include "json.hpp"
 
+using json = nlohmann::json; 
+
 #define CHECK_CUDA(call) { \
     cudaError_t err = call; \
     if (err != cudaSuccess) { \
@@ -19,7 +21,14 @@ float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, 
 double *d_CS;
 
 int main() {
-    
+    std::ifstream inputFile("data.json");
+
+    json j;
+
+    std::int g = j["Gyro"];
+
+    std::cout << "Gyro: " << g << std::endl;
+
     SpinMxX = 0;
     SpinMxY = 0;
     SpinMxZ = 0;
