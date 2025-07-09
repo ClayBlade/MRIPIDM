@@ -21,7 +21,7 @@ float totalSpins, SBufferLen, SignalLen, SeqLen, RxCoilNum, TxCoilNum, TypeNum, 
 double *d_CS;
 
 int main() {
-    std::ifstream inputFile("/MRIPIDMoutput/labeledSpaceJSON/1.pkl.json");
+    std::ifstream inputFile("/output/labeledSpaceJSON/1.pkl.json");
 
     json j;
     inputFile >> j; 
