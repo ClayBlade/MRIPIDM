@@ -7,12 +7,16 @@ import numpy as np
 import os
 import pickle
 
+os.makedirs("D:\Projects\MRIPIDMoutput\labeledSpace", exist_ok=True)
+
+
 for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data/MR Brain Segmentation Challenge 2018 Data/test/test"):
     segmentation_path = rf"D:/Users/clayt/NotDownloads/3d medical Diffusion data/MR Brain Segmentation Challenge 2018 Data/test/test/{folder}/segm.nii.gz"
 
     success, segNode = slicer.util.loadSegmentation(segmentation_path, returnNode=True)
 
     if not success:
+        print("error")
         raise RuntimeError("Failed to load segmentation.")
 
     labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode", "TempLabelmap")
@@ -27,15 +31,14 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
     ySize = label_array.shape[1]
     xSize = label_array.shape[2]
 
-    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    My = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    Mz = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    
+    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    My = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    Mz = np.ones((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
 
-    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
+    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
 
     for i, label in enumerate(label_array.flatten()):
         if label == 1: #Grey Matter
@@ -73,7 +76,7 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
         "Rho" : Rho.tolist()
     }
 
-    with open(rf"D:/Projects/MRIPIDM/output/labeledSpace2/{folder}.pkl", "wb") as f:
+    with open(rf"D:/Projects/MRIPIDMoutput/labeledSpace/{folder}.pkl", "wb") as f:
         pickle.dump(data_obj, f)
 
 
@@ -99,14 +102,14 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
     ySize = label_array.shape[1]
     xSize = label_array.shape[2]
 
-    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    My = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    Mz = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
+    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    My = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    Mz = np.ones((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
 
-    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
-    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32).flatten()
+    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
 
     for i, label in enumerate(label_array.flatten()):
         if label == 1: #Grey Matter
@@ -144,7 +147,7 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
         "Rho" : Rho.tolist()
     }
 
-    with open(rf"D:/Projects/MRIPIDM/output/labeledSpace2/{folder}.pkl", "wb") as f:
+    with open(rf"D:/Projects/MRIPIDMoutput/labeledSpace/{folder}.pkl", "wb") as f:
         pickle.dump(data_obj, f)
 
     slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
