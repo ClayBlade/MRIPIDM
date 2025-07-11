@@ -12,7 +12,6 @@
 #include <string.h>
 #include <vector>
 
-#include "matrix.h"
 /* nVIDIA CUDA header */
 #include <cuda.h> 
 /* OpenMP header*/
@@ -220,7 +219,7 @@ void main(){
     SpinMxDimNum    		= 3;
     /*SpinMxDims      		= (mwSize*) mxCalloc(SpinMxDimNum, sizeof(mwSize));*/
 
-    mwSize *SpinMxDims = (mwSize*) mxMalloc(SpinMxDimNum * sizeof(mwSize));
+    size_t *SpinMxDims = (size_t*) malloc(N * sizeof(size_t));
     SpinMxDims[0] = (mwSize) j["xSize"];
     SpinMxDims[1] = (mwSize) j["ySize"]; 
     SpinMxDims[2] = (mwSize) j["zSize"];
