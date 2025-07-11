@@ -11,8 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
-/* MEX header */
-#include <mex.h> 
+
 #include "matrix.h"
 /* nVIDIA CUDA header */
 #include <cuda.h> 
@@ -72,6 +71,14 @@
 #include "BlochKernelGMGPU.h"
 #include "json.hpp"
 
+using json = nlohmann::json; 
+
+void main(){
+    std::ifstream inputFile("/root/output/labeledSpaceJSON/1.pkl.json");
+
+    json j;
+    inputFile >> j; 
+
 /* pointers for VObj */
     double *Gyro;
     int SpinMxNum, SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, SpinMxDimNum;
@@ -118,93 +125,106 @@
 
     
 /* assign pointers */
-   Gyro             = 2.67e08;
-    Mz              = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mz"));
-    My              = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "My"));
-    Mx              = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mx"));
-    Rho             = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Rho"));
-    T1              = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "T1"));
-    T2              = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "T2"));
-    SpinNum         = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "SpinNum"));
-    TypeNum         = 1;
+    /*VObj*/
+   Gyro             = (float*) 2.67e08;
+    Mz              = (float*) j["Mz"];
+    My              = (float*) j["My"];
+    Mx              = (float*) j["Mx"];
+    Rho             = (float*) j["Rho"];
+    T1              = (float*) j["T1"];
+    T2              = (float*) j["T2"];
+    SpinNum         = (int*)    j["xSize"] * j["ySize"];
+    TypeNum         = (int*) 1;
 
-    dB0             = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "dB0"));
-    dWRnd           = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "dWRnd"));
-    Gzgrid          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "Gzgrid"));
-    Gygrid          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "Gygrid"));
-    Gxgrid          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "Gxgrid"));
+    /*VMag*/
+    dB0             = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
+    dWRnd           = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"] * SpinNum * TypeNum;
+    Gzgrid          = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
+    Gygrid          = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
+    Gxgrid          = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
     
-    TxCoilmg        = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "TxCoilmg"));
-    TxCoilpe        = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "TxCoilpe"));
-    RxCoilx         = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "RxCoilx"));
-    RxCoily         = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "RxCoily"));
-    TxCoilNum       = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "TxCoilNum"));
-    RxCoilNum       = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "RxCoilNum"));
-	TxCoilDefault   = 0;
-    RxCoilDefault   = 0;
+    /*VCoi*/
+    TxCoilmg        = (float*) 0;
+    TxCoilpe        = (float*) 0;
+    RxCoilx         = (float*) 0;
+    RxCoily         = (float*) 0;
+    TxCoilNum       = (int*)   0;
+    RxCoilNum       = (int*)   0;
+	TxCoilDefault   = 1;
+    RxCoilDefault   = 1;
      
-    CS              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCtl"), 0, "CS"));
-    TRNum  			= (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VCtl"), 0, "TRNum"));
-    MaxThreadNum    = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VCtl"), 0, "MaxThreadNum"));
-	ActiveThreadNum = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VCtl"), 0, "ActiveThreadNum"));
-	GPUIndex		= (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VCtl"), 0, "GPUIndex"));
+    /*VCtl*/
+    CS              = (double*) 0;
+    TRNum  			= (int*)    0;
+    MaxThreadNum    = (int*)    0;
+	ActiveThreadNum = (int*)    0;
+	GPUIndex		= (int*)    0;
     
-    utsLine         = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "utsLine"));
-    tsLine          = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "tsLine"));
-    rfAmpLine       = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "rfAmpLine"));
-    rfPhaseLine     = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "rfPhaseLine"));
-    rfFreqLine      = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "rfFreqLine"));
-    rfCoilLine      = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "rfCoilLine"));
-    GzAmpLine       = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "GzAmpLine"));
-    GyAmpLine       = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "GyAmpLine"));
-    GxAmpLine       = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "GxAmpLine"));
-    ADCLine         = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "ADCLine"));
-    ExtLine         = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "ExtLine"));
-    flagsLine       = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "flagsLine"));
+    /*VSeq*/
+    utsLine         = (double*) 0;
+    tsLine          = (double*) 0;
+    rfAmpLine       = (double*) 0;
+    rfPhaseLine     = (double*) 0;
+    rfFreqLine      = (double*) 0;
+    rfCoilLine      = (double*) 0;
+    GzAmpLine       = (double*) 0;
+    GyAmpLine       = (double*) 0;
+    GxAmpLine       = (double*) 0;
+    ADCLine         = (double*) 0;
+    ExtLine         = (double*) 0;
+    flagsLine       = (double*) 0;
     
-    MaxStep         = mxGetNumberOfElements(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "tsLine"));
-    MaxutsStep      = mxGetNumberOfElements(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "utsLine"));
-    MaxrfStep       = mxGetNumberOfElements(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "rfAmpLine"));
-    MaxGzStep       = mxGetNumberOfElements(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "GzAmpLine"));
-    MaxGyStep       = mxGetNumberOfElements(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "GyAmpLine"));
-    MaxGxStep       = mxGetNumberOfElements(mxGetField(mexGetVariablePtr("global", "VSeq"), 0, "GxAmpLine"));
+    
+    MaxStep         = 0;
+    MaxutsStep      = 0;
+    MaxrfStep       = 0;
+    MaxGzStep       = 0;
+    MaxGyStep       = 0;
+    MaxGxStep       = 0;
 	
-	t               = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "t"));
-    dt              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "dt"));
-    rfAmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "rfAmp"));
-    rfPhase         = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "rfPhase"));
-    rfFreq          = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "rfFreq"));
-    rfCoil          = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "rfCoil"));
-    rfRef           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "rfRef"));
-    GzAmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "GzAmp"));
-    GyAmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "GyAmp"));
-    GxAmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "GxAmp"));
-    ADC             = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "ADC"));
-    Ext             = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Ext"));
-    KzTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kz"));
-    KyTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Ky"));
-    KxTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kx"));
-	gpuFetch     	= (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "gpuFetch"));
-    utsi            = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "utsi"));
-    rfi             = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "rfi"));
-    Gzi             = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Gzi"));
-    Gyi             = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Gyi"));
-    Gxi             = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Gxi"));
-    ADCi            = (int*)	mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "ADCi"));
-    Exti            = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Exti"));
-    TRCount         = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "TRCount"));
+    /*VVar*/
+	t               = (double*) 0;
+    dt              = (double*) 0;
+    rfAmp           = (double*) 0;
+    rfPhase         = (double*) 0;
+    rfFreq          = (double*) 0;
+    rfCoil          = (double*) 0;
+    rfRef           = (double*) 0;
+    GzAmp           = (double*) 0;
+    GyAmp           = (double*) 0;
+    GxAmp           = (double*) 0;
+    ADC             = (double*) 0;
+    Ext             = (double*) 0;
+    KzTmp           = (double*) 0;
+    KyTmp           = (double*) 0;
+    KxTmp           = (double*) 0;
+	gpuFetch     	= (double*) 0;
+    utsi            = (int*)    0;
+    rfi             = (int*)    0;
+    Gzi             = (int*)    0;
+    Gyi             = (int*)    0;
+    Gxi             = (int*)    0;
+    ADCi            = (int*)	0;
+    Exti            = (int*)    0;
+    TRCount         = (int*)    0;
 	
-	Sy              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSig"), 0, "Sy"));
-    Sx              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSig"), 0, "Sx"));
-    Kz              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSig"), 0, "Kz"));
-    Ky              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSig"), 0, "Ky"));
-    Kx              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VSig"), 0, "Kx"));
-    SignalNum       = (int*)    mxGetData(mxGetField(mexGetVariablePtr("global", "VSig"), 0, "SignalNum"));
+    /*VSig*/ 
+	Sy              = (double*) 0;
+    Sx              = (double*) 0;
+    Kz              = (double*) 0;
+    Ky              = (double*) 0;
+    Kx              = (double*) 0;
+    SignalNum       = (int*)    0;
     
 /* get size of spin matrix */
-    SpinMxDimNum    		= mxGetNumberOfDimensions(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mz"));
-    SpinMxDims      		= (mwSize*) mxCalloc(SpinMxDimNum, sizeof(mwSize));
-    SpinMxDims      		= mxGetDimensions(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mz"));
+    SpinMxDimNum    		= 3;
+    /*SpinMxDims      		= (mwSize*) mxCalloc(SpinMxDimNum, sizeof(mwSize));*/
+
+    mwSize *SpinMxDims = (mwSize*) mxMalloc(SpinMxDimNum * sizeof(mwSize));
+    SpinMxDims[0] = (mwSize) j["xSize"];
+    SpinMxDims[1] = (mwSize) j["ySize"]; 
+    SpinMxDims[2] = (mwSize) j["zSize"];
+    /*Might be y by x by z*/
 	
     SpinMxRowNum    		= SpinMxDims[0];
     SpinMxColNum    		= SpinMxDims[1];
@@ -771,5 +791,5 @@
 	
 	/* reset device, may slow down subsequent startup due to initialization */
 	// cudaDeviceReset();
-    
+}    
 
