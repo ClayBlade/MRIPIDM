@@ -131,7 +131,7 @@ int main(){
     Rho             = (float*) data_obj["Rho"];
     T1              = (float*) data_obj["T1"];
     T2              = (float*) data_obj["T2"];
-    SpinNum         = (int*)    data_obj["xSize"] * data_obj["ySize"];
+    SpinNum         = (int*)   data_obj["xSize"] * data_obj["ySize"];
     TypeNum         = (int*) 1;
 
 /*DoScanAtGPU.cu(140): error: expression must have arithmetic or unscoped enum type
@@ -222,7 +222,7 @@ int main(){
     SpinMxDimNum    		= 3;
     /*SpinMxDims      		= (mwSize*) mxCalloc(SpinMxDimNum, sizeof(mwSize));*/
 
-    size_t *SpinMxDims = (size_t*) malloc(N * sizeof(size_t));
+    size_t *SpinMxDims = (size_t*) malloc(SpinNum * sizeof(size_t));
     SpinMxDims[0] = (mwSize*) data_obj["xSize"];
     SpinMxDims[1] = (mwSize*) data_obj["ySize"]; 
     SpinMxDims[2] = (mwSize*) data_obj["zSize"];
