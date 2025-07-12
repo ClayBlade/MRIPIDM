@@ -66,17 +66,16 @@
 
 #define PI      3.14159265359 /* pi constant */
 
-/* includes CUDA kernel */
 #include "BlochKernelGMGPU.h"
 #include "json.hpp"
 
 using json = nlohmann::json; 
 
-void main(){
+int main(){
     std::ifstream inputFile("/root/output/labeledSpaceJSON/1.pkl.json");
 
-    json j;
-    inputFile >> j; 
+    json data_obj;
+    inputFile >> data_obj; 
 
 /* pointers for VObj */
     double *Gyro;
@@ -126,21 +125,25 @@ void main(){
 /* assign pointers */
     /*VObj*/
    Gyro             = (float*) 2.67e08;
-    Mz              = (float*) j["Mz"];
-    My              = (float*) j["My"];
-    Mx              = (float*) j["Mx"];
-    Rho             = (float*) j["Rho"];
-    T1              = (float*) j["T1"];
-    T2              = (float*) j["T2"];
-    SpinNum         = (int*)    j["xSize"] * j["ySize"];
+    Mz              = (float*) data_obj["Mz"];
+    My              = (float*) data_obj["My"];
+    Mx              = (float*) data_obj["Mx"];
+    Rho             = (float*) data_obj["Rho"];
+    T1              = (float*) data_obj["T1"];
+    T2              = (float*) data_obj["T2"];
+    SpinNum         = (int*)    data_obj["xSize"] * data_obj["ySize"];
     TypeNum         = (int*) 1;
 
+/*DoScanAtGPU.cu(140): error: expression must have arithmetic or unscoped enum type
+      dWRnd = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"] * SpinNum * TypeNum
+*/
+
     /*VMag*/
-    dB0             = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
-    dWRnd           = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"] * SpinNum * TypeNum;
-    Gzgrid          = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
-    Gygrid          = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
-    Gxgrid          = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];
+    dB0             = (float*)( data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
+    dWRnd           = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"] * SpinNum * TypeNum);
+    Gzgrid          = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
+    Gygrid          = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
+    Gxgrid          = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
     
     /*VCoi*/
     TxCoilmg        = (float*) 0;
@@ -149,8 +152,8 @@ void main(){
     RxCoily         = (float*) 0;
     TxCoilNum       = (int*)   0;
     RxCoilNum       = (int*)   0;
-	TxCoilDefault   = 1;
-    RxCoilDefault   = 1;
+	TxCoilDefault   = (double*) 1;
+    RxCoilDefault   = (double*) 1;
      
     /*VCtl*/
     CS              = (double*) 0;
@@ -220,9 +223,9 @@ void main(){
     /*SpinMxDims      		= (mwSize*) mxCalloc(SpinMxDimNum, sizeof(mwSize));*/
 
     size_t *SpinMxDims = (size_t*) malloc(N * sizeof(size_t));
-    SpinMxDims[0] = (mwSize) j["xSize"];
-    SpinMxDims[1] = (mwSize) j["ySize"]; 
-    SpinMxDims[2] = (mwSize) j["zSize"];
+    SpinMxDims[0] = (mwSize*) data_obj["xSize"];
+    SpinMxDims[1] = (mwSize*) data_obj["ySize"]; 
+    SpinMxDims[2] = (mwSize*) data_obj["zSize"];
     /*Might be y by x by z*/
 	
     SpinMxRowNum    		= SpinMxDims[0];
@@ -790,5 +793,63 @@ void main(){
 	
 	/* reset device, may slow down subsequent startup due to initialization */
 	// cudaDeviceReset();
+    return 0;
 }    
 
+/*DoScanAtGPU.cu(75): warning #951-D: return type of function "main" must be "int"                                          void main(){                                                                                                                 ^
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+DoScanAtGPU.cu(76): error: incomplete type is not allowed                                                                     std::ifstream inputFile("/root/output/labeledSpaceJSON/1.pkl.json");                                                                  ^
+DoScanAtGPU.cu(84): error: identifier "mwSize" is undefined                                                                   const mwSize *SpinMxDims;                                                                                                     ^
+DoScanAtGPU.cu(112): error: "j" has already been declared in the current scope                                                int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=0, SignalLen=0, SBufferLen=0, Typei, RxCoili, TxCoili;                   ^
+DoScanAtGPU.cu(117): error: identifier "Ipp32f" is undefined                                                                  Ipp32f buffer, *Sxbuffer, *Sybuffer;                                                                                    ^
+DoScanAtGPU.cu(128): error: invalid type conversion                                                                          Gyro = (float*) 2.67e08;                                                                                                       ^                                                                                                                                                                                                                                   DoScanAtGPU.cu(135): error: expression must have arithmetic or unscoped enum type                                             SpinNum = (int*) j["xSize"] * j["ySize"];                                                                                         ^                                                                                                                                                                                                                               DoScanAtGPU.cu(139): error: expression must have arithmetic or unscoped enum type                                             dB0 = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];                                                            ^                                                                                                                                                                                                                                   DoScanAtGPU.cu(139): error: expression must have arithmetic or unscoped enum type                                             dB0 = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];                                                                                  ^                                                                                                                                                                                                             DoScanAtGPU.cu(140): error: expression must have arithmetic or unscoped enum type                                             dWRnd = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"] * SpinNum * TypeNum;             
+                                                                                                                        
+                                     ^
+
+DoScanAtGPU.cu(152): error: a value of type "int" cannot be assigned to an entity of type "double *"
+   TxCoilDefault = 1;
+                 ^
+
+DoScanAtGPU.cu(153): error: a value of type "int" cannot be assigned to an entity of type "double *"
+      RxCoilDefault = 1;
+                    ^
+
+DoScanAtGPU.cu(222): error: "SpinMxDims" has already been declared in the current scope
+      size_t *SpinMxDims = (size_t*) malloc(N * sizeof(size_t));                                                                                                                        
+                                                                                                                        
+      
+      DoScanAtGPU.cu(222): error: identifier "N" is undefined
+      size_t *SpinMxDims = (size_t*) malloc(N * sizeof(size_t));
+                                            ^
+
+DoScanAtGPU.cu(223): error: identifier "mwSize" is undefined
+      SpinMxDims[0] = (mwSize) j["xSize"];
+                       ^
+
+DoScanAtGPU.cu(223): error: expected a ";"
+      SpinMxDims[0] = (mwSize) j["xSize"];
+                               ^
+
+DoScanAtGPU.cu(224): error: expected a ";"
+      SpinMxDims[1] = (mwSize) j["ySize"];
+                               ^
+
+DoScanAtGPU.cu(225): error: expected a ";"
+      SpinMxDims[2] = (mwSize) j["zSize"];
+                               ^
+
+DoScanAtGPU.cu(332): error: identifier "ippsMalloc_32f" is undefined
+   Sxbuffer = ippsMalloc_32f(SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum));
+              ^
+
+DoScanAtGPU.cu(342): error: identifier "mexPrintf" is undefined
+   mexPrintf("------ Current active GPU device : %s ------\n", &deviceProp.name[0]);
+   ^
+
+DoScanAtGPU.cu(505): error: identifier "ippsFree" is undefined
+        ippsFree(Sxbuffer);
+        ^
+
+DoScanAtGPU.cu(555): error: identifier "ippAlgHintFast" is undefined
+           ippsSum_32f(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) + j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);                                                                                                                                                                                                                                ^                                                                                                                                                                                                               DoScanAtGPU.cu(555): error: identifier "ippsSum_32f" is undefined                                                                  ippsSum_32f(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) + j$
+      */
