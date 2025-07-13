@@ -5,6 +5,7 @@
 #include <fwSignal.h>
 #include <ipps.h>
 
+
 #define Ipp32f                  Fw32f                 
 #define ippAlgHintFast          fwAlgHintFast
 #define ippsMalloc_32f          fwsMalloc_32f
@@ -38,6 +39,7 @@
 
 #ifndef HELPERUNCS_H
 #define HELPERUNCS_H
+typedef int IppAlgHint;  // Dummy placeholder to avoid compilation error
 
  float* ippsMalloc_32fHF(int len) ;
  void ippsFreeHF(float* ptr);
