@@ -24,35 +24,35 @@
 #ifdef FW
 #include <fwSignal.h>
 #include <fwBase.h>
-#define Ipp32f                  Fw32f
-#define ippAlgHintFast          fwAlgHintFast
-#define ippsMalloc_32f          fwsMalloc_32f
-#define ippsFree                fwsFree
-#define ippsZero_32f            fwsZero_32f
-#define ippsZero_64f            fwsZero_64f
-#define ippsSum_32f             fwsSum_32f
-#define ippsCopy_32f            fwsCopy_32f
-#define ippsAddC_32f            fwsAddC_32f
-#define ippsAddC_32f_I          fwsAddC_32f_I
-#define ippsAdd_32f             fwsAdd_32f 
-#define ippsAdd_32f_I           fwsAdd_32f_I
-#define ippsMulC_32f            fwsMulC_32f
-#define ippsMulC_32f_I          fwsMulC_32f_I
-#define ippsMul_32f             fwsMul_32f
-#define ippsMul_32f_I           fwsMul_32f_I
-#define ippsDiv_32f             fwsDiv_32f
-#define ippsDivC_32f            fwsDivC_32f
-#define ippsInv_32f_A24         fwsInv_32f_A24
-#define ippsThreshold_LT_32f_I  fwsThreshold_LT_32f_I
-#define ippsExp_32f_I           fwsExp_32f_I
-#define ippsArctan_32f          fwsArctan_32f
-#define ippsSqr_32f             fwsSqr_32f
-#define ippsSqr_32f_I           fwsSqr_32f_I
-#define ippsSqrt_32f_I          fwsSqrt_32f_I
-#define ippsSin_32f_A24         fwsSin_32f_A24
-#define ippsCos_32f_A24         fwsCos_32f_A24
-#define ippsPolarToCart_32f     fwsPolarToCart_32f
-#define ippsCartToPolar_32f     fwsCartToPolar_32f
+#define Fw32f
+#define fwAlgHintFast
+#define fwsMalloc_32f
+#define fwsFree
+#define fwsZero_32f
+#define fwsZero_64f
+#define fwsSum_32f
+#define fwsCopy_32f
+#define fwsAddC_32f
+#define fwsAddC_32f_I
+#define fwsAdd_32f 
+#define fwsAdd_32f_I
+#define fwsMulC_32f
+#define fwsMulC_32f_I
+#define fwsMul_32f
+#define fwsMul_32f_I
+#define fwsDiv_32f
+#define fwsDivC_32f
+#define fwsInv_32f_A24
+#define fwsThreshold_LT_32f_I
+#define fwsExp_32f_I
+#define fwsArctan_32f
+#define fwsSqr_32f
+#define fwsSqr_32f_I
+#define fwsSqrt_32f_I
+#define fwsSin_32f_A24
+#define fwsCos_32f_A24
+#define fwsPolarToCart_32f
+#define fwsCartToPolar_32f
 #endif
 
 /* for fixing error : identifier "IUnknown" is undefined" */
