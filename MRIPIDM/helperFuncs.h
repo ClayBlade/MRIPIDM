@@ -1,6 +1,4 @@
 //ipps
-#pragma once
-#ifndef __CUDACC__
 #include <ipps.h>
 #ifdef FW
 #include <fwBase.h>
