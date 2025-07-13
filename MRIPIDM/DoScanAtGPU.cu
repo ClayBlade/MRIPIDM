@@ -147,7 +147,7 @@ int main(){
 
 /* get size of spin matrix */
     SpinMxDimNum    		= 3;
-    size_t* SpinMxDims = malloc(*SpinNum * sizeof(size_t));
+    size_t* SpinMxDims = size_t* malloc(*SpinNum * sizeof(size_t));
     SpinMxDims[0] = (int)data_obj["xSize"];
     SpinMxDims[1] = (int)data_obj["ySize"]; 
     SpinMxDims[2] = (int)data_obj["zSize"];
@@ -255,7 +255,7 @@ int main(){
     rfFreq          = new double;
     *rfFreq         =  0;
     rfCoil          = new double;
-    *rfCoil         =  1
+    *rfCoil         =  1;
     rfRef           = new double;
     *rfRef          =  0;
     GzAmp           = new double;
@@ -318,26 +318,26 @@ int main(){
    for (int x = 0; x < xSiz; x++){
     for (int y = 0; y < ySiz; y++){
     for (int b = 0; b < SpinMxSliceNum; b++){
-            *dB0[b * xSiz * ySiz + y * xSiz + x] = 0.0;
-            *Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((z-SpinMxSliceNum)/2) * 0.25/SpinMxSliceNum; /*0.2/size*/
-            *Gygrid[b * xSiz * ySiz + y * xSiz + x] = (y-ySiz/2) * 0.25/ySiz; /*0.2/size*/
-            *Gxgrid[b * xSiz * ySiz + y * xSiz + x] = (x-xSiz/2) * 0.25/xSiz; /*0.2/size*/
+            dB0[b * xSiz * ySiz + y * xSiz + x] = 0.0;
+            Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((z-SpinMxSliceNum)/2) * 0.25/SpinMxSliceNum; /*0.2/size*/
+            Gygrid[b * xSiz * ySiz + y * xSiz + x] = (y-ySiz/2) * 0.25/ySiz; /*0.2/size*/
+            Gxgrid[b * xSiz * ySiz + y * xSiz + x] = (x-xSiz/2) * 0.25/xSiz; /*0.2/size*/
 
             for (int d = 0; d < *SpinNum; d++){
                 int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
-                *dWrnd[idx] = 0;
+                dWrnd[idx] = 0;
             }
 
             for (int e = 0; e < *TxCoilNum; e++){
                 int idx = e * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
-                *TxCoilmg[idx] = 0.0;
-                *TxCoilpe[idx] = 0.0;
+                TxCoilmg[idx] = 0.0;
+                TxCoilpe[idx] = 0.0;
             }
 
             for (int f = 0; f < *RxCoilNum; f++){
                 int idx = f * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
-                *RxCoilx[idx] = 0.0;
-                *RxCoily[idx] = 0.0;
+                RxCoilx[idx] = 0.0;
+                RxCoily[idx] = 0.0;
             }
             
      }
@@ -369,15 +369,15 @@ for (int i = 0; i < MaxStep; i++){
 /* allocate device memory for matrices */
     float *d_Mz = NULL;
     cudaMalloc( (void**) &d_Mz, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_Mz, Mz, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
+	cudaMemcpy( d_Mz, Mz.data(), SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
     
     float *d_My = NULL;
     cudaMalloc( (void**) &d_My, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_My, My, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
+	cudaMemcpy( d_My, My.data(), SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
     
     float *d_Mx = NULL;
     cudaMalloc( (void**) &d_Mx, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_Mx, Mx, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
+	cudaMemcpy( d_Mx, Mx.data(), SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
     
     float *d_dWRnd = NULL;
     cudaMalloc( (void**) &d_dWRnd, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float)) ;
@@ -385,15 +385,15 @@ for (int i = 0; i < MaxStep; i++){
     
     float *d_Rho = NULL;
     cudaMalloc( (void**) &d_Rho, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_Rho, Rho, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
+	cudaMemcpy( d_Rho, Rho.data(), SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
     
     float *d_T1 = NULL;
     cudaMalloc( (void**) &d_T1, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_T1, T1, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
+	cudaMemcpy( d_T1, T1.data(), SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
     
     float *d_T2 = NULL;
     cudaMalloc( (void**) &d_T2, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float)) ;
-	cudaMemcpy( d_T2, T2, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
+	cudaMemcpy( d_T2, T2.data(), SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice ) ;
     
     float *d_Gzgrid = NULL;
     cudaMalloc( (void**) &d_Gzgrid, SpinMxNum * SpinMxSliceNum * sizeof(float)) ;
