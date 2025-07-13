@@ -27,7 +27,7 @@ int main() {
     json j;
     inputFile >> j; 
 
-    float g = j["Gyro"];
+    std::vector<float> g = data_obj["Mz"].get<std::vector<float>>();;
 
     std::cout << "Gyro: " << g << std::endl;
 
