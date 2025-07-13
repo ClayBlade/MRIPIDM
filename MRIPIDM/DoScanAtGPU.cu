@@ -62,12 +62,15 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
+
 #endif
 
 #define PI      3.14159265359 /* pi constant */
 
 #include "BlochKernelGMGPU.h"
 #include "json.hpp"
+#include <fstream>
+#include <iostream>
 
 using json = nlohmann::json; 
 
@@ -80,7 +83,7 @@ int main(){
 /* pointers for VObj */
     double *Gyro;
     int SpinMxNum, SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, SpinMxDimNum;
-    const mwSize *SpinMxDims;
+    size_t mwSize *SpinMxDims;
 	float *Mz, *My, *Mx, *Rho, *T1, *T2;
 
 /* pointers for VMag */
@@ -113,7 +116,7 @@ int main(){
     double flag[6];
     
 /* IPP or FW buffer */
-    Ipp32f buffer, *Sxbuffer, *Sybuffer;
+    Fw32f buffer, *Sxbuffer, *Sybuffer;
 	
 /* function status */
     int ExtCall;
@@ -121,12 +124,28 @@ int main(){
 /* GPU execution sequence */
 	std::vector<float> g_Sig;	
 
+/* assign pointers */
+    /*VObj*/
+    Gyro             = new double;
+        *Gryo = 2.67e08double
+    TypeNum         = new int;
+        *TypeNum = 1;
+    SpinNum         = new int;
+        *SpinNum         =   ((int)data_obj["xSize"] * (int)data_obj["ySize"]);
+        std::vector<float> Mz = data_obj["Mz"].get<std::vector<float>>();
+        std::vector<float> My = data_obj["My"].get<std::vector<float>>();
+        std::vector<float> Mx = data_obj["Mx"].get<std::vector<float>>();
+        std::vector<float> Rho = data_obj["Rho"].get<std::vector<float>>();
+        std::vector<float> T1 = data_obj["T1"].get<std::vector<float>>();
+        std::vector<float> T2 = data_obj["T2"].get<std::vector<float>>();
+
+
 /* get size of spin matrix */
     SpinMxDimNum    		= 3;
-    size_t *SpinMxDims = (size_t*) malloc(SpinNum * sizeof(size_t));
-    SpinMxDims[0] = (mwSize*) (int)data_obj["xSize"];
-    SpinMxDims[1] = (mwSize*) (int)data_obj["ySize"]; 
-    SpinMxDims[2] = (mwSize*) (int)data_obj["zSize"];
+    *SpinMxDims = (size_t*) malloc(*SpinNum * sizeof(size_t));
+    SpinMxDims[0] = (size_t*) (int)data_obj["xSize"];
+    SpinMxDims[1] = (size_t*) (int)data_obj["ySize"]; 
+    SpinMxDims[2] = (size_t*) (int)data_obj["zSize"];
     /*Might be y by x by z*/
 	
     SpinMxRowNum    		= SpinMxDims[0];
@@ -163,20 +182,6 @@ int main(){
 	}
 	i=0;
 
-/* assign pointers */
-    /*VObj*/
-    Gyro             = new double;
-        *Gryo = 2.67e08double
-    TypeNum         = new int;
-        *TypeNum = 1;
-    SpinNum         = new int;
-        *SpinNum         =   ((int)data_obj["xSize"] * (int)data_obj["ySize"]);
-        std::vector<float> Mz = data_obj["Mz"].get<std::vector<float>>();
-        std::vector<float> My = data_obj["My"].get<std::vector<float>>();
-        std::vector<float> Mx = data_obj["Mx"].get<std::vector<float>>();
-        std::vector<float> Rho = data_obj["Rho"].get<std::vector<float>>();
-        std::vector<float> T1 = data_obj["T1"].get<std::vector<float>>();
-        std::vector<float> T2 = data_obj["T2"].get<std::vector<float>>();
     
     
     
@@ -891,26 +896,3 @@ for (int i = 0; i < MaxStep; i++){
 	// cudaDeviceReset();
     return 0;
 }    
-/*
-DoScanAtGPU.cu(75): error: incomplete type is not allowed                                                                                                                                                                                          std::ifstream inputFile("/root/output/labeledSpaceJSON/1.pkl.json");                                                                                                                                                                                       ^
-
-DoScanAtGPU.cu(83): error: identifier "mwSize" is undefined
-      const mwSize *SpinMxDims;
-            ^
-
-
-DoScanAtGPU.cu(142): error: no operator "*" matches these operands                                                                                                                                                                                       operand types are: nlohmann::json_abi_v3_12_0::basic_json<std::map, std::vector, std::string, bool, int64_t, uint64_t, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vector<uint8_t, std::allocator<ui
-nt8_t>>, void> * nlohmann::json_abi_v3_12_0::basic_json<std::map, std::vector, std::string, bool, int64_t, uint64_t, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vector<uint8_t, std::allocator<uint8_t>>, void>      dB0 = (float*)( data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
-
-    /usr/include/c++/11/valarray(1188): note #3327-D: candidate function template "std::operator*(const std::valarray<_Tp>::value_type &, const std::valarray<_Tp> &)" failed deduction
-    template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const valarray<_Tp>& __w) { do { if (__builtin_is_constant
-    _evaluated() && !bool(__v.size() == __w.size())) __builtin_unreachable(); } while (false); typedef _BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<
-    _Closure, _Rt>(_Closure(__v, __w)); } template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray,_Constant, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const typename valarray
-    <_Tp>::value_type& __t) { typedef _BinClos<__multiplies, _ValArray, _Constant, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__v, __t)); } template<typename _Tp> inli
-    ne _Expr<_BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const typename valarray<_Tp>::value_type& __t, const valarray<_Tp>& __v) { typedef _BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__t, __v)); }
-
-    /usr/include/c++/11/valarray(1188): note #3327-D: candidate function template "std::operator*(const std::valarray<_Tp> &, const std::valarray<_Tp> &)" failed deduction                                                                        template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const valarray<_Tp>& __w) { do { if (__builtin_is_constant_evaluated() && !bool(__v.size() == __w.size())) __builtin_unreachable(); } while (false); typedef _BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__v, __w)); } template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray,_Constant, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const typename valarray<_Tp>::value_type& __t) { typedef _BinClos<__multiplies, _ValArray, _Constant, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__v, __t)); } template<typename _Tp> inline _Expr<_BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const typename valarray<_Tp>::value_type& __t, const valarray<_Tp>& __v) { typedef _BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__t, __v)); }
-
-    /usr/include/c++/11/bits/valarray_after.h(407): note #3327-D: candidate function template "std::operator*(const std::valarray<_Dom::value_type> &, const std::_Expr<_Dom, _Dom::value_type> &)" failed deduction                                   template<class _Dom1, class _Dom2> inline _Expr<_BinClos<struct std::__multiplies, _Expr, 
-    _Expr, _Dom1, _Dom2>, typename __fun<struct std::__multiplies, typename _Dom1::value_type>::result_type> operator *(const _Expr<_Dom1, typename _Dom1::value_type>& __v, const _Expr<_Dom2, typename _Dom2::value_type>& __w) { typedef typename _Dom1::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Expr, _Expr, _Dom1, _Dom2> _Closure; return _Expr<_Closure, _Value>(_Closure(__v(), __w())); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _Expr, _Constant, _Dom, typename _Dom::value_type>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const _Expr<_Dom, typename _Dom::value_type>& __v, const typename _Dom::value_type& __t) { typedef typename _Dom::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Expr, _Constant, _Dom, _Arg> _Closure; return _Expr<_Closure, _Value>(_Closure(__v(), __t)); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _Constant, _Expr, typename _Dom::value_type, _Dom>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const typename _Dom::value_type& __t, const _Expr<_Dom, typename _Dom::value_type>& __v) { typedef typename _Dom::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Constant, _Expr, _Arg, _Dom> _Closure; return _Expr<_Closure, _Value>(_Closure(__t, __v())); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _Expr, _ValArray, _Dom, typename _Dom::value_type>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const _Expr<_Dom,typename _Dom::value_type>& __e, const valarray<typename _Dom::value_type>& __v) { typedef typename _Dom::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Expr, _ValArray, _Dom, _Arg> _Closure; return _Expr<_Closure, _Value>(_Closure(__e(), __v)); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _ValArray, _Expr, typename _Dom::value_type, _Dom>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const valarray<typename _Dom::value_type>& __v, const _Expr<_Dom, typename _Dom::value_type>& __e) { typedef typename _Dom::value_type _Tp; typedef typename __fun<struct std::__multiplies, _Tp>::result_type _Value; typedef _BinClos<struct std::__multiplies, _ValArray, _Expr, _Tp, _Dom> _Closure; return _Expr<_Closure, _Value>(_Closure(__v, __e ())); }
-    */
