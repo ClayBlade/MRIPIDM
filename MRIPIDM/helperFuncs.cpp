@@ -1,5 +1,5 @@
-#include BlochKernelGMGPU.h
 #include <iostream>
+#include "helperFuncs.h"
 
 extern "C" float* ippsMalloc_32fHF(int len) {
     return ippsMalloc_32f(len);
