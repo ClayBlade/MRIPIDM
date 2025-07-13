@@ -1,9 +1,10 @@
 //ipps
+#ifndef __CUDACC__
+#include <ipps.h>
 #ifdef FW
 #include <fwBase.h>
 #include <fwSignal.h>
 
-#include <ipps.h>   // signal processing
 #define Ipp32f                  Fw32f                 
 #define ippAlgHintFast          fwAlgHintFast
 #define ippsMalloc_32f          fwsMalloc_32f
@@ -41,6 +42,6 @@
  float* ippsMalloc_32fHF(int len) ;
  void ippsFreeHF(float* ptr);
  void ippsZero_64fHF(float* ptr, int len);
- void ippsSum_32fHF(const float* src, int len, float* sum, ippAlgHintFast);
+ void ippsSum_32fHF(const float* src, int len, float* sum, IppAlgHint algHint = ippAlgHintFast);
 
 #endif
