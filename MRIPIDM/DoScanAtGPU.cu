@@ -6,6 +6,7 @@
 ************************************************************************/
 
 /* system header */
+#pragma once
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,40 +23,7 @@
 #include <ippdefs.h>
 #endif
 /* AMD Framewave header */
-#ifdef FW
-#include <fwBase.h>
-#include <fwSignal.h>
 
-#define Ipp32f                  Fw32f                 
-#define ippAlgHintFast          fwAlgHintFast
-#define ippsMalloc_32f          fwsMalloc_32f
-#define ippsFree                fwsFree
-#define ippsZero_32f            fwsZero_32f
-#define ippsZero_64f            fwsZero_64f
-#define ippsSum_32f             fwsSum_32f
-#define ippsCopy_32f            fwsCopy_32f
-#define ippsAddC_32f            fwsAddC_32f
-#define ippsAddC_32f_I          fwsAddC_32f_I
-#define ippsAdd_32f             fwsAdd_32f 
-#define ippsAdd_32f_I           fwsAdd_32f_I
-#define ippsMulC_32f            fwsMulC_32f
-#define ippsMulC_32f_I          fwsMulC_32f_I
-#define ippsMul_32f             fwsMul_32f
-#define ippsMul_32f_I           fwsMul_32f_I
-#define ippsDiv_32f             fwsDiv_32f
-#define ippsDivC_32f            fwsDivC_32f
-#define ippsInv_32f_A24         fwsInv_32f_A24
-#define ippsThreshold_LT_32f_I  fwsThreshold_LT_32f_I
-#define ippsExp_32f_I           fwsExp_32f_I
-#define ippsArctan_32f          fwsArctan_32f
-#define ippsSqr_32f             fwsSqr_32f
-#define ippsSqr_32f_I           fwsSqr_32f_I
-#define ippsSqrt_32f_I          fwsSqrt_32f_I
-#define ippsSin_32f_A24         fwsSin_32f_A24
-#define ippsCos_32f_A24         fwsCos_32f_A24
-#define ippsPolarToCart_32f     fwsPolarToCart_32f
-#define ippsCartToPolar_32f     fwsCartToPolar_32f
-#endif
 
 /* for fixing error : identifier "IUnknown" is undefined" */
 #ifdef _WIN32
@@ -436,8 +404,8 @@ for (int i = 0; i < MaxStep; i++){
     cudaMalloc( (void**) &d_Sig, (5+3*(*TxCoilNum)) * MaxutsStep * sizeof(float)) ;
 	
 /* set CPU signal buffer */
-	Sxbuffer    = ippsMalloc_32f(SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum));
-	Sybuffer    = ippsMalloc_32f(SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum));
+	Sxbuffer    = ippsMalloc_32fHF(SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum));
+	Sybuffer    = ippsMalloc_32fHF(SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum));
 
 /* allocate device memory for buffering acquired signal */
     float *d_Sx = NULL;
@@ -446,8 +414,6 @@ for (int i = 0; i < MaxStep; i++){
     cudaMalloc( (void**) &d_Sy, SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)) ;
 
 /* start simulator execution loop */
-	mexPrintf("------ Current active GPU device : %s ------\n", &deviceProp.name[0]);
-    mexPrintf("TR Counts: %d of %d\n", 1, *TRNum);
     while (i < MaxStep){
         /* check MR sequence pulse flag */
         flag[0]=0;
@@ -609,10 +575,10 @@ for (int i = 0; i < MaxStep; i++){
 						cudaMemset(d_Sx, 0 ,SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)); /* only work for 0 */
 						cudaMemset(d_Sy, 0 ,SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)); /* only work for 0 */
 						/* set buffer */
-						ippsFree(Sxbuffer);
-						ippsFree(Sybuffer);
-						Sxbuffer = ippsMalloc_32f(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
-						Sybuffer = ippsMalloc_32f(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
+						ippsFreeHF(Sxbuffer);
+						ippsFreeHF(Sybuffer);
+						Sxbuffer = ippsMalloc_32fHF(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
+						Sybuffer = ippsMalloc_32fHF(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
 					}
 
 					/* avoid shared memory overflow */
@@ -659,9 +625,9 @@ for (int i = 0; i < MaxStep; i++){
 									p_Sx = Sx + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 									p_Sy = Sy + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 								
-									ippsSum_32f(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
+									ippsSum_32fHF(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
 									*p_Sx = (double)buffer;
-									ippsSum_32f(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
+									ippsSum_32fHF(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
 									*p_Sy = (double)buffer;
 								
 								}
@@ -773,9 +739,9 @@ for (int i = 0; i < MaxStep; i++){
         }
         
         if (flag[0]+flag[1]+flag[2]+flag[3]+flag[4]+flag[5] == 0){ /* reset VVar */
-            ippsZero_64f(rfAmp, *TxCoilNum);
-            ippsZero_64f(rfPhase, *TxCoilNum);
-            ippsZero_64f(rfFreq, *TxCoilNum);
+            ippsZero_64fHF(rfAmp, *TxCoilNum);
+            ippsZero_64fHF(rfPhase, *TxCoilNum);
+            ippsZero_64fHF(rfFreq, *TxCoilNum);
             *GzAmp = 0;
             *GyAmp = 0;
             *GxAmp = 0;
@@ -801,10 +767,10 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemset(d_Sx, 0 ,SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)); /* only work for 0 */
 					cudaMemset(d_Sy, 0 ,SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)); /* only work for 0 */
 					/* set buffer */
-					ippsFree(Sxbuffer);
-					ippsFree(Sybuffer);
-					Sxbuffer = ippsMalloc_32f(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
-					Sybuffer = ippsMalloc_32f(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
+					ippsFreeHF(Sxbuffer);
+					ippsFreeHF(Sybuffer);
+					Sxbuffer = ippsMalloc_32fHF(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
+					Sybuffer = ippsMalloc_32fHF(SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum));
 				}
 
 				/* avoid shared memory overflow */
@@ -851,9 +817,9 @@ for (int i = 0; i < MaxStep; i++){
 								p_Sx = Sx + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 								p_Sy = Sy + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 							
-								ippsSum_32f(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
+								ippsSum_32fHF(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
 								*p_Sx = (double)buffer;
-								ippsSum_32f(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
+								ippsSum_32fHF(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);
 								*p_Sy = (double)buffer;
 							
 							}
