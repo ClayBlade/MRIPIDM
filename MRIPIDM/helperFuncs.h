@@ -3,6 +3,7 @@
 #include <fwBase.h>
 #include <fwSignal.h>
 
+#include <ipps.h>   // signal processing
 #define Ipp32f                  Fw32f                 
 #define ippAlgHintFast          fwAlgHintFast
 #define ippsMalloc_32f          fwsMalloc_32f
