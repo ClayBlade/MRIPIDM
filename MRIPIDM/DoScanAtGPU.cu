@@ -834,7 +834,7 @@ for (int i = 0; i < MaxStep; i++){
 
 			if (*dt < 0){
 				(*TRCount)++;
-				mexPrintf("TR Counts: %d of %d\n", *TRCount, *TRNum);
+				/*mexPrintf("TR Counts: %d of %d\n", *TRCount, *TRNum);*/
 			}
         }
     }
