@@ -38,6 +38,7 @@
 #define PI      3.14159265359 /* pi constant */
 
 #include "BlochKernelGMGPU.h"
+#include "helperFuncs.h"
 #include "json.hpp"
 #include <fstream>
 #include <iostream>
