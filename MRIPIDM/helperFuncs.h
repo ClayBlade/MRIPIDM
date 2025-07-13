@@ -37,9 +37,9 @@
 #ifndef HELPERUNCS_H
 #define HELPERUNCS_H
 
-__global__ float* ippsMalloc_32fHF(int len) ;
-__global__ void ippsFreeHF(float* ptr);
-__global__ void ippsZero_64fHF(float* ptr, int len);
-__global__ void ippsSum_32fHF(const float* src, int len, float* sum);
+ float* ippsMalloc_32fHF(int len) ;
+ void ippsFreeHF(float* ptr);
+ void ippsZero_64fHF(float* ptr, int len);
+ void ippsSum_32fHF(const float* src, int len, float* sum, IppAlgHint algHint = ippAlgHintFast);
 
 #endif
