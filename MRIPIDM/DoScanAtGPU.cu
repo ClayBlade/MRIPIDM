@@ -140,15 +140,7 @@ int main(){
         std::vector<float> T1 = data_obj["T1"].get<std::vector<float>>();
         std::vector<float> T2 = data_obj["T2"].get<std::vector<float>>();
 
-/*VCtl*/
-    CS              = new double[*TypeNum]; 
-    *CS[0] = 0.0; /* default value */
-    TRNum  			= new int;
-    *TRNum          = 1; /* default value */
-    MaxThreadNum    = new int;
-    *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
-	ActiveThreadNum = new int;
-    *ActiveThreadNum = *MaxThreadNum; /* default value */
+
 	GPUIndex		= new int;
     *GPUIndex       = 0; /* default value */
 
@@ -195,7 +187,15 @@ int main(){
 	}
 	i=0;
 
-    
+    /*VCtl*/
+    CS              = new double; 
+    *CS = 0.0; /* default value */
+    TRNum  			= new int;
+    *TRNum          = 1; /* default value */
+    MaxThreadNum    = new int;
+    *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
+	ActiveThreadNum = new int;
+    *ActiveThreadNum = *MaxThreadNum; /* default value */
     
     
     /*VMag*/
