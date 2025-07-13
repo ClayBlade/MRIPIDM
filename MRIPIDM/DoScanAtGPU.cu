@@ -164,14 +164,14 @@ int main(){
 	
 /* choose selected GPU */
 	if( cudaSuccess != cudaSetDevice(*GPUIndex)){
-        return;
+        return 0;
     }
 	
 /* set GPU grid & block configuration*/
     cudaDeviceProp deviceProp;
     memset( &deviceProp, 0, sizeof(deviceProp));
     if( cudaSuccess != cudaGetDeviceProperties(&deviceProp, *GPUIndex)){
-        return;
+        return 0;
     }
 
 	dim3 dimGridImg(SpinMxColNum,1,1);
@@ -683,21 +683,21 @@ for (int i = 0; i < MaxStep; i++){
 				
 				if (*gpuFetch !=0){
 					/* fetch data from GPU */
-					cudaMemcpy( Mz, d_Mz, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( My, d_My, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( Mx, d_Mx, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( dWRnd, d_dWRnd, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( Rho, d_Rho, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( T1, d_T1, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( T2, d_T2, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( Gzgrid, d_Gzgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( Gygrid, d_Gygrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( Gxgrid, d_Gxgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( dB0, d_dB0, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( TxCoilmg, d_TxCoilmg, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( TxCoilpe, d_TxCoilpe, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( RxCoilx, d_RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
-					cudaMemcpy( RxCoily, d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( Mz.data(), d_Mz, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( My.data(), d_My, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( Mx.data(), d_Mx, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( dWRnd.data(), d_dWRnd, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( Rho.data(), d_Rho, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( T1.data(), d_T1, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( T2.data(), d_T2, SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( Gzgrid.data(), d_Gzgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( Gygrid.data(), d_Gygrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( Gxgrid.data(), d_Gxgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( dB0.data(), d_dB0, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( TxCoilmg.data(), d_TxCoilmg, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( TxCoilpe.data(), d_TxCoilpe, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( RxCoilx.data(), d_RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
+					cudaMemcpy( RxCoily.data(), d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 				}
 
                 /* execute extended process */
