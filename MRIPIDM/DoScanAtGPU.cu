@@ -121,111 +121,12 @@ int main(){
 /* GPU execution sequence */
 	std::vector<float> g_Sig;	
 
-    
-/* assign pointers */
-    /*VObj*/
-   Gyro             = (float*) 2.67e08;
-    Mz              = (float*) data_obj["Mz"];
-    My              = (float*) data_obj["My"];
-    Mx              = (float*) data_obj["Mx"];
-    Rho             = (float*) data_obj["Rho"];
-    T1              = (float*) data_obj["T1"];
-    T2              = (float*) data_obj["T2"];
-    SpinNum         = (int*)   data_obj["xSize"] * data_obj["ySize"];
-    TypeNum         = (int*) 1;
-
-/*DoScanAtGPU.cu(140): error: expression must have arithmetic or unscoped enum type
-      dWRnd = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"] * SpinNum * TypeNum
-*/
-
-    /*VMag*/
-    dB0             = (float*)( data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
-    dWRnd           = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"] * SpinNum * TypeNum);
-    Gzgrid          = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
-    Gygrid          = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
-    Gxgrid          = (float*) (data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
-    
-    /*VCoi*/
-    TxCoilmg        = (float*) 0;
-    TxCoilpe        = (float*) 0;
-    RxCoilx         = (float*) 0;
-    RxCoily         = (float*) 0;
-    TxCoilNum       = (int*)   0;
-    RxCoilNum       = (int*)   0;
-	TxCoilDefault   = (double*) 1;
-    RxCoilDefault   = (double*) 1;
-     
-    /*VCtl*/
-    CS              = (double*) 0;
-    TRNum  			= (int*)    0;
-    MaxThreadNum    = (int*)    0;
-	ActiveThreadNum = (int*)    0;
-	GPUIndex		= (int*)    0;
-    
-    /*VSeq*/
-    utsLine         = (double*) 0;
-    tsLine          = (double*) 0;
-    rfAmpLine       = (double*) 0;
-    rfPhaseLine     = (double*) 0;
-    rfFreqLine      = (double*) 0;
-    rfCoilLine      = (double*) 0;
-    GzAmpLine       = (double*) 0;
-    GyAmpLine       = (double*) 0;
-    GxAmpLine       = (double*) 0;
-    ADCLine         = (double*) 0;
-    ExtLine         = (double*) 0;
-    flagsLine       = (double*) 0;
-    
-    
-    MaxStep         = 0;
-    MaxutsStep      = 0;
-    MaxrfStep       = 0;
-    MaxGzStep       = 0;
-    MaxGyStep       = 0;
-    MaxGxStep       = 0;
-	
-    /*VVar*/
-	t               = (double*) 0;
-    dt              = (double*) 0;
-    rfAmp           = (double*) 0;
-    rfPhase         = (double*) 0;
-    rfFreq          = (double*) 0;
-    rfCoil          = (double*) 0;
-    rfRef           = (double*) 0;
-    GzAmp           = (double*) 0;
-    GyAmp           = (double*) 0;
-    GxAmp           = (double*) 0;
-    ADC             = (double*) 0;
-    Ext             = (double*) 0;
-    KzTmp           = (double*) 0;
-    KyTmp           = (double*) 0;
-    KxTmp           = (double*) 0;
-	gpuFetch     	= (double*) 0;
-    utsi            = (int*)    0;
-    rfi             = (int*)    0;
-    Gzi             = (int*)    0;
-    Gyi             = (int*)    0;
-    Gxi             = (int*)    0;
-    ADCi            = (int*)	0;
-    Exti            = (int*)    0;
-    TRCount         = (int*)    0;
-	
-    /*VSig*/ 
-	Sy              = (double*) 0;
-    Sx              = (double*) 0;
-    Kz              = (double*) 0;
-    Ky              = (double*) 0;
-    Kx              = (double*) 0;
-    SignalNum       = (int*)    0;
-    
 /* get size of spin matrix */
     SpinMxDimNum    		= 3;
-    /*SpinMxDims      		= (mwSize*) mxCalloc(SpinMxDimNum, sizeof(mwSize));*/
-
     size_t *SpinMxDims = (size_t*) malloc(SpinNum * sizeof(size_t));
-    SpinMxDims[0] = (mwSize*) data_obj["xSize"];
-    SpinMxDims[1] = (mwSize*) data_obj["ySize"]; 
-    SpinMxDims[2] = (mwSize*) data_obj["zSize"];
+    SpinMxDims[0] = (mwSize*) (int)data_obj["xSize"];
+    SpinMxDims[1] = (mwSize*) (int)data_obj["ySize"]; 
+    SpinMxDims[2] = (mwSize*) (int)data_obj["zSize"];
     /*Might be y by x by z*/
 	
     SpinMxRowNum    		= SpinMxDims[0];
@@ -261,6 +162,201 @@ int main(){
 		}
 	}
 	i=0;
+
+/* assign pointers */
+    /*VObj*/
+    Gyro             = new double;
+        *Gryo = 2.67e08double
+    TypeNum         = new int;
+        *TypeNum = 1;
+    SpinNum         = new int;
+        *SpinNum         =   ((int)data_obj["xSize"] * (int)data_obj["ySize"]);
+        std::vector<float> Mz = data_obj["Mz"].get<std::vector<float>>();
+        std::vector<float> My = data_obj["My"].get<std::vector<float>>();
+        std::vector<float> Mx = data_obj["Mx"].get<std::vector<float>>();
+        std::vector<float> Rho = data_obj["Rho"].get<std::vector<float>>();
+        std::vector<float> T1 = data_obj["T1"].get<std::vector<float>>();
+        std::vector<float> T2 = data_obj["T2"].get<std::vector<float>>();
+    
+    
+    
+    /*VMag*/
+    dB0 = new float[SpinMxNum * SpinMxSliceNum]; /*Initialized as 0*/
+    dWRnd = new float[SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum)];
+    Gzgrid = new float[SpinMxNum * SpinMxSliceNum];
+    Gygrid = new float[SpinMxNum * SpinMxSliceNum];
+    Gxgrid = new float[SpinMxNum * SpinMxSliceNum];
+    
+    /*VCoi*/
+    TxCoilmg        = new float[SpinMxNum * SpinMxSliceNum * (*TxCoilNum)];
+    TxCoilpe        = new float[SpinMxNum * SpinMxSliceNum * (*TxCoilNum)];
+    RxCoilx         = new float[SpinMxNum * SpinMxSliceNum * (*RxCoilNum)];
+    RxCoily         = new float[SpinMxNum * SpinMxSliceNum * (*RxCoilNum)];
+    TxCoilNum       = new int;
+    *TxCoilNum      = 1; /* default value */
+    RxCoilNum       = new int;
+    *RxCoilNum      = 1; /* default value */
+	TxCoilDefault   = new double;
+    *TxCoilDefault = 1.0;
+    RxCoilDefault   = new double;
+    *RxCoilDefault = 1.0;
+     
+    /*VCtl*/
+    CS              = new double[*TypeNum]; 
+    *CS[0] = 0.0; /* default value */
+    TRNum  			= new int;
+    *TRNum          = 1; /* default value */
+    MaxThreadNum    = new int;
+    *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
+	ActiveThreadNum = new int;
+    *ActiveThreadNum = *MaxThreadNum; /* default value */
+	GPUIndex		= new int;
+    *GPUIndex       = 0; /* default value */
+    
+    /*VSeq*/
+    utsLine         = new double[MaxutsStep];
+    tsLine          = new double[MaxStep];
+    rfAmpLine       = new double[MaxrfStep];
+    rfPhaseLine     = new double[MaxrfStep];
+    rfFreqLine      = new double[MaxrfStep];
+    rfCoilLine      = new double[MaxrfStep];
+    GzAmpLine       = new double[MaxGzStep];
+    GyAmpLine       = new double[MaxGyStep];
+    GxAmpLine       = new double[MaxGxStep];
+    ADCLine         = new double[MaxStep];
+    ExtLine         = new double[MaxStep];
+    flagsLine       = new double[MaxStep * 6];
+    
+    
+    MaxStep         = 2500;
+    MaxutsStep      = MaxStep * 10;
+    MaxrfStep       = 2500; /*Just fill in the zeros*/
+    MaxGzStep       = 2500;
+    MaxGyStep       = 2500;
+    MaxGxStep       = 2500;
+	
+    /*VVar*/
+	t               = new double;
+    *t              =  0;
+    dt              = new double;
+    *dt             = 20e-6; /* 20 us */
+    rfAmp           = new double;
+    *rfAmp          =  0;
+    rfPhase         = new double;
+    *rfPhase        =  0;
+    rfFreq          = new double;
+    *rfFreq         =  0;
+    rfCoil          = new double;
+    *rfCoil         =  1
+    rfRef           = new double;
+    *rfRef          =  0;
+    GzAmp           = new double;
+    GzAmp           =  0;
+    GyAmp           = new double;
+    GyAmp           =  0;
+    GxAmp           = new double;
+    GxAmp           =  0;
+    ADC             = new double;
+    *ADC            =  0;
+    Ext             = new double;
+    *Ext            =  0;
+    KzTmp           = new double;
+    *KzTmp          = 0;
+    KyTmp           = new double;
+    *KyTmp          =  0;
+    KxTmp           = new double;
+    *KxTmp          = 0;
+	gpuFetch     	= new double;
+    *gpuFetch       = 0;
+    utsi            = new int;
+    *utsi           =  0;
+    rfi             = new int;
+    *rfi            =  0;
+    Gzi             = new int;
+    *Gzi            =  0;
+    Gyi             = new int;
+    *Gyi            =  0;
+    Gxi             = new int;
+    *Gxi            = 0;
+    ADCi            = new int;
+    *ADCi           =  0;
+    Exti            = new int;
+    *Exti           =  0;
+    TRCount         = new int;
+    *TRCount        =  0;
+	
+    /*VSig*/ 
+	Sy              = new double[SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum)];
+    Sx              = new double[SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum)];
+    Kz              = new double;
+    *Kz              = 0;
+    Ky              = new double;
+    *Ky              = 0;
+    Kx              = new double;
+    *Kx              = 0;
+    SignalNum       = new int;
+    *SignalNum      = 0;
+
+    /*Initialize Arrays: dB0, dWRn, Gzgrid, Gygrid, Gxgrid
+    TxCoilmg, TxCoilpe, RxCoilx, RxCoily, TxCoilNum,
+    CS,
+    utsLine, tsLine, rfAmpLine, rfPhaseLine, rfFreqLine, rfCoilLine, GzAmpLine, GyAmpLine, GxAmpLine, ADCLine, ExtLine, flagsLine  
+    Sy, Sx, Kx, Ky, Kz
+    */
+    int xSiz = (int)data_obj["xSize"];
+    int ySiz = (int)data_obj["ySize"];
+
+
+   for (int x = 0; x < xSiz; x++){
+    for (int y = 0; y < ySiz; y++){
+    for (int b = 0; b < SpinMxSliceNum; b++){
+            *dB0[b * xSiz * ySiz + y * xSiz + x] = 0.0;
+            *Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((z-SpinMxSliceNum)/2) * 0.25/SpinMxSliceNum; /*0.2/size*/
+            *Gygrid[b * xSiz * ySiz + y * xSiz + x] = (y-ySiz/2) * 0.25/ySiz; /*0.2/size*/
+            *Gxgrid[b * xSiz * ySiz + y * xSiz + x] = (x-xSiz/2) * 0.25/xSiz; /*0.2/size*/
+
+            for (int d = 0; d < *SpinNum; d++){
+                int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
+                *dWrnd[idx] = 0;
+            }
+
+            for (int e = 0; e < *TxCoilNum; e++){
+                int idx = e * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
+                *TxCoilmg[idx] = 0.0;
+                *TxCoilpe[idx] = 0.0;
+            }
+
+            for (int f = 0; f < *RxCoilNum; f++){
+                int idx = f * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
+                *RxCoilx[idx] = 0.0;
+                *RxCoily[idx] = 0.0;
+            }
+            
+     }
+    }
+   }
+
+
+ /*Initialize Sequence */  
+
+for (int i = 0; i < MaxStep; i++){
+    tsLine[i] = *dt * i;
+    utsLine[i] = *dt * i ;
+    rfAmpLine[i] = 0.0;
+    rfPhaseLine[i] = 3.14f;  
+    rfFreqLine[i] = 0;
+    rfCoilLine[i] = 1.0f;
+    GzAmpLine[i] = 0.0;
+    GyAmpLine[i] = 0.0;
+    GxAmpLine[i] = 0.0;
+    ADCLine[i] = 0.0;
+    ExtLine[i] = 0.0;
+    flagsLine[i * 6] = 0.0; // rf pulse flag
+}
+
+
+    
+    
 	
 /* allocate device memory for matrices */
     float *d_Mz = NULL;
@@ -795,61 +891,25 @@ int main(){
 	// cudaDeviceReset();
     return 0;
 }    
+/*
+DoScanAtGPU.cu(75): error: incomplete type is not allowed                                                                                                                                                                                          std::ifstream inputFile("/root/output/labeledSpaceJSON/1.pkl.json");                                                                                                                                                                                       ^
 
-/*DoScanAtGPU.cu(75): warning #951-D: return type of function "main" must be "int"                                          void main(){                                                                                                                 ^
-Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
-DoScanAtGPU.cu(76): error: incomplete type is not allowed                                                                     std::ifstream inputFile("/root/output/labeledSpaceJSON/1.pkl.json");                                                                  ^
-DoScanAtGPU.cu(84): error: identifier "mwSize" is undefined                                                                   const mwSize *SpinMxDims;                                                                                                     ^
-DoScanAtGPU.cu(112): error: "j" has already been declared in the current scope                                                int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=0, SignalLen=0, SBufferLen=0, Typei, RxCoili, TxCoili;                   ^
-DoScanAtGPU.cu(117): error: identifier "Ipp32f" is undefined                                                                  Ipp32f buffer, *Sxbuffer, *Sybuffer;                                                                                    ^
-DoScanAtGPU.cu(128): error: invalid type conversion                                                                          Gyro = (float*) 2.67e08;                                                                                                       ^                                                                                                                                                                                                                                   DoScanAtGPU.cu(135): error: expression must have arithmetic or unscoped enum type                                             SpinNum = (int*) j["xSize"] * j["ySize"];                                                                                         ^                                                                                                                                                                                                                               DoScanAtGPU.cu(139): error: expression must have arithmetic or unscoped enum type                                             dB0 = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];                                                            ^                                                                                                                                                                                                                                   DoScanAtGPU.cu(139): error: expression must have arithmetic or unscoped enum type                                             dB0 = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"];                                                                                  ^                                                                                                                                                                                                             DoScanAtGPU.cu(140): error: expression must have arithmetic or unscoped enum type                                             dWRnd = (float*) j["xSize"] * (int*) j["ySize"] * (int*) j["zSize"] * SpinNum * TypeNum;             
-                                                                                                                        
-                                     ^
+DoScanAtGPU.cu(83): error: identifier "mwSize" is undefined
+      const mwSize *SpinMxDims;
+            ^
 
-DoScanAtGPU.cu(152): error: a value of type "int" cannot be assigned to an entity of type "double *"
-   TxCoilDefault = 1;
-                 ^
 
-DoScanAtGPU.cu(153): error: a value of type "int" cannot be assigned to an entity of type "double *"
-      RxCoilDefault = 1;
-                    ^
+DoScanAtGPU.cu(142): error: no operator "*" matches these operands                                                                                                                                                                                       operand types are: nlohmann::json_abi_v3_12_0::basic_json<std::map, std::vector, std::string, bool, int64_t, uint64_t, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vector<uint8_t, std::allocator<ui
+nt8_t>>, void> * nlohmann::json_abi_v3_12_0::basic_json<std::map, std::vector, std::string, bool, int64_t, uint64_t, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vector<uint8_t, std::allocator<uint8_t>>, void>      dB0 = (float*)( data_obj["xSize"] * data_obj["ySize"] * data_obj["zSize"]);
 
-DoScanAtGPU.cu(222): error: "SpinMxDims" has already been declared in the current scope
-      size_t *SpinMxDims = (size_t*) malloc(N * sizeof(size_t));                                                                                                                        
-                                                                                                                        
-      
-      DoScanAtGPU.cu(222): error: identifier "N" is undefined
-      size_t *SpinMxDims = (size_t*) malloc(N * sizeof(size_t));
-                                            ^
+    /usr/include/c++/11/valarray(1188): note #3327-D: candidate function template "std::operator*(const std::valarray<_Tp>::value_type &, const std::valarray<_Tp> &)" failed deduction
+    template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const valarray<_Tp>& __w) { do { if (__builtin_is_constant
+    _evaluated() && !bool(__v.size() == __w.size())) __builtin_unreachable(); } while (false); typedef _BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<
+    _Closure, _Rt>(_Closure(__v, __w)); } template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray,_Constant, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const typename valarray
+    <_Tp>::value_type& __t) { typedef _BinClos<__multiplies, _ValArray, _Constant, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__v, __t)); } template<typename _Tp> inli
+    ne _Expr<_BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const typename valarray<_Tp>::value_type& __t, const valarray<_Tp>& __v) { typedef _BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__t, __v)); }
 
-DoScanAtGPU.cu(223): error: identifier "mwSize" is undefined
-      SpinMxDims[0] = (mwSize) j["xSize"];
-                       ^
+    /usr/include/c++/11/valarray(1188): note #3327-D: candidate function template "std::operator*(const std::valarray<_Tp> &, const std::valarray<_Tp> &)" failed deduction                                                                        template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const valarray<_Tp>& __w) { do { if (__builtin_is_constant_evaluated() && !bool(__v.size() == __w.size())) __builtin_unreachable(); } while (false); typedef _BinClos<__multiplies, _ValArray, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__v, __w)); } template<typename _Tp> inline _Expr<_BinClos<__multiplies, _ValArray,_Constant, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const valarray<_Tp>& __v, const typename valarray<_Tp>::value_type& __t) { typedef _BinClos<__multiplies, _ValArray, _Constant, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__v, __t)); } template<typename _Tp> inline _Expr<_BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp>, typename __fun<__multiplies, _Tp>::result_type> operator *(const typename valarray<_Tp>::value_type& __t, const valarray<_Tp>& __v) { typedef _BinClos<__multiplies, _Constant, _ValArray, _Tp, _Tp> _Closure; typedef typename __fun<__multiplies, _Tp>::result_type _Rt; return _Expr<_Closure, _Rt>(_Closure(__t, __v)); }
 
-DoScanAtGPU.cu(223): error: expected a ";"
-      SpinMxDims[0] = (mwSize) j["xSize"];
-                               ^
-
-DoScanAtGPU.cu(224): error: expected a ";"
-      SpinMxDims[1] = (mwSize) j["ySize"];
-                               ^
-
-DoScanAtGPU.cu(225): error: expected a ";"
-      SpinMxDims[2] = (mwSize) j["zSize"];
-                               ^
-
-DoScanAtGPU.cu(332): error: identifier "ippsMalloc_32f" is undefined
-   Sxbuffer = ippsMalloc_32f(SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum));
-              ^
-
-DoScanAtGPU.cu(342): error: identifier "mexPrintf" is undefined
-   mexPrintf("------ Current active GPU device : %s ------\n", &deviceProp.name[0]);
-   ^
-
-DoScanAtGPU.cu(505): error: identifier "ippsFree" is undefined
-        ippsFree(Sxbuffer);
-        ^
-
-DoScanAtGPU.cu(555): error: identifier "ippAlgHintFast" is undefined
-           ippsSum_32f(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) + j*SpinMxNum], SpinMxNum, &buffer, ippAlgHintFast);                                                                                                                                                                                                                                ^                                                                                                                                                                                                               DoScanAtGPU.cu(555): error: identifier "ippsSum_32f" is undefined                                                                  ippsSum_32f(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) + j$
-      */
+    /usr/include/c++/11/bits/valarray_after.h(407): note #3327-D: candidate function template "std::operator*(const std::valarray<_Dom::value_type> &, const std::_Expr<_Dom, _Dom::value_type> &)" failed deduction                                   template<class _Dom1, class _Dom2> inline _Expr<_BinClos<struct std::__multiplies, _Expr, 
+    _Expr, _Dom1, _Dom2>, typename __fun<struct std::__multiplies, typename _Dom1::value_type>::result_type> operator *(const _Expr<_Dom1, typename _Dom1::value_type>& __v, const _Expr<_Dom2, typename _Dom2::value_type>& __w) { typedef typename _Dom1::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Expr, _Expr, _Dom1, _Dom2> _Closure; return _Expr<_Closure, _Value>(_Closure(__v(), __w())); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _Expr, _Constant, _Dom, typename _Dom::value_type>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const _Expr<_Dom, typename _Dom::value_type>& __v, const typename _Dom::value_type& __t) { typedef typename _Dom::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Expr, _Constant, _Dom, _Arg> _Closure; return _Expr<_Closure, _Value>(_Closure(__v(), __t)); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _Constant, _Expr, typename _Dom::value_type, _Dom>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const typename _Dom::value_type& __t, const _Expr<_Dom, typename _Dom::value_type>& __v) { typedef typename _Dom::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Constant, _Expr, _Arg, _Dom> _Closure; return _Expr<_Closure, _Value>(_Closure(__t, __v())); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _Expr, _ValArray, _Dom, typename _Dom::value_type>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const _Expr<_Dom,typename _Dom::value_type>& __e, const valarray<typename _Dom::value_type>& __v) { typedef typename _Dom::value_type _Arg; typedef typename __fun<struct std::__multiplies, _Arg>::result_type _Value; typedef _BinClos<struct std::__multiplies, _Expr, _ValArray, _Dom, _Arg> _Closure; return _Expr<_Closure, _Value>(_Closure(__e(), __v)); } template<class _Dom> inline _Expr<_BinClos<struct std::__multiplies, _ValArray, _Expr, typename _Dom::value_type, _Dom>, typename __fun<struct std::__multiplies, typename _Dom::value_type>::result_type> operator *(const valarray<typename _Dom::value_type>& __v, const _Expr<_Dom, typename _Dom::value_type>& __e) { typedef typename _Dom::value_type _Tp; typedef typename __fun<struct std::__multiplies, _Tp>::result_type _Value; typedef _BinClos<struct std::__multiplies, _ValArray, _Expr, _Tp, _Dom> _Closure; return _Expr<_Closure, _Value>(_Closure(__v, __e ())); }
