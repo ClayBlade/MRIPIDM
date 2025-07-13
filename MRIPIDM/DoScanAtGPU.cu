@@ -85,7 +85,7 @@ int main(){
 /* pointers for VObj */
     int SpinMxNum, SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, SpinMxDimNum;
     size_t *SpinMxDims;
-	float *Mz, *My, *Mx, *Rho, *T1, *T2;
+
 
 /* pointers for VMag */
     float *dB0, *dWRnd, *Gzgrid, *Gygrid, *Gxgrid;
@@ -128,7 +128,7 @@ int main(){
 /* assign pointers */
     /*VObj*/
     double* Gyro             = new double;
-        *Gryo = 2.67e08double
+        *Gyro = 2.67e08double
     TypeNum         = new int;
         *TypeNum = 1;
     SpinNum         = new int;
