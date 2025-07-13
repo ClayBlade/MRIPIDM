@@ -19,11 +19,13 @@
 /* Intel IPP header */
 #ifdef IPP
 #include <ipps.h>
+#include <ippdefs.h> // For type definitions like Fw32f
 #endif
 /* AMD Framewave header */
 #ifdef FW
-#include <fwSignal.h>
 #include <fwBase.h>
+#include <fwSignal.h>
+
 #define Fw32f
 #define fwAlgHintFast
 #define fwsMalloc_32f
@@ -81,7 +83,6 @@ int main(){
     inputFile >> data_obj; 
 
 /* pointers for VObj */
-    double *Gyro;
     int SpinMxNum, SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, SpinMxDimNum;
     size_t *SpinMxDims;
 	float *Mz, *My, *Mx, *Rho, *T1, *T2;
@@ -126,7 +127,7 @@ int main(){
 
 /* assign pointers */
     /*VObj*/
-    Gyro             = new double;
+    double* Gyro             = new double;
         *Gryo = 2.67e08double
     TypeNum         = new int;
         *TypeNum = 1;
