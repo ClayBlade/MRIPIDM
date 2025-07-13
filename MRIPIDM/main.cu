@@ -28,7 +28,10 @@ int main() {
     inputFile >> j; 
 
     std::vector<float> g = j["Mz"].get<std::vector<float>>();
-    std::cout << "Gyro: " << g << std::endl;
+    for (float val : g) {
+    std::cout << val << " ";
+}
+    std::cout << std::endl;
 
     SpinMxX = 0;
     SpinMxY = 0;
