@@ -147,7 +147,7 @@ int main(){
 
 /* get size of spin matrix */
     SpinMxDimNum    		= 3;
-    size_t* SpinMxDims = size_t* malloc(*SpinNum * sizeof(size_t));
+    size_t* SpinMxDims = (size_t*) malloc(*SpinNum * sizeof(size_t));
     SpinMxDims[0] = (int)data_obj["xSize"];
     SpinMxDims[1] = (int)data_obj["ySize"]; 
     SpinMxDims[2] = (int)data_obj["zSize"];
@@ -319,13 +319,13 @@ int main(){
     for (int y = 0; y < ySiz; y++){
     for (int b = 0; b < SpinMxSliceNum; b++){
             dB0[b * xSiz * ySiz + y * xSiz + x] = 0.0;
-            Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((z-SpinMxSliceNum)/2) * 0.25/SpinMxSliceNum; /*0.2/size*/
+            Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((b-SpinMxSliceNum)/2) * 0.25/SpinMxSliceNum; /*0.2/size*/
             Gygrid[b * xSiz * ySiz + y * xSiz + x] = (y-ySiz/2) * 0.25/ySiz; /*0.2/size*/
             Gxgrid[b * xSiz * ySiz + y * xSiz + x] = (x-xSiz/2) * 0.25/xSiz; /*0.2/size*/
 
             for (int d = 0; d < *SpinNum; d++){
                 int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
-                dWrnd[idx] = 0;
+                dWRnd[idx] = 0;
             }
 
             for (int e = 0; e < *TxCoilNum; e++){
