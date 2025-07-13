@@ -18,7 +18,7 @@
 #include <omp.h>
 /* Intel IPP header */
 #ifdef IPP
-#include <ipp.h>
+#include <ipps.h>
 #endif
 /* AMD Framewave header */
 #ifdef FW
@@ -83,7 +83,7 @@ int main(){
 /* pointers for VObj */
     double *Gyro;
     int SpinMxNum, SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, SpinMxDimNum;
-    size_t mwSize *SpinMxDims;
+    size_t *SpinMxDims;
 	float *Mz, *My, *Mx, *Rho, *T1, *T2;
 
 /* pointers for VMag */
