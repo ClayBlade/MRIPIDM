@@ -84,7 +84,7 @@ int main(){
 
 /* pointers for VObj */
     int SpinMxNum, SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, SpinMxDimNum;
-    size_t *SpinMxDims;
+
 
 
 /* pointers for VMag */
@@ -113,7 +113,7 @@ int main(){
 	
 /* loop control */
     int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=0, SignalLen=0, SBufferLen=0, Typei, RxCoili, TxCoili;
-    int MaxStep, MaxutsStep, MaxrfStep, MaxGzStep, MaxGyStep, MaxGxStep, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, *SignalNum;
+    int MaxStep, MaxutsStep, MaxrfStep, MaxGzStep, MaxGyStep, MaxGxStep, *SpinNum, *TxCoilNum, *RxCoilNum, *SignalNum;
     double flag[6];
     
 /* IPP or FW buffer */
@@ -140,13 +140,25 @@ int main(){
         std::vector<float> T1 = data_obj["T1"].get<std::vector<float>>();
         std::vector<float> T2 = data_obj["T2"].get<std::vector<float>>();
 
+/*VCtl*/
+    CS              = new double[*TypeNum]; 
+    *CS[0] = 0.0; /* default value */
+    TRNum  			= new int;
+    *TRNum          = 1; /* default value */
+    MaxThreadNum    = new int;
+    *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
+	ActiveThreadNum = new int;
+    *ActiveThreadNum = *MaxThreadNum; /* default value */
+	GPUIndex		= new int;
+    *GPUIndex       = 0; /* default value */
+
 
 /* get size of spin matrix */
     SpinMxDimNum    		= 3;
-    *SpinMxDims = (size_t*) malloc(*SpinNum * sizeof(size_t));
-    SpinMxDims[0] = (size_t*) (int)data_obj["xSize"];
-    SpinMxDims[1] = (size_t*) (int)data_obj["ySize"]; 
-    SpinMxDims[2] = (size_t*) (int)data_obj["zSize"];
+    size_t* SpinMxDims = malloc(*SpinNum * sizeof(size_t));
+    SpinMxDims[0] = (int)data_obj["xSize"];
+    SpinMxDims[1] = (int)data_obj["ySize"]; 
+    SpinMxDims[2] = (int)data_obj["zSize"];
     /*Might be y by x by z*/
 	
     SpinMxRowNum    		= SpinMxDims[0];
@@ -207,17 +219,7 @@ int main(){
     RxCoilDefault   = new double;
     *RxCoilDefault = 1.0;
      
-    /*VCtl*/
-    CS              = new double[*TypeNum]; 
-    *CS[0] = 0.0; /* default value */
-    TRNum  			= new int;
-    *TRNum          = 1; /* default value */
-    MaxThreadNum    = new int;
-    *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
-	ActiveThreadNum = new int;
-    *ActiveThreadNum = *MaxThreadNum; /* default value */
-	GPUIndex		= new int;
-    *GPUIndex       = 0; /* default value */
+
     
     /*VSeq*/
     utsLine         = new double[MaxutsStep];
