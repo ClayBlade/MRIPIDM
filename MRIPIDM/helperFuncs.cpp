@@ -38,6 +38,8 @@
 #define ippsCos_32f_A24         fwsCos_32f_A24
 #define ippsPolarToCart_32f     fwsPolarToCart_32f
 #define ippsCartToPolar_32f     fwsCartToPolar_32f
+#else 
+    #include <ipps.h>
 #endif
 
 
