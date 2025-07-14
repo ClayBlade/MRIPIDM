@@ -6,7 +6,7 @@
 #ifdef FW
 #include <fwBase.h>
 #include <fwSignal.h>
-
+#include <ipps.h>
 
 
 #define Ipp32f                  Fw32f                 
