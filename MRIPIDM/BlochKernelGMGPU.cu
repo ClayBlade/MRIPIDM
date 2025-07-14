@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
-/* MEX header */
-#include <mex.h> 
 #include "matrix.h"
 /* nVIDIA CUDA header */
 #include <cuda.h> 
