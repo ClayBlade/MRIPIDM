@@ -3,10 +3,10 @@
 
 
 
-#ifndef FW
+#ifdef FW
 #include <fwBase.h>
 #include <fwSignal.h>
-#include <ipps.h>
+
 
 
 #define Ipp32f                  Fw32f                 
@@ -39,7 +39,7 @@
 #define ippsPolarToCart_32f     fwsPolarToCart_32f
 #define ippsCartToPolar_32f     fwsCartToPolar_32f
 #endif
-
+#include <ipps.h>
 
 extern "C" float* ippsMalloc_32fHF(int len) {
     return ippsMalloc_32f(len);
