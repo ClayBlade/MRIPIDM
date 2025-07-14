@@ -2,7 +2,7 @@
 
 #ifndef HELPERFUNCS_H
 #define HELPERFUNCS_H
-
+#include <ipps.h>
 // Dummy placeholder to avoid compilation error
 
  float* ippsMalloc_32fHF(int len) ;
@@ -15,6 +15,4 @@
 #ifdef __CUDACC__  // If compiling with nvcc (CUDA)
     typedef int IppAlgHint;
     #define ippAlgHintFast 0
-#else
-    #include <ipps.h>
 #endif
