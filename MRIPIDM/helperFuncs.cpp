@@ -1,9 +1,9 @@
+#pragma once
 #include <iostream> 
 //ipps
 
 
 
-#ifdef FW
 #include <fwBase.h>
 #include <fwSignal.h>
 #include <ipps.h>
@@ -38,7 +38,7 @@
 #define ippsCos_32f_A24         fwsCos_32f_A24
 #define ippsPolarToCart_32f     fwsPolarToCart_32f
 #define ippsCartToPolar_32f     fwsCartToPolar_32f
-#endif
+
 
 extern "C" float* ippsMalloc_32fHF(int len) {
     return ippsMalloc_32f(len);
