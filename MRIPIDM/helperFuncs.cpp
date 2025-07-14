@@ -1,12 +1,7 @@
-#include <iostream>
-
+#include <iostream> 
+#include <helperFuncs.h>
 //ipps
-#ifdef __CUDACC__  // If compiling with nvcc (CUDA)
-    typedef int IppAlgHint;
-    #define ippAlgHintFast 0
-#else
-    #include <ipps.h>
-#endif
+
 
 
 #ifdef FW
