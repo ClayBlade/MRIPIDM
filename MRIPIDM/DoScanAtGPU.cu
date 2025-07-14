@@ -331,7 +331,8 @@ for (int i = 0; i < MaxStep; i++){
     flagsLine[i * 6] = 0.0; // rf pulse flag
 }
 
-// typedef int IppAlgHint;
+typedef int IppAlgHint;
+IppaAlgHint ippAlgHint = ippAlgHintFast; // Use fast algorithm hint for IPP functions
     
     
 	
@@ -626,9 +627,9 @@ for (int i = 0; i < MaxStep; i++){
 									p_Sx = Sx + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 									p_Sy = Sy + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 								
-									ippsSum_32fHF(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, IppAlgHint);
+									ippsSum_32fHF(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHint);
 									*p_Sx = (double)buffer;
-									ippsSum_32fHF(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, IppAlgHint);
+									ippsSum_32fHF(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHint);
 									*p_Sy = (double)buffer;
 								
 								}
@@ -818,9 +819,9 @@ for (int i = 0; i < MaxStep; i++){
 								p_Sx = Sx + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 								p_Sy = Sy + (Typei*(*RxCoilNum)*(*SignalNum)+RxCoili*(*SignalNum)+s);
 							
-								ippsSum_32fHF(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, IppAlgHint);
+								ippsSum_32fHF(&Sxbuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHint);
 								*p_Sx = (double)buffer;
-								ippsSum_32fHF(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, IppAlgHint);
+								ippsSum_32fHF(&Sybuffer[Typei * (SpinMxNum * SignalLen * (*RxCoilNum)) + RxCoili * (SpinMxNum * SignalLen) +  j*SpinMxNum], SpinMxNum, &buffer, ippAlgHint);
 								*p_Sy = (double)buffer;
 							
 							}
