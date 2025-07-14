@@ -1,7 +1,6 @@
 
 
-#ifndef HELPERFUNCS_H
-#define HELPERFUNCS_H
+#pragma once
 
 #ifdef __CUDACC__  // If compiling with nvcc (CUDA)
     typedef int IppAlgHint;
