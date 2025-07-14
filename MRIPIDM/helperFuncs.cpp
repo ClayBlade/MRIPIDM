@@ -54,7 +54,7 @@ extern "C" void ippsZero_64fHF(double* ptr, int len) {
     ippsZero_64f(ptr, len);
 }
 extern "C" void ippsSum_32fHF(const float* src, int len, float* sum) {
-    ippsSum_32f(src, len, sum);
+    ippsSum_32f(src, len, sum, ippAlgHintFast);
 }
 
 
