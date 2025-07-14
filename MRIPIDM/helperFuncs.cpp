@@ -1,9 +1,9 @@
-#pragma once
 #include <iostream> 
 //ipps
 
 
 
+#define FW
 #include <fwBase.h>
 #include <fwSignal.h>
 #include <ipps.h>
