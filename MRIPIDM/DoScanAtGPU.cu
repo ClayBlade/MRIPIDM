@@ -81,7 +81,7 @@ int main(){
 	double *p_Sx, *p_Sy;
 	
 /* loop control */
-    int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=0, SignalLen=0, SBufferLen=0, Typei, RxCoili, TxCoili;
+    int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=1, SignalLen=1, SBufferLen=0, Typei, RxCoili, TxCoili;
     int MaxStep, MaxutsStep, MaxrfStep, MaxGzStep, MaxGyStep, MaxGxStep, *SpinNum, *TxCoilNum, *RxCoilNum, *SignalNum;
     double flag[6];
     
@@ -175,10 +175,6 @@ int main(){
     Gxgrid = new float[SpinMxNum * SpinMxSliceNum];
     
     /*VCoi*/
-    TxCoilmg        = new float[SpinMxNum * SpinMxSliceNum * (*TxCoilNum)];
-    TxCoilpe        = new float[SpinMxNum * SpinMxSliceNum * (*TxCoilNum)];
-    RxCoilx         = new float[SpinMxNum * SpinMxSliceNum * (*RxCoilNum)];
-    RxCoily         = new float[SpinMxNum * SpinMxSliceNum * (*RxCoilNum)];
     TxCoilNum       = new int;
     *TxCoilNum      = 1; /* default value */
     RxCoilNum       = new int;
@@ -187,9 +183,20 @@ int main(){
     *TxCoilDefault = 1.0;
     RxCoilDefault   = new double;
     *RxCoilDefault = 1.0;
+    TxCoilmg        = new float[SpinMxNum * SpinMxSliceNum * (*TxCoilNum)];
+    TxCoilpe        = new float[SpinMxNum * SpinMxSliceNum * (*TxCoilNum)];
+    RxCoilx         = new float[SpinMxNum * SpinMxSliceNum * (*RxCoilNum)];
+    RxCoily         = new float[SpinMxNum * SpinMxSliceNum * (*RxCoilNum)];
+    
      
 
-    
+    MaxStep         = 2500;
+    MaxutsStep      = MaxStep * 10;
+    MaxrfStep       = 2500; /*Just fill in the zeros*/
+    MaxGzStep       = 2500;
+    MaxGyStep       = 2500;
+    MaxGxStep       = 2500;
+
     /*VSeq*/
     utsLine         = new double[MaxutsStep];
     tsLine          = new double[MaxStep];
@@ -205,12 +212,7 @@ int main(){
     flagsLine       = new double[MaxStep * 6];
     
     
-    MaxStep         = 2500;
-    MaxutsStep      = MaxStep * 10;
-    MaxrfStep       = 2500; /*Just fill in the zeros*/
-    MaxGzStep       = 2500;
-    MaxGyStep       = 2500;
-    MaxGxStep       = 2500;
+
 	
     /*VVar*/
 	t               = new double;
@@ -265,6 +267,7 @@ int main(){
     /*VSig*/ 
 	Sy              = new double[SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum)];
     Sx              = new double[SpinMxNum * PreSignalLen * (*TypeNum) * (*RxCoilNum)];
+    
     Kz              = new double;
     *Kz              = 0;
     Ky              = new double;
