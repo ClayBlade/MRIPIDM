@@ -1,11 +1,5 @@
 /* Basic Bloch Equation Kernel running at CUDA GPU */
 
-#ifndef _BLOCH_KERNEL_GPU_H_
-#define _BLOCH_KERNEL_GPU_H_
-#include <stdio.h>
-#define PI 3.14159265358979323846f
-
-
 __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, float *d_T1, float *d_T2, float *d_Mz, float *d_My, float *d_Mx,
 					 float *d_dB0, float *d_dWRnd, float *d_Gzgrid, float *d_Gygrid, float *d_Gxgrid, float *d_TxCoilmg, float *d_TxCoilpe, float *d_RxCoilx, float *d_RxCoily, 
 					 float *d_Sig, float RxCoilDefault, float TxCoilDefault,
