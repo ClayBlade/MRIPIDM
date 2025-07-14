@@ -331,7 +331,7 @@ for (int i = 0; i < MaxStep; i++){
     flagsLine[i * 6] = 0.0; // rf pulse flag
 }
 
-typedef int IppAlgHint;
+// typedef int IppAlgHint;
     
     
 	
