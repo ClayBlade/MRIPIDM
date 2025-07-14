@@ -280,5 +280,3 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 	}
 	printf("Mx: %f, My: %f, Mz: %f\n", Mx, My, Mz);
 }
-
-#endif
