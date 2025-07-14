@@ -48,9 +48,6 @@ extern "C" float* ippsMalloc_32fHF(int len) {
 extern "C" void ippsFreeHF(float* ptr) {
     ippsFree(ptr);
 }
-extern "C" void ippsZero_64fHF(float* ptr, int len) {
-    ippsZero_64f(ptr, len);
-}
 extern "C" void ippsZero_64fHF(double* ptr, int len) {
     ippsZero_64f(ptr, len);
 }
