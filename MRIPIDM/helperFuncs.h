@@ -1,7 +1,7 @@
 #ifndef helperFuncs_H
 #define helperFuncs_H
 
-extern 'c' {
+extern "C" {
  float* ippsMalloc_32fHF(int len) ;
  void ippsFreeHF(float* ptr);
  void ippsZero_64fHF(double* ptr, int len);
