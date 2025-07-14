@@ -1,5 +1,5 @@
-#ifndef HELPERFUNCS_H
-#define HELPERFUNCS_H
+#ifndef helperFuncs_H
+#define helperFuncs_H
 
  float* ippsMalloc_32fHF(int len) ;
  void ippsFreeHF(float* ptr);
