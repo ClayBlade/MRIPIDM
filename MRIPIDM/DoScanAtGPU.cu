@@ -907,11 +907,11 @@ for (int i = 0; i < MaxStep; i++){
 	cudaFree(d_Sx);
 	cudaFree(d_Sy);
 
-    //std::cout << "Mz:" << std::endl;
-    //for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
-    //    std::cout << Mz[i] << " ";
-    //}
-    //std::cout << "Simulation completed!" << std::endl;
+    std::cout << "Mz:" << std::endl;
+    for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
+        std::cout << Mz[i] << " ";
+    }
+    std::cout << "Simulation completed!" << std::endl;
 	
 	/* reset device, may slow down subsequent startup due to initialization */
 	// cudaDeviceReset();
