@@ -13,6 +13,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 					 float *d_Sx, float *d_Sy, float rfRef, int SignalLen, int SBufferLen,
 					 int SpinMxX, int SpinMxY, int SpinMxZ, int SpinNum, int TypeNum, int TxCoilNum, int RxCoilNum, int SeqLen)
 {
+	std::cout << "BlochKernel Checkpoint" << std::endl;
     /* CUDA index */
 	unsigned tid	 = blockIdx.x * blockDim.y + threadIdx.y; /* thread id in one slice */
 	unsigned id      = threadIdx.y;                           /* thread id in one block */
