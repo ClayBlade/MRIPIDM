@@ -637,7 +637,7 @@ for (int i = 0; i < MaxStep; i++){
 										d_Sig, (float)*RxCoilDefault, (float)*TxCoilDefault,
 										d_Sx, d_Sy, (float)*rfRef, SignalLen, SBufferLen,
 										SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, g_Sig.size()/(5+3*(*TxCoilNum)));
-					cudaThreadSynchronize();
+					cudaDeviceSynchronize();  // 
 					g_Sig.clear();
 					Signalptr = Signali; /* shift signal array pointer */
 				}
@@ -835,7 +835,7 @@ for (int i = 0; i < MaxStep; i++){
 									d_Sig, (float)*RxCoilDefault, (float)*TxCoilDefault,
 									d_Sx, d_Sy, (float)*rfRef, SignalLen, SBufferLen,
 									SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, g_Sig.size()/(5+3*(*TxCoilNum)));
-				cudaThreadSynchronize(); /* stablize simulation */
+				cudaDeviceSynchronize();  
 				g_Sig.clear();
 				Signalptr = Signali;
 			}
