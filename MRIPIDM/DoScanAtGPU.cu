@@ -594,9 +594,9 @@ for (int i = 0; i < MaxStep; i++){
         *KxTmp +=(*GxAmp)*(*dt)*(*Gyro/(2*PI));
 		
         if (flag[5] != 0){
-            if (*ext !=0){
+            if (*Ext !=0){
         std::cout << "flag5" << flag[5] << std::endl;
-        std::cout << "*ext" << *Ext << std::endl;}}
+        std::cout << "ext" << *Ext << std::endl;}}
         std::cout << "checkpoint4" << std::endl;
 
         if (flag[5]==1){ /* update Ext */
