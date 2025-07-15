@@ -239,11 +239,11 @@ int main(){
     rfRef           = new double;
     *rfRef          =  0;
     GzAmp           = new double;
-    GzAmp           =  0;
+    *GzAmp           =  0;
     GyAmp           = new double;
-    GyAmp           =  0;
+    *GyAmp           =  0;
     GxAmp           = new double;
-    GxAmp           =  0;
+    *GxAmp           =  0;
     ADC             = new double;
     *ADC            =  0;
     Ext             = new double;
@@ -523,10 +523,10 @@ for (int i = 0; i < MaxStep; i++){
 		}
         std::cout << "checkpoint2.1" << std::endl;
         if (flag[1]==1 ){ /* update GzAmp */
-            if (fabs(*(GzAmpLine+ *Gzi)) <= fabs(*(GzAmpLine + (int)min(*Gzi+1, MaxGzStep-1))))
+            if (fabs(*(GzAmpLine+ *Gzi)) <= fabs(*(GzAmpLine + (int)min((*Gzi)+1, MaxGzStep-1))))
                 *GzAmp = *(GzAmpLine+ *Gzi);
             else
-                *GzAmp = *(GzAmpLine+ *Gzi+1);
+                *GzAmp = *(GzAmpLine+ (*Gzi)+1);
             
             (*Gzi)++;
         }
@@ -535,7 +535,7 @@ for (int i = 0; i < MaxStep; i++){
         std::cout << "checkpoint2.2" << std::endl;
 
         if (flag[2]==1 ){ /* update GyAmp */
-            if (fabs(*(GyAmpLine+ *Gyi)) <= fabs(*(GyAmpLine + (int)min(*Gyi+1, MaxGyStep-1))))
+            if (fabs(*(GyAmpLine + *Gyi)) <= fabs(*(GyAmpLine + (int)min(*Gyi+1, MaxGyStep-1))))
                 *GyAmp = *(GyAmpLine+ *Gyi);
             else
                 *GyAmp = *(GyAmpLine+ *Gyi+1);
