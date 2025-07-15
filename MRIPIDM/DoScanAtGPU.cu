@@ -332,17 +332,15 @@ int main(){
  /*Initialize Sequence */  
 
 for (int i = 0; i < MaxStep; i++){
-    rfAmpLine[i] = 0.0;
+    rfAmpLine[i] = 1;
     rfPhaseLine[i] = 3.14f;  
-    rfFreqLine[i] = 0;
-    rfCoilLine[i] = 0;
-    GzAmpLine[i] = 0.0;
-    GyAmpLine[i] = 0.0;
-    GxAmpLine[i] = 0.0;
-    ADCLine[i] = 0.0;
-    if (i <= 10 && i >=2){
-        ExtLine[i] = 1;
-    }
+    rfFreqLine[i] = 1;
+    rfCoilLine[i] = 1;
+    GzAmpLine[i] = 1;
+    GyAmpLine[i] = 1;
+    GxAmpLine[i] = 1;
+    ADCLine[i] = 1;
+    ExtLine[i] = 1;
     for (int j = 0; j < 10; j++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
     }
