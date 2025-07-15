@@ -116,7 +116,7 @@ int main(){
 
 /* get size of spin matrix */
     SpinMxDimNum    		= 3;
-    size_t* SpinMxDims = (size_t*) malloc(*SpinNum * sizeof(size_t));
+    size_t* SpinMxDims = (size_t*) malloc(SpinMxDimNum * sizeof(size_t));
     SpinMxDims[0] = (int)data_obj["xSize"];
     SpinMxDims[1] = (int)data_obj["ySize"]; 
     SpinMxDims[2] = (int)data_obj["zSize"];
@@ -208,7 +208,7 @@ int main(){
 
     /*VSeq*/
     utsLine         = new double[MaxutsStep];
-    tsLine          = new double[MaxStep];
+    tsLine          = new double[MaxStep * 6];
     rfAmpLine       = new double[MaxrfStep];
     rfPhaseLine     = new double[MaxrfStep];
     rfFreqLine      = new double[MaxrfStep];
@@ -332,18 +332,28 @@ int main(){
  /*Initialize Sequence */  
 
 for (int i = 0; i < MaxStep; i++){
-    tsLine[i] = *dt * i;
-    utsLine[i] = *dt * i ;
     rfAmpLine[i] = 0.0;
     rfPhaseLine[i] = 3.14f;  
     rfFreqLine[i] = 0;
-    rfCoilLine[i] = 1.0f;
+    rfCoilLine[i] = 0;
     GzAmpLine[i] = 0.0;
     GyAmpLine[i] = 0.0;
     GxAmpLine[i] = 0.0;
     ADCLine[i] = 0.0;
     ExtLine[i] = 0.0;
-    flagsLine[i * 6] = 0.0; // rf pulse flag
+    for (int j = 0; j < 10; j++){
+        utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
+    }
+    for (int j = 0; j < 6; j++){
+        tsLine[i * 6 + j] = *dt * i;
+        flagsLine[i * 6] = rfAmpLine[i];
+        flagsLine[i * 6 + 1] = GzAmpLine[i]; 
+        flagsLine[i * 6 + 2] = GyAmpLine[i];
+        flagsLine[i * 6 + 3] = GxAmpLine[i];
+        flagsLine[i * 6 + 4] = ADCLine[i];
+        flagsLine[i * 6 + 5] = ExtLine[i];
+
+    }    
 }
 
 
@@ -470,6 +480,11 @@ for (int i = 0; i < MaxStep; i++){
             }
             i++;
         }
+
+        /*tsLine contains timeline of if events happen at this timestep or not for event event
+        */
+
+
         //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
         *t 	= *(utsLine + *utsi);
