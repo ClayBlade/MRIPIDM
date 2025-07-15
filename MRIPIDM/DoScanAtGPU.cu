@@ -169,7 +169,7 @@ int main(){
 	ActiveThreadNum = new int;
     *ActiveThreadNum = *MaxThreadNum; /* default value */
     std::cout << "MaxThreadNum: " << *MaxThreadNum << std::endl;
-    std::cout << "SpinMxNum: " << *SpinMxNum << std::endl;  
+    std::cout << "SpinMxNum: " << SpinMxNum << std::endl;  
     std::cout << "SpinMxSliceNum: " << SpinMxSliceNum << std::endl;
     std::cout << "TypeNum: " << *TypeNum << std::endl;
 
