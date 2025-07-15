@@ -255,7 +255,7 @@ int main(){
     KxTmp           = new double;
     *KxTmp          = 0;
 	gpuFetch     	= new double;
-    *gpuFetch       = 0;
+    *gpuFetch       = 1;
     utsi            = new int;
     *utsi           =  0;
     rfi             = new int;
