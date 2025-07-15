@@ -431,6 +431,7 @@ for (int i = 0; i < MaxStep; i++){
 
 /* start simulator execution loop */
     while (i < MaxStep){
+        std::cout << "Processing step: " << i << std::endl;
         /* check MR sequence pulse flag */
         flag[0]=0;
         flag[1]=0;
@@ -607,7 +608,7 @@ for (int i = 0; i < MaxStep; i++){
 					/* upload GPU sequence */
 					cudaMemcpy( d_Sig, 	&g_Sig[0], 	g_Sig.size() * sizeof(float),	cudaMemcpyHostToDevice ) ;
 
-					/* call GPU kernel for spin discrete precessing */
+                    /* call GPU kernel for spin discrete precessing */
 					BlochKernelNormalGPU<<< dimGridImg, dimBlockImg, SBufferLen >>>
 										((float)*Gyro, d_CS, d_Rho, d_T1, d_T2, d_Mz, d_My, d_Mx,
 										d_dB0, d_dWRnd, d_Gzgrid, d_Gygrid, d_Gxgrid, d_TxCoilmg, d_TxCoilpe, d_RxCoilx, d_RxCoily,
@@ -879,6 +880,8 @@ for (int i = 0; i < MaxStep; i++){
     cudaFree(d_Sig);
 	cudaFree(d_Sx);
 	cudaFree(d_Sy);
+
+    std::cout << "Simulation completed!" << std::endl;
 	
 	/* reset device, may slow down subsequent startup due to initialization */
 	// cudaDeviceReset();
