@@ -597,9 +597,7 @@ for (int i = 0; i < MaxStep; i++){
         if (flag[5] != 0){
             if (*Ext !=0){
         std::cout << "flag5" << flag[5] << std::endl;
-        std::cout << "ext" << *Ext << std::endl;}}
-        if (g_sig.size() != 0){
-        std::cout << "g_sig" << g_sig.size() << std::endl;}}
+        std::cout << "ext" << *Ext << std::endl;}}}
 
         if (flag[5]==1){ /* update Ext */
             *Ext = *(ExtLine+ *Exti);
