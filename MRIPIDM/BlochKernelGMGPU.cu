@@ -1,6 +1,7 @@
 /* Basic Bloch Equation Kernel running at CUDA GPU */
 #include "BlochKernelGMGPU.h"
 #include <stdio.h>
+#include <iostream>
 
 /* nVIDIA CUDA header */
 

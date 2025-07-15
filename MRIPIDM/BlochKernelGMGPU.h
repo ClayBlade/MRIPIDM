@@ -6,7 +6,6 @@
 #ifndef PI
 #define PI 3.14159265358979323846f
 #endif
-#include <stdio.h>
 #ifndef BLOCH_KERNEL_GMGPU_H
 #define BLOCH_KERNEL_GMGPU_H
 
