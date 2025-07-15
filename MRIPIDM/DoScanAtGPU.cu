@@ -470,7 +470,7 @@ for (int i = 0; i < MaxStep; i++){
             }
             i++;
         }
-        
+        std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
         *t 	= *(utsLine + *utsi);
         *dt 	= *(utsLine + (int)min(*utsi+1, MaxutsStep-1))-*(utsLine + *utsi);
@@ -513,6 +513,7 @@ for (int i = 0; i < MaxStep; i++){
 			}
 			
         }
+        std::cout << "checkpoint2" << std::endl;
 		if (*dt > 0){
 			for (j = 0; j < *TxCoilNum; j++){
 				g_Sig.push_back((float)rfAmp[j]);
@@ -551,6 +552,8 @@ for (int i = 0; i < MaxStep; i++){
         }			
 		if (*dt > 0) g_Sig.push_back((float)*GxAmp);
         
+        std::cout << "checkpoint3" << std::endl;
+
         *ADC = 0;   /* avoid ADC overflow */
         if (flag[4]==1){ /* update ADC */
             *ADC = *(ADCLine+ *ADCi);
@@ -758,6 +761,8 @@ for (int i = 0; i < MaxStep; i++){
             }
             (*Exti)++;
         }
+
+        std::cout << "checkpoint4" << std::endl;
         
         if (flag[0]+flag[1]+flag[2]+flag[3]+flag[4]+flag[5] == 0){ /* reset VVar */
             ippsZero_64fHF(rfAmp, *TxCoilNum);
@@ -771,7 +776,7 @@ for (int i = 0; i < MaxStep; i++){
         }
         
 		/* check TR point & end of time point */
-		 if (*dt <= 0){ 
+		if (*dt <= 0){ 
 			if (g_Sig.size() !=0){
 				/* calculate signal length */
 				SignalLen = Signali-Signalptr;
@@ -816,6 +821,7 @@ for (int i = 0; i < MaxStep; i++){
 				Signalptr = Signali;
 			}
 			
+            
 			/* signal acquisition */
 			if (SignalLen>0){
 				/* get Sx, Sy buffer from GPU */
@@ -858,6 +864,7 @@ for (int i = 0; i < MaxStep; i++){
 				/*mexPrintf("TR Counts: %d of %d\n", *TRCount, *TRNum);*/
 			}
         }
+        std::cout << "checkpoint5" << std::endl;
     }
 
     /* free GPU memory */
