@@ -340,7 +340,9 @@ for (int i = 0; i < MaxStep; i++){
     GyAmpLine[i] = 0.0;
     GxAmpLine[i] = 0.0;
     ADCLine[i] = 0.0;
-    ExtLine[i] = 0.0;
+    if (i <= 10 && i >=2){
+        ExtLine[i] = 1;
+    }
     for (int j = 0; j < 10; j++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
     }
