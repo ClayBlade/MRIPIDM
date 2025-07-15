@@ -247,7 +247,7 @@ int main(){
     ADC             = new double;
     *ADC            =  0;
     Ext             = new double;
-    *Ext            =  0;
+    *Ext            =  1;
     KzTmp           = new double;
     *KzTmp          = 0;
     KyTmp           = new double;
