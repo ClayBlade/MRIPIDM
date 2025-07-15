@@ -163,7 +163,7 @@ int main(){
     CS              = new double; 
     *CS = 0.0; /* default value */
     TRNum  			= new int;
-    *TRNum          = 1; /* default value */
+    *TRNum          = 10; /* default value */
     MaxThreadNum    = new int;
     *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
 	ActiveThreadNum = new int;
