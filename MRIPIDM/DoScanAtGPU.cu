@@ -101,7 +101,7 @@ int main(){
     int* TypeNum             = new int;
         *TypeNum = 1;
     SpinNum         = new int;
-        *SpinNum         =   ((int)data_obj["xSize"] * (int)data_obj["ySize"]);
+        *SpinNum         =   1;
         std::vector<float> Mz = data_obj["Mz"].get<std::vector<float>>();
         std::vector<float> My = data_obj["My"].get<std::vector<float>>();
         std::vector<float> Mx = data_obj["Mx"].get<std::vector<float>>();
@@ -137,6 +137,7 @@ int main(){
 	if( cudaSuccess != cudaSetDevice(*GPUIndex)){
         return 0;
     }
+    std::cout << "Using GPU: " << *GPUIndex << std::endl;
 	
 /* set GPU grid & block configuration*/
     cudaDeviceProp deviceProp;
@@ -167,14 +168,19 @@ int main(){
     *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
 	ActiveThreadNum = new int;
     *ActiveThreadNum = *MaxThreadNum; /* default value */
-    
+    std::cout << "MaxThreadNum: " << *MaxThreadNum << std::endl;
+    std::cout << "SpinMxNum: " << *SpinMxNum << std::endl;  
+    std::cout << "SpinMxSliceNum: " << SpinMxSliceNum << std::endl;
+    std::cout << "TypeNum: " << *TypeNum << std::endl;
+
     
     /*VMag*/
     dB0 = new float[SpinMxNum * SpinMxSliceNum]; /*Initialized as 0*/
-    dWRnd = new float[SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum)];
+    dWRnd = new float[SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum)]; 
     Gzgrid = new float[SpinMxNum * SpinMxSliceNum];
     Gygrid = new float[SpinMxNum * SpinMxSliceNum];
     Gxgrid = new float[SpinMxNum * SpinMxSliceNum];
+
     std::cout << SpinMxNum * SpinMxSliceNum << " spins in total." << std::endl;
     
     /*VCoi*/
