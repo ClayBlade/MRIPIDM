@@ -307,21 +307,21 @@ int main(){
             for (int d = 0; d < *SpinNum; d++){
                 int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 dWRnd[idx] = 0;
-                std::cout << "dWRnd[" << idx << "] = " << dWRnd[idx] << std::endl;
+                //std::cout << "dWRnd[" << idx << "] = " << dWRnd[idx] << std::endl;
             }
 
             for (int e = 0; e < *TxCoilNum; e++){
                 int idx = e * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 TxCoilmg[idx] = 0.0;
                 TxCoilpe[idx] = 0.0;
-                std::cout << "TxCoilmg[" << idx << "] = " << TxCoilmg[idx] << std::endl;
+                //std::cout << "TxCoilmg[" << idx << "] = " << TxCoilmg[idx] << std::endl;
             }
 
             for (int f = 0; f < *RxCoilNum; f++){
                 int idx = f * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 RxCoilx[idx] = 0.0;
                 RxCoily[idx] = 0.0;
-                std::cout << "RxCoilx[" << idx << "] = " << RxCoilx[idx] << std::endl;
+                //std::cout << "RxCoilx[" << idx << "] = " << RxCoilx[idx] << std::endl;
             }
             
      }
@@ -431,7 +431,7 @@ for (int i = 0; i < MaxStep; i++){
 
 /* start simulator execution loop */
     while (i < MaxStep){
-        std::cout << "Processing step: " << i << std::endl;
+        //std::cout << "Processing step: " << i << std::endl;
         /* check MR sequence pulse flag */
         flag[0]=0;
         flag[1]=0;
@@ -470,7 +470,7 @@ for (int i = 0; i < MaxStep; i++){
             }
             i++;
         }
-        std::cout << "checkpoint1" << std::endl;
+        //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
         *t 	= *(utsLine + *utsi);
         *dt 	= *(utsLine + (int)min(*utsi+1, MaxutsStep-1))-*(utsLine + *utsi);
@@ -513,7 +513,7 @@ for (int i = 0; i < MaxStep; i++){
 			}
 			
         }
-        std::cout << "checkpoint2" << std::endl;
+        //std::cout << "checkpoint2" << std::endl;
 		if (*dt > 0){
 			for (j = 0; j < *TxCoilNum; j++){
 				g_Sig.push_back((float)rfAmp[j]);
@@ -521,7 +521,7 @@ for (int i = 0; i < MaxStep; i++){
 				g_Sig.push_back((float)rfFreq[j]);
 			}
 		}
-        std::cout << "checkpoint2.1" << std::endl;
+        //std::cout << "checkpoint2.1" << std::endl;
         if (flag[1]==1 ){ /* update GzAmp */
             if (fabs(*(GzAmpLine+ *Gzi)) <= fabs(*(GzAmpLine + (int)min((*Gzi)+1, MaxGzStep-1))))
                 *GzAmp = *(GzAmpLine+ *Gzi);
@@ -532,7 +532,7 @@ for (int i = 0; i < MaxStep; i++){
         }
         if (*dt > 0) g_Sig.push_back((float)*GzAmp);
 		
-        std::cout << "checkpoint2.2" << std::endl;
+        //std::cout << "checkpoint2.2" << std::endl;
 
         if (flag[2]==1 ){ /* update GyAmp */
             if (fabs(*(GyAmpLine + *Gyi)) <= fabs(*(GyAmpLine + (int)min(*Gyi+1, MaxGyStep-1))))
@@ -544,7 +544,7 @@ for (int i = 0; i < MaxStep; i++){
         }
         if (*dt > 0) g_Sig.push_back((float)*GyAmp);
 		
-        std::cout << "checkpoint2.3" << std::endl;
+        //std::cout << "checkpoint2.3" << std::endl;
 
         if (flag[3]==1 ){ /* update GxAmp */
             if (fabs(*(GxAmpLine+ *Gxi)) <= fabs(*(GxAmpLine + (int)min(*Gxi+1, MaxGxStep-1))))
@@ -556,7 +556,7 @@ for (int i = 0; i < MaxStep; i++){
         }			
 		if (*dt > 0) g_Sig.push_back((float)*GxAmp);
         
-        std::cout << "checkpoint3" << std::endl;
+        //std::cout << "checkpoint3" << std::endl;
 
         *ADC = 0;   /* avoid ADC overflow */
         if (flag[4]==1){ /* update ADC */
@@ -727,14 +727,14 @@ for (int i = 0; i < MaxStep; i++){
 					/* update pointers, avoid pointer change between Matlab and Mex call */
 
                     /*Unchanging fields for now*/
-/*
-					Mz          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mz"));
-					My          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "My"));
-					Mx          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mx"));
-					Rho         = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Rho"));
-					T1          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "T1"));
-					T2          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "T2"));
-*/					
+
+					//Mz          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mz"));
+					//My          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "My"));
+					//Mx          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mx"));
+					//Rho         = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Rho"));
+					//T1          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "T1"));
+					//T2          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "T2"));
+				
                     //dWRnd       = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "dWRnd"));
 					//dB0         = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "dB0"));
 					//Gzgrid      = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VMag"), 0, "Gzgrid"));
@@ -766,7 +766,7 @@ for (int i = 0; i < MaxStep; i++){
             (*Exti)++;
         }
 
-        std::cout << "checkpoint4" << std::endl;
+        //std::cout << "checkpoint4" << std::endl;
         
         if (flag[0]+flag[1]+flag[2]+flag[3]+flag[4]+flag[5] == 0){ /* reset VVar */
             ippsZero_64fHF(rfAmp, *TxCoilNum);
@@ -868,7 +868,7 @@ for (int i = 0; i < MaxStep; i++){
 				/*mexPrintf("TR Counts: %d of %d\n", *TRCount, *TRNum);*/
 			}
         }
-        std::cout << "checkpoint5" << std::endl;
+        //std::cout << "checkpoint5" << std::endl;
     }
 
     /* free GPU memory */
@@ -892,6 +892,10 @@ for (int i = 0; i < MaxStep; i++){
 	cudaFree(d_Sx);
 	cudaFree(d_Sy);
 
+    std::cout << "Mz:" << std::endl;
+    for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
+        std::cout << Mz[i] << " ";
+    }
     std::cout << "Simulation completed!" << std::endl;
 	
 	/* reset device, may slow down subsequent startup due to initialization */
