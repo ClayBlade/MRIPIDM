@@ -909,8 +909,10 @@ for (int i = 0; i < MaxStep; i++){
 
     std::cout << "Mz:" << std::endl;
     for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
+        if (Mz[i] != 1){
         std::cout << Mz[i] << " ";
     }
+}
     std::cout << "Simulation completed!" << std::endl;
 	
 	/* reset device, may slow down subsequent startup due to initialization */
