@@ -120,6 +120,8 @@ int main(){
     SpinMxDims[0] = (int)data_obj["xSize"];
     SpinMxDims[1] = (int)data_obj["ySize"]; 
     SpinMxDims[2] = (int)data_obj["zSize"];
+    std::cout << "SpinMxDims: " << SpinMxDims[0] << " " << SpinMxDims[1] << " " << SpinMxDims[2] << std::endl;
+
     /*Might be y by x by z*/
 	
     SpinMxRowNum    		= SpinMxDims[0];
@@ -173,6 +175,7 @@ int main(){
     Gzgrid = new float[SpinMxNum * SpinMxSliceNum];
     Gygrid = new float[SpinMxNum * SpinMxSliceNum];
     Gxgrid = new float[SpinMxNum * SpinMxSliceNum];
+    std::cout << SpinMxNum * SpinMxSliceNum << " spins in total." << std::endl;
     
     /*VCoi*/
     TxCoilNum       = new int;
@@ -298,18 +301,21 @@ int main(){
             for (int d = 0; d < *SpinNum; d++){
                 int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 dWRnd[idx] = 0;
+                std::cout << "dWRnd[" << idx << "] = " << dWRnd[idx] << std::endl;
             }
 
             for (int e = 0; e < *TxCoilNum; e++){
                 int idx = e * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 TxCoilmg[idx] = 0.0;
                 TxCoilpe[idx] = 0.0;
+                std::cout << "TxCoilmg[" << idx << "] = " << TxCoilmg[idx] << std::endl;
             }
 
             for (int f = 0; f < *RxCoilNum; f++){
                 int idx = f * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 RxCoilx[idx] = 0.0;
                 RxCoily[idx] = 0.0;
+                std::cout << "RxCoilx[" << idx << "] = " << RxCoilx[idx] << std::endl;
             }
             
      }
