@@ -521,7 +521,7 @@ for (int i = 0; i < MaxStep; i++){
 				g_Sig.push_back((float)rfFreq[j]);
 			}
 		}
-
+        std::cout << "checkpoint2.1" << std::endl;
         if (flag[1]==1 ){ /* update GzAmp */
             if (fabs(*(GzAmpLine+ *Gzi)) <= fabs(*(GzAmpLine + (int)min(*Gzi+1, MaxGzStep-1))))
                 *GzAmp = *(GzAmpLine+ *Gzi);
@@ -532,6 +532,8 @@ for (int i = 0; i < MaxStep; i++){
         }
         if (*dt > 0) g_Sig.push_back((float)*GzAmp);
 		
+        std::cout << "checkpoint2.2" << std::endl;
+
         if (flag[2]==1 ){ /* update GyAmp */
             if (fabs(*(GyAmpLine+ *Gyi)) <= fabs(*(GyAmpLine + (int)min(*Gyi+1, MaxGyStep-1))))
                 *GyAmp = *(GyAmpLine+ *Gyi);
@@ -542,6 +544,8 @@ for (int i = 0; i < MaxStep; i++){
         }
         if (*dt > 0) g_Sig.push_back((float)*GyAmp);
 		
+        std::cout << "checkpoint2.3" << std::endl;
+
         if (flag[3]==1 ){ /* update GxAmp */
             if (fabs(*(GxAmpLine+ *Gxi)) <= fabs(*(GxAmpLine + (int)min(*Gxi+1, MaxGxStep-1))))
                 *GxAmp = *(GxAmpLine+ *Gxi);
