@@ -97,7 +97,7 @@ int main(){
 /* assign pointers */
     /*VObj*/
     double* Gyro             = new double;
-        *Gyro = 2.67;
+        *Gyro = 42.58e6; /* Gyromagnetic ratio for Hydrogen in Hz/T */
     int* TypeNum             = new int;
         *TypeNum = 1;
     SpinNum         = new int;
@@ -892,11 +892,11 @@ for (int i = 0; i < MaxStep; i++){
 	cudaFree(d_Sx);
 	cudaFree(d_Sy);
 
-    std::cout << "Mz:" << std::endl;
-    for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
-        std::cout << Mz[i] << " ";
-    }
-    std::cout << "Simulation completed!" << std::endl;
+    //std::cout << "Mz:" << std::endl;
+    //for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
+    //    std::cout << Mz[i] << " ";
+    //}
+    //std::cout << "Simulation completed!" << std::endl;
 	
 	/* reset device, may slow down subsequent startup due to initialization */
 	// cudaDeviceReset();
