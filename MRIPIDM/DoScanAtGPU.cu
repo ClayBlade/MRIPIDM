@@ -50,7 +50,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 					 float *d_Sig, float RxCoilDefault, float TxCoilDefault,
 					 float *d_Sx, float *d_Sy, float rfRef, int SignalLen, int SBufferLen,
 					 int SpinMxX, int SpinMxY, int SpinMxZ, int SpinNum, int TypeNum, int TxCoilNum, int RxCoilNum, int SeqLen)
-                     {std::cout << "SAMEFILE BlochKernelNormalGPU Checkpoint" << std::endl;
+                     {
                         printf("BlochKernel Checkpoint");
                                     printf("Hello from GPU thread %d\n", threadIdx.x);
                                     /* CUDA index */
