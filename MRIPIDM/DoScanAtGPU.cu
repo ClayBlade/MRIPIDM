@@ -651,7 +651,11 @@ for (int i = 0; i < MaxStep; i++){
 										d_Sig, (float)*RxCoilDefault, (float)*TxCoilDefault,
 										d_Sx, d_Sy, (float)*rfRef, SignalLen, SBufferLen,
 										SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, g_Sig.size()/(5+3*(*TxCoilNum)));
-					cudaDeviceSynchronize();  // 
+					myKernel<<<blocks, threads>>>();
+                    cudaError_t err = cudaDeviceSynchronize();
+                    if (err != cudaSuccess) {
+                    std::cerr << "Kernel launch failed: " << cudaGetErrorString(err) << std::endl;
+}
 					g_Sig.clear();
 					Signalptr = Signali; /* shift signal array pointer */
 				}

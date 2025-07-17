@@ -15,6 +15,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 					 int SpinMxX, int SpinMxY, int SpinMxZ, int SpinNum, int TypeNum, int TxCoilNum, int RxCoilNum, int SeqLen)
 {
 	printf("BlochKernel Checkpoint");
+	printf("Hello from GPU thread %d\n", threadIdx.x)
     /* CUDA index */
 	unsigned tid	 = blockIdx.x * blockDim.y + threadIdx.y; /* thread id in one slice */
 	unsigned id      = threadIdx.y;                           /* thread id in one block */
