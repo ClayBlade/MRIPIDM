@@ -603,7 +603,7 @@ for (int i = 0; i < MaxStep; i++){
             *Ext = *(ExtLine+ *Exti);
             /* execute extended process */
             if (*Ext != 0){
-                std::cout << "g.sig" << g_sig.size()<< std::endl;
+                std::cout << "g.sig" << g_Sig.size() << std::endl;
 				if (g_Sig.size() !=0){
 				
 					/* calculate signal length */
