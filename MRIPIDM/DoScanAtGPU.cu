@@ -97,7 +97,7 @@ int main(){
 /* assign pointers */
     /*VObj*/
     double* Gyro             = new double;
-        *Gyro = 42.58e6; /* Gyromagnetic ratio for Hydrogen in Hz/T */
+        *Gyro = 4257.59; /* Gyromagnetic ratio for Hydrogen in Hz/T */
     int* TypeNum             = new int;
         *TypeNum = 1;
     SpinNum         = new int;
@@ -593,10 +593,11 @@ for (int i = 0; i < MaxStep; i++){
         *KyTmp +=(*GyAmp)*(*dt)*(*Gyro/(2*PI));
         *KxTmp +=(*GxAmp)*(*dt)*(*Gyro/(2*PI));
 		
-        if (i > 100){
-        if (flag[5] != 0){ std::cout << "flag passed" << std::endl; }
-        if (*Ext !=0){std::cout << "ext" << *Ext << std::endl;}
-    }
+        //if (i > 100){
+            //if (flag[5] != 0){ std::cout << "flag passed" << std::endl; }
+            //if (*Ext !=0){std::cout << "ext" << *Ext << std::endl;}
+    //}
+        std::cout << "g.sig" << g_sig.size()<< std::endl;
 
         if (flag[5]==1){ /* update Ext */
             *Ext = *(ExtLine+ *Exti);
@@ -912,7 +913,7 @@ for (int i = 0; i < MaxStep; i++){
 	cudaFree(d_Sx);
 	cudaFree(d_Sy);
 
-    std::cout << "Mz:" << std::endl;
+    std::cout << "Mx:" << std::endl;
     for (int i = 0; i < 100; i++) {
         if (Mx[i] != 0){
         std::cout << Mx[i] << " ";
