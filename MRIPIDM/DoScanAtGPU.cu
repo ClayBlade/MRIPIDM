@@ -914,7 +914,7 @@ for (int i = 0; i < MaxStep; i++){
 
     std::cout << "Mz:" << std::endl;
     for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
-        if (Mz[i] != 1){
+        if (Mx[i] != 1){
         std::cout << Mz[i] << " ";
     }
 }
