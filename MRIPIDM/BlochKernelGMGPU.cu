@@ -6,7 +6,7 @@
 /* nVIDIA CUDA header */
 
 
-_global__ void simpleBloch(){
+__global__ void simpleBloch(){
 	printf("Hello from GPU thread %d\n", threadIdx.x);
 }
 
