@@ -6,7 +6,10 @@
 /* nVIDIA CUDA header */
 
 
-
+_global__ int simpleBloch(){
+	printf("Hello from GPU thread %d\n", threadIdx.x);
+	return 1;
+}
 
 __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, float *d_T1, float *d_T2, float *d_Mz, float *d_My, float *d_Mx,
 					 float *d_dB0, float *d_dWRnd, float *d_Gzgrid, float *d_Gygrid, float *d_Gxgrid, float *d_TxCoilmg, float *d_TxCoilpe, float *d_RxCoilx, float *d_RxCoily, 

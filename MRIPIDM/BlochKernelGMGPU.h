@@ -9,7 +9,7 @@
 #ifndef BLOCH_KERNEL_GMGPU_H
 #define BLOCH_KERNEL_GMGPU_H
 
-
+__global__ int simpleBloch();
 
 __global__ void BlochKernelNormalGPU(
     float Gyro, double *d_CS, float *d_Rho, float *d_T1, float *d_T2, float *d_Mz, float *d_My, float *d_Mx,

@@ -645,6 +645,7 @@ for (int i = 0; i < MaxStep; i++){
                     /* call GPU kernel for spin discrete precessing */
 
                     std::cout << "Calling BlochKernelNormalGPU" << std::endl;
+                    simpleBloch<<<1, 2>>>();
 					BlochKernelNormalGPU<<< dimGridImg, dimBlockImg, SBufferLen >>>
 										((float)*Gyro, d_CS, d_Rho, d_T1, d_T2, d_Mz, d_My, d_Mx,
 										d_dB0, d_dWRnd, d_Gzgrid, d_Gygrid, d_Gxgrid, d_TxCoilmg, d_TxCoilpe, d_RxCoilx, d_RxCoily,
