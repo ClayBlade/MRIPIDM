@@ -927,12 +927,22 @@ for (int i = 0; i < MaxStep; i++){
 
                     /* call GPU kernel for spin discrete precessing */
 
+                    std::cout << "Grid: (" << dimGridImg.x << ", " << dimGridImg.y << ", " << dimGridImg.z << ")" << std::endl;
+                    std::cout << "Block: (" << dimBlockImg.x << ", " << dimBlockImg.y << ", " << dimBlockImg.z << ")" << std::endl;
+                    std::cout << "SBufferLen: " << SBufferLen << std::endl;
+                    
 					BlochKernelNormalGPU<<< dimGridImg, dimBlockImg, SBufferLen >>>
 										((float)*Gyro, d_CS, d_Rho, d_T1, d_T2, d_Mz, d_My, d_Mx,
 										d_dB0, d_dWRnd, d_Gzgrid, d_Gygrid, d_Gxgrid, d_TxCoilmg, d_TxCoilpe, d_RxCoilx, d_RxCoily,
 										d_Sig, (float)*RxCoilDefault, (float)*TxCoilDefault,
 										d_Sx, d_Sy, (float)*rfRef, SignalLen, SBufferLen,
 										SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, g_Sig.size()/(5+3*(*TxCoilNum)));
+                    
+                    cudaError_t err = cudaGetLastError();
+                    if (err != cudaSuccess) {
+                    std::cerr << "Launch error: " << cudaGetErrorString(err) << std::endl;
+                    }
+                                        
                     cudaError_t err = cudaDeviceSynchronize();
                     if (err != cudaSuccess) {
                     std::cerr << "Kernel launch failed: " << cudaGetErrorString(err) << std::endl;
