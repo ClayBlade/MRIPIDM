@@ -599,7 +599,7 @@ for (int i = 0; i < MaxStep; i++){
 
         
 
-        if (flag[5]!=0){ /* update Ext */
+        if (flag[5]!=0){ /* update Ext */         //changed from ==1
 
             *Ext = *(ExtLine+ *Exti);
             /* execute extended process */
@@ -643,6 +643,8 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( d_Sig, 	&g_Sig[0], 	g_Sig.size() * sizeof(float),	cudaMemcpyHostToDevice ) ;
 
                     /* call GPU kernel for spin discrete precessing */
+
+                    std::cout << "Calling BlochKernelNormalGPU" << std::endl;
 					BlochKernelNormalGPU<<< dimGridImg, dimBlockImg, SBufferLen >>>
 										((float)*Gyro, d_CS, d_Rho, d_T1, d_T2, d_Mz, d_My, d_Mx,
 										d_dB0, d_dWRnd, d_Gzgrid, d_Gygrid, d_Gxgrid, d_TxCoilmg, d_TxCoilpe, d_RxCoilx, d_RxCoily,
@@ -691,11 +693,6 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemset(d_Sy, 0 ,SpinMxNum * SignalLen * (*TypeNum) * (*RxCoilNum) * sizeof(float)); /* only work for 0 */
 				}
 
-			    /* fetch GPU data? */
-                /*ExtCall = mexEvalString("DoGPUFetch");
-                if (ExtCall){
-                    return 0 ;
-                }*/
 				
 				if (*gpuFetch !=0){
 					/* fetch data from GPU */
