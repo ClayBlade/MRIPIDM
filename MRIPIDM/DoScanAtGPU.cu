@@ -29,7 +29,7 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #endif
-
+s
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 
@@ -37,7 +37,6 @@
 
 #define PI      3.14159265359 /* pi constant */
 
-#include "BlochKernelGMGPU.h"
 #include "helperFuncs.h"
 #include "json.hpp"
 #include <fstream>
@@ -51,7 +50,8 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 					 float *d_Sig, float RxCoilDefault, float TxCoilDefault,
 					 float *d_Sx, float *d_Sy, float rfRef, int SignalLen, int SBufferLen,
 					 int SpinMxX, int SpinMxY, int SpinMxZ, int SpinNum, int TypeNum, int TxCoilNum, int RxCoilNum, int SeqLen)
-                     {printf("BlochKernel Checkpoint");
+                     {std::cout << "SAMEFILE BlochKernelNormalGPU Checkpoint" << std::endl;
+                        printf("BlochKernel Checkpoint");
                                     printf("Hello from GPU thread %d\n", threadIdx.x);
                                     /* CUDA index */
                                     unsigned tid	 = blockIdx.x * blockDim.y + threadIdx.y; /* thread id in one slice */
