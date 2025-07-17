@@ -593,13 +593,13 @@ for (int i = 0; i < MaxStep; i++){
         *KyTmp +=(*GyAmp)*(*dt)*(*Gyro/(2*PI));
         *KxTmp +=(*GxAmp)*(*dt)*(*Gyro/(2*PI));
 		
-        //if (i > 100){
-            //if (flag[5] != 0){ std::cout << "flag passed" << std::endl; }
-            //if (*Ext !=0){std::cout << "ext" << *Ext << std::endl;}
-    //}
+
+        //if (flag[5] != 0){ std::cout << "flag passed" << std::endl; }
+        //if (*Ext !=0){std::cout << "ext" << *Ext << std::endl;}
+
         
 
-        if (flag[5]==1){ /* update Ext */
+        if (flag[5]!=0){ /* update Ext */
 
             *Ext = *(ExtLine+ *Exti);
             /* execute extended process */
