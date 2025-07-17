@@ -913,8 +913,8 @@ for (int i = 0; i < MaxStep; i++){
 	cudaFree(d_Sy);
 
     std::cout << "Mz:" << std::endl;
-    for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
-        if (Mx[i] != 1){
+    for (int i = 0; i < 100; i++) {
+        if (Mx[i] != 0){
         std::cout << Mx[i] << " ";
     }
 }
