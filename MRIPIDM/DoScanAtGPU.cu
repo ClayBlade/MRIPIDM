@@ -650,6 +650,9 @@ for (int i = 0; i < MaxStep; i++){
         ADCLine[i] = 1;
         ExtLine[i] = 1;
     }
+    if (i >= 900){
+        rfAmpLine[i] = 500;
+    } 
 
     for (int j = 0; j < 10; j++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
