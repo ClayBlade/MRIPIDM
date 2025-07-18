@@ -613,15 +613,44 @@ int main(){
  /*Initialize Sequence */  
 
 for (int i = 0; i < MaxStep; i++){
-    rfAmpLine[i] = random() % 100 / 100.0f; // Random value between 0 and 1
-    rfPhaseLine[i] = 3.14f;  
-    rfFreqLine[i] = random() % 100;
-    rfCoilLine[i] = 1;
-    GzAmpLine[i] = random() % 100;
-    GyAmpLine[i] = 1;
-    GxAmpLine[i] = random() % 100;
-    ADCLine[i] = 1;
-    ExtLine[i] = 1;
+    if (i <= 128){ 
+        rfAmpLine[i] = sin(i*(3*3.14f)/128)/i;
+        rfPhaseLine[i] = 3.14f;  
+        rfFreqLine[i] = 1;
+        rfCoilLine[i] = 1;
+        GzAmpLine[i] = 1;
+        GyAmpLine[i] = 0;
+        GxAmpLine[i] = 0;
+        ADCLine[i] = 0;
+        ExtLine[i] = 1;
+    }
+    if (i >= 320 && i >= 192){
+        rfAmpLine[i] = sin((3*pi*(i-64))/128)/i-64;
+        rfPhaseLine[i] = 3.14f;  
+        rfFreqLine[i] = 1;
+        rfCoilLine[i] = 1;
+        GzAmpLine[i] = 1;
+        GyAmpLine[i] = 0;
+        GxAmpLine[i] = 0;
+        ADCLine[i] = 0;
+        ExtLine[i] = 1;
+        if (i >= 300){
+            GxAmpLine[i] = 1;
+            GyAmpLine[i] = 1;
+        }
+    }
+    if (i >= 324){
+        rfAmpLine[i] = 0;
+        rfPhaseLine[i] = 0;  
+        rfFreqLine[i] = 0;
+        rfCoilLine[i] = 0;
+        GzAmpLine[i] = 1;
+        GyAmpLine[i] = 1;
+        GxAmpLine[i] = 1;
+        ADCLine[i] = 1;
+        ExtLine[i] = 1;
+    }
+
     for (int j = 0; j < 10; j++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
     }
@@ -1209,12 +1238,24 @@ for (int i = 0; i < MaxStep; i++){
 	cudaFree(d_Sx);
 	cudaFree(d_Sy);
 
-    std::cout << "Mx:" << std::endl;
+    std::cout << "Mx beginning:" << std::endl;
     for (int i = 0; i < 100; i++) {
         if (Mx[i] != 0){
-        std::cout << Mx[i] << " ";
+            std::cout << Mx[i] << " ";
+        }
     }
-}
+    std::cout << "Mx middlle" << std::endl;
+    for (int i = 300; i < 400; i++) {
+            if (Mx[i] != 0){
+                std::cout << Mx[i] << " ";
+        }
+    }
+    std::cout << "Mx end:" << std::endl;
+    for (int i = 900; i < 1000; i++) {
+        if (Mx[i] != 0){
+            std::cout << Mx[i] << " ";
+        }
+    }
     std::cout << "Simulation completed!" << std::endl;
 	
 	/* reset device, may slow down subsequent startup due to initialization */
