@@ -588,7 +588,7 @@ int main(){
 
             for (int d = 0; d < *SpinNum; d++){
                 int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
-                dWRnd[idx] = (std::rand() / (float)RAND_MAX) * 100f; // Random value between 0 and 0.01
+                dWRnd[idx] = (std::rand() / (float)RAND_MAX); // Random value between 0 and 1
                 //std::cout << "dWRnd[" << idx << "] = " << dWRnd[idx] << std::endl;
             }
 
