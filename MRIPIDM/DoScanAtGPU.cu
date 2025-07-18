@@ -625,7 +625,7 @@ for (int i = 0; i < MaxStep; i++){
         ExtLine[i] = 1;
     }
     if (i >= 320 && i >= 192){
-        rfAmpLine[i] = sin((3*pi*(i-64))/128)/i-64;
+        rfAmpLine[i] = sin((3*3.14f*(i-64))/128)/i-64;
         rfPhaseLine[i] = 3.14f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
