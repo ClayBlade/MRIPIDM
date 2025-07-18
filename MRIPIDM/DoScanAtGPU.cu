@@ -652,7 +652,7 @@ for (int i = 0; i < MaxStep; i++){
         ExtLine[i] = 1;
     }
     if (i >= 900){
-        rfAmpLine[i] = 500;
+        rfAmpLine[i] = 3;
     } 
 
     for (int j = 0; j < 10; j++){
