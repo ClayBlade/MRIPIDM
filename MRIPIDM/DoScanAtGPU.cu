@@ -602,7 +602,7 @@ int main(){
             for (int f = 0; f < *RxCoilNum; f++){
                 int idx = f * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 RxCoilx[idx] = std::rand() / (float)RAND_MAX; // Random value between 0 and 1
-                RxCoily[idx] = std::rand() / (float)RAND_MAX; // Random value between 0 and 1
+                RxCoily[idx] = (std::rand() / (float)RAND_MAX)*100; // Random value between 0 and 1
                 //std::cout << "RxCoilx[" << idx << "] = " << RxCoilx[idx] << std::endl;
             }
             
