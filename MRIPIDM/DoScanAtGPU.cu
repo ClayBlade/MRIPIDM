@@ -378,7 +378,7 @@ int main(){
 /* assign pointers */
     /*VObj*/
     double* Gyro             = new double;
-        *Gyro = 4257.59; /* Gyromagnetic ratio for Hydrogen in Hz/T */
+        *Gyro = 2.67e08; /* Gyromagnetic ratio for Hydrogen in Hz/T */
     int* TypeNum             = new int;
         *TypeNum = 1;
     SpinNum         = new int;
