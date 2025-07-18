@@ -617,11 +617,11 @@ int main(){
 for (int i = 0; i < MaxStep; i++){
     rfAmpLine[i] = random() % 100 / 100.0f; // Random value between 0 and 1
     rfPhaseLine[i] = 3.14f;  
-    rfFreqLine[i] = 1;
+    rfFreqLine[i] = random() % 100;
     rfCoilLine[i] = 1;
-    GzAmpLine[i] = 1;
+    GzAmpLine[i] = random() % 100;
     GyAmpLine[i] = 1;
-    GxAmpLine[i] = 1;
+    GxAmpLine[i] = random() % 100;
     ADCLine[i] = 1;
     ExtLine[i] = 1;
     for (int j = 0; j < 10; j++){
