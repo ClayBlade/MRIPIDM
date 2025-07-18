@@ -615,7 +615,7 @@ int main(){
  /*Initialize Sequence */  
 
 for (int i = 0; i < MaxStep; i++){
-    rfAmpLine[i] = 1;
+    rfAmpLine[i] = random() % 100 / 100.0f; // Random value between 0 and 1
     rfPhaseLine[i] = 3.14f;  
     rfFreqLine[i] = 1;
     rfCoilLine[i] = 1;
