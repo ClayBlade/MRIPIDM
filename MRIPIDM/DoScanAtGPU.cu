@@ -51,8 +51,6 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 					 float *d_Sx, float *d_Sy, float rfRef, int SignalLen, int SBufferLen,
 					 int SpinMxX, int SpinMxY, int SpinMxZ, int SpinNum, int TypeNum, int TxCoilNum, int RxCoilNum, int SeqLen)
                      {
-                        printf("BlochKernel Checkpoint");
-                                    printf("Hello from GPU thread %d\n", threadIdx.x);
                                     /* CUDA index */
                                     unsigned tid	 = blockIdx.x * blockDim.y + threadIdx.y; /* thread id in one slice */
                                     unsigned id      = threadIdx.y;                           /* thread id in one block */
@@ -325,7 +323,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                             }
                                         }
                                     }
-                                    printf("Mx: %f, My: %f, Mz: %f\n", Mx, My, Mz);
+                                    //printf("Mx: %f, My: %f, Mz: %f\n", Mx, My, Mz);
                                 }
 
 int main(){
@@ -886,13 +884,13 @@ for (int i = 0; i < MaxStep; i++){
 
             *Ext = *(ExtLine+ *Exti);
             /* execute extended process */
-            std::cout << "Passed flag" << std::endl;
-            std::cout << "ext: " << *Ext << std::endl;
+            //std::cout << "Passed flag" << std::endl;
+            //std::cout << "ext: " << *Ext << std::endl;
             if (*Ext != 0){
-                std::cout << "Passed Ext" << std::endl;
-                std::cout << "g.sig: " << g_Sig.size() << std::endl;
+                //std::cout << "Passed Ext" << std::endl;
+                //std::cout << "g.sig: " << g_Sig.size() << std::endl;
 				if (g_Sig.size() !=0){
-                    std::cout << "passed g_sig" << std::endl;
+                    //std::cout << "passed g_sig" << std::endl;
 				
 					/* calculate signal length */
 					SignalLen = Signali-Signalptr;
