@@ -324,7 +324,11 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                             }
                                         }
                                     }
-                                    //printf("Mx: %f, My: %f, Mz: %f\n", Mx, My, Mz);
+                                    if (Mx[1002] != 0){
+                                        printf("Mx[1002]: %f\n", Mx[1002]);
+                                        printf("My[1002]: %f\n", My[1002]);
+                                        printf("Mz[1002]: %f\n", Mz[1002]);
+                                    }
                                 }
 
 int main(){
