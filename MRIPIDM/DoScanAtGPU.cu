@@ -322,7 +322,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                 //printf("ExpdtT2: %f\n", ExpdtT2 );
                                                 //printf("bufferMy: %f\n", bufferMy);
                                                 //printf("My: %f\n", My);
-}
+                                                //}
                                                 
                                                 *p_d_Mx  = Mx;
                                                 *p_d_My  = My;
