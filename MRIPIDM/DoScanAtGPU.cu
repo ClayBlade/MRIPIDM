@@ -625,6 +625,7 @@ int main(){
  /*Initialize Sequence */  
 
 for (int i = 0; i < MaxStep; i++){
+    ExtLine[i] = 1;
     if (i <= 128){ 
         rfAmpLine[i] = sin(i*(3*3.14f)/128)/i;
         rfPhaseLine[i] = 3.14f;  
@@ -634,7 +635,6 @@ for (int i = 0; i < MaxStep; i++){
         GyAmpLine[i] = 0;
         GxAmpLine[i] = 0;
         ADCLine[i] = 0;
-        ExtLine[i] = 1;
     }
     if (i >= 320 && i >= 192){
         rfAmpLine[i] = sin((3*3.14f*(i-64))/128)/i-64;
@@ -645,7 +645,6 @@ for (int i = 0; i < MaxStep; i++){
         GyAmpLine[i] = 0;
         GxAmpLine[i] = 0;
         ADCLine[i] = 0;
-        ExtLine[i] = 1;
         if (i >= 300){
             GxAmpLine[i] = 1;
             GyAmpLine[i] = 1;
@@ -660,7 +659,6 @@ for (int i = 0; i < MaxStep; i++){
         GyAmpLine[i] = 1;
         GxAmpLine[i] = 1;
         ADCLine[i] = 1;
-        ExtLine[i] = 1;
     }
     if (i >= 900){
         rfAmpLine[i] = 3;
