@@ -317,11 +317,11 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                     My = bufferMy * ExpdtT2;
                                                     Mz = bufferMz * ExpdtT1 - M0dtT1;
                                                 }
-                                                if (tid == 0){
-                                                printf("------------------------\n");
+                                                //if (tid == 0){
+                                                //printf("------------------------\n");
                                                 //printf("ExpdtT2: %f\n", ExpdtT2 );
-                                                printf("bufferMy: %f\n", bufferMy);
-                                                printf("My: %f\n", My);
+                                                //printf("bufferMy: %f\n", bufferMy);
+                                                //printf("My: %f\n", My);
 }
                                                 
                                                 *p_d_Mx  = Mx;
@@ -451,7 +451,7 @@ int main(){
     CS              = new double; 
     *CS = 0.0; /* default value */
     TRNum  			= new int;
-    *TRNum          = 10; /* default value */
+    *TRNum          = 1; /* default value */
     MaxThreadNum    = new int;
     *MaxThreadNum   = deviceProp.maxThreadsPerBlock;
 	ActiveThreadNum = new int;
@@ -489,7 +489,7 @@ int main(){
 
     MaxStep         = 2500;
     MaxutsStep      = MaxStep * 10;
-    MaxrfStep       = 2500; /*Just fill in the zeros*/
+    MaxrfStep       = 2500; 
     MaxGzStep       = 2500;
     MaxGyStep       = 2500;
     MaxGxStep       = 2500;
@@ -535,7 +535,7 @@ int main(){
     ADC             = new double;
     *ADC            =  0;
     Ext             = new double;
-    *Ext            =  1;
+    *Ext            =  0;
     KzTmp           = new double;
     *KzTmp          = 0;
     KyTmp           = new double;
@@ -1044,6 +1044,10 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( RxCoilx, d_RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 					cudaMemcpy( RxCoily, d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 				}
+
+                if (2500 % i == 0){
+                    std::cout << "i: " << i << ", Mx: "<< Mx << std::endl;
+                }
 
                 /* execute extended process */
                 /*ExtCall = mexEvalString("DoExtPlugin");
