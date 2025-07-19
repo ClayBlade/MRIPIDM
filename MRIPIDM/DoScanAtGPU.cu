@@ -317,14 +317,15 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                     My = bufferMy * ExpdtT2;
                                                     Mz = bufferMz * ExpdtT1 - M0dtT1;
                                                 }
+                                                printf("ExpdtT2: %f\n", ExpdtT2 );
+                                                printf("(*p_d_dt): %f\n", (*p_d_dt) );
+                                                printf("bufferMx: %f\n", bufferMx);
+                                                printf("Mx: %f\n", Mx);
+
                                                 
                                                 *p_d_Mx  = Mx;
                                                 *p_d_My  = My;
                                                 *p_d_Mz  = Mz;
-
-                                                if (k == 4){
-                                                    printf("Mx: %f\n", Mx);
-                                                }
 
                                             }
                                         }
@@ -605,8 +606,8 @@ int main(){
 
             for (int f = 0; f < *RxCoilNum; f++){
                 int idx = f * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
-                RxCoilx[idx] = std::rand() / (float)RAND_MAX; // Random value between 0 and 1
-                RxCoily[idx] = (std::rand() / (float)RAND_MAX); // Random value between 0 and 1
+                RxCoilx[idx] = 1; // Random value between 0 and 1
+                RxCoily[idx] = 0; // Random value between 0 and 1
                 //std::cout << "RxCoilx[" << idx << "] = " << RxCoilx[idx] << std::endl;
             }
             
