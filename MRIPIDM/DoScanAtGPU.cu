@@ -975,6 +975,11 @@ for (int i = 0; i < MaxStep; i++){
 										d_Sx, d_Sy, (float)*rfRef, SignalLen, SBufferLen,
 										SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, g_Sig.size()/(5+3*(*TxCoilNum)));
                     
+                    std::cout << "------" << std::endl;                    
+                    std::cout << i << "Mx: " << Mx[500000] << std::endl;
+                    std::cout << i << "My: " << My[500000] << std::endl;
+                    std::cout << i << "Mz: " << Mz[500000] << std::endl;
+
                     cudaError_t err = cudaGetLastError();
                     if (err != cudaSuccess) {
                     std::cerr << "Launch error: " << cudaGetErrorString(err) << std::endl;
@@ -1226,11 +1231,7 @@ for (int i = 0; i < MaxStep; i++){
 				/*mexPrintf("TR Counts: %d of %d\n", *TRCount, *TRNum);*/
 			}
         }
-        if (i % 100 == 0){
-                    std::cout << i << "mx: " << Mx[0] << std::endl;
-                    std::cout << i << "my: " << My[0] << std::endl;
-                    std::cout << i << "mz: " << Mz[0] << std::endl;
-                }
+        
         //std::cout << "checkpoint5" << std::endl;
     }
 
