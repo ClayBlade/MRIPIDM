@@ -1049,6 +1049,12 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( TxCoilpe, d_TxCoilpe, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 					cudaMemcpy( RxCoilx, d_RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 					cudaMemcpy( RxCoily, d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
+
+                                                /*Print doesn't work because i++ in while loop */
+                    std::cout << "------" << std::endl;                    
+                    std::cout << i << "Mx: " << Mx[263809] << std::endl;
+                    std::cout << i << "My: " << My[263809] << std::endl;
+                    std::cout << i << "Mz: " << Mz[263809] << std::endl;
 				}
 
 
@@ -1126,11 +1132,7 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( d_RxCoilx, RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
 					cudaMemcpy( d_RxCoily, RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
 				
-                            /*Print doesn't work because i++ in while loop */
-                    std::cout << "------" << std::endl;                    
-                    std::cout << i << "Mx: " << Mx[263809] << std::endl;
-                    std::cout << i << "My: " << My[263809] << std::endl;
-                    std::cout << i << "Mz: " << Mz[263809] << std::endl;
+
 
                 
                 }
