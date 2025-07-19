@@ -319,10 +319,9 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                 }
                                                 if (tid == 0){
                                                 printf("------------------------\n");
-                                                printf("ExpdtT2: %f\n", ExpdtT2 );
-                                                printf("(*p_d_dt): %f\n", (*p_d_dt) );
-                                                printf("bufferMx: %f\n", bufferMx);
-                                                printf("Mx: %f\n", Mx);
+                                                //printf("ExpdtT2: %f\n", ExpdtT2 );
+                                                printf("bufferMz: %f\n", bufferMz);
+                                                printf("Mz: %f\n", Mz);
 }
                                                 
                                                 *p_d_Mx  = Mx;
