@@ -964,9 +964,9 @@ for (int i = 0; i < MaxStep; i++){
 
                     /* call GPU kernel for spin discrete precessing */
 
-                    std::cout << "Grid: (" << dimGridImg.x << ", " << dimGridImg.y << ", " << dimGridImg.z << ")" << std::endl;
-                    std::cout << "Block: (" << dimBlockImg.x << ", " << dimBlockImg.y << ", " << dimBlockImg.z << ")" << std::endl;
-                    std::cout << "SBufferLen: " << SBufferLen << std::endl;
+                    //std::cout << "Grid: (" << dimGridImg.x << ", " << dimGridImg.y << ", " << dimGridImg.z << ")" << std::endl;
+                    //std::cout << "Block: (" << dimBlockImg.x << ", " << dimBlockImg.y << ", " << dimBlockImg.z << ")" << std::endl;
+                    //std::cout << "SBufferLen: " << SBufferLen << std::endl;
 
 					BlochKernelNormalGPU<<< dimGridImg, dimBlockImg, SBufferLen >>>
 										((float)*Gyro, d_CS, d_Rho, d_T1, d_T2, d_Mz, d_My, d_Mx,
