@@ -501,7 +501,7 @@ int main(){
 
     /*VSeq*/
     utsLine         = new double[MaxutsStep];
-    tsLine          = new double[MaxStep];
+    tsLine          = new double[MaxStep * 6];
     rfAmpLine       = new double[MaxrfStep];
     rfPhaseLine     = new double[MaxrfStep];
     rfFreqLine      = new double[MaxrfStep];
@@ -661,7 +661,7 @@ for (int i = 0; i < MaxStep; i++){
         ADCLine[i] = 1;
     }
     if (i >= 900){
-        rfAmpLine[i] = 3;
+        rfAmpLine[i] = 0;
     } 
 
     for (int j = 0; j < 10; j++){
