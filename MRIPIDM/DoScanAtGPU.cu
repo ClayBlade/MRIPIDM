@@ -803,7 +803,10 @@ for (int i = 0; i < MaxStep; i++){
 
         /*tsLine contains timeline of if events happen at this timestep or not for event event
         */
-
+        std::cout << "------" << std::endl;                    
+        std::cout << i << "Mx: " << Mx[263809] << std::endl;
+        std::cout << i << "My: " << My[263809] << std::endl;
+        std::cout << i << "Mz: " << Mz[263809] << std::endl;
 
         //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
@@ -975,10 +978,7 @@ for (int i = 0; i < MaxStep; i++){
 										d_Sx, d_Sy, (float)*rfRef, SignalLen, SBufferLen,
 										SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, g_Sig.size()/(5+3*(*TxCoilNum)));
                     
-                    std::cout << "------" << std::endl;                    
-                    std::cout << i << "Mx: " << Mx[263809] << std::endl;
-                    std::cout << i << "My: " << My[263809] << std::endl;
-                    std::cout << i << "Mz: " << Mz[263809] << std::endl;
+                    
 
                     cudaError_t err = cudaGetLastError();
                     if (err != cudaSuccess) {
