@@ -317,16 +317,16 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                     My = bufferMy * ExpdtT2;
                                                     Mz = bufferMz * ExpdtT1 - M0dtT1;
                                                 }
-                                                if (tid == 0){
-                                                printf("------------------------\n");
-                                                printf("ExpdtT2: %f\n", ExpdtT2 );
-                                                printf("bufferMy: %f\n", bufferMy);
-                                                printf("My: %f\n", My);
-                                                printf("bufferMx: %f\n", bufferMx);
-                                                printf("Mx: %f\n", Mx);
-                                                printf("bufferMz: %f\n", bufferMz);
-                                                printf("Mz: %f\n", Mz);
-                                                }
+                                                //if (tid == 0){
+                                                //printf("------------------------\n");
+                                                //printf("ExpdtT2: %f\n", ExpdtT2 );
+                                                //printf("bufferMy: %f\n", bufferMy);
+                                                //printf("My: %f\n", My);
+                                                //printf("bufferMx: %f\n", bufferMx);
+                                                //printf("Mx: %f\n", Mx);
+                                                //printf("bufferMz: %f\n", bufferMz);
+                                                //printf("Mz: %f\n", Mz);
+                                                //}
 
                                                 
                                                 *p_d_Mx  = Mx;
@@ -679,6 +679,11 @@ for (int i = 0; i < MaxStep; i++){
     }    
 }
 
+if (i % 100 == 0){
+    std::cout << i << "Mx: " << Mx[270059] << std::endl;
+    std::cout << i << "My: " << My[270059] << std::endl;
+    std::cout << i << "Mz: " << Mz[270059] << std::endl;
+}
 
     
     
