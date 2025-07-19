@@ -1045,11 +1045,7 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( RxCoily, d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 				}
 
-                if (i % 100 == 0){
-                    std::cout << i << "mx: " << Mx[0] << std::endl;
-                    std::cout << i << "my: " << My[0] << std::endl;
-                    std::cout << i << "mx: " << Mz[0] << std::endl;
-                }
+
 
                 /* execute extended process */
                 /*ExtCall = mexEvalString("DoExtPlugin");
@@ -1230,6 +1226,11 @@ for (int i = 0; i < MaxStep; i++){
 				/*mexPrintf("TR Counts: %d of %d\n", *TRCount, *TRNum);*/
 			}
         }
+        if (i % 100 == 0){
+                    std::cout << i << "mx: " << Mx[0] << std::endl;
+                    std::cout << i << "my: " << My[0] << std::endl;
+                    std::cout << i << "mz: " << Mz[0] << std::endl;
+                }
         //std::cout << "checkpoint5" << std::endl;
     }
 
@@ -1272,6 +1273,7 @@ for (int i = 0; i < MaxStep; i++){
             std::cout << Mx[i] << " ";
         }
     }
+
     std::cout << "Simulation completed!" << std::endl;
 	
 	/* reset device, may slow down subsequent startup due to initialization */
