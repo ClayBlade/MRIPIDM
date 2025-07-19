@@ -976,9 +976,9 @@ for (int i = 0; i < MaxStep; i++){
 										SpinMxColNum, SpinMxRowNum, SpinMxSliceNum, *SpinNum, *TypeNum, *TxCoilNum, *RxCoilNum, g_Sig.size()/(5+3*(*TxCoilNum)));
                     
                     std::cout << "------" << std::endl;                    
-                    std::cout << i << "Mx: " << Mx[500000] << std::endl;
-                    std::cout << i << "My: " << My[500000] << std::endl;
-                    std::cout << i << "Mz: " << Mz[500000] << std::endl;
+                    std::cout << i << "Mx: " << Mx[263809] << std::endl;
+                    std::cout << i << "My: " << My[263809] << std::endl;
+                    std::cout << i << "Mz: " << Mz[263809] << std::endl;
 
                     cudaError_t err = cudaGetLastError();
                     if (err != cudaSuccess) {
