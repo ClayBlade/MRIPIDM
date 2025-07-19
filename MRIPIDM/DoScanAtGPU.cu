@@ -1046,7 +1046,7 @@ for (int i = 0; i < MaxStep; i++){
 				}
 
                 if (2500 % i == 0){
-                    std::cout << "i: " << i << ", Mx: "<< Mx << std::endl;
+                    std::cout << i << "mx: " << mx << std::endl;
                 }
 
                 /* execute extended process */
