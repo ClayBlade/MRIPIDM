@@ -317,12 +317,17 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                     My = bufferMy * ExpdtT2;
                                                     Mz = bufferMz * ExpdtT1 - M0dtT1;
                                                 }
-                                                //if (tid == 0){
-                                                //printf("------------------------\n");
-                                                //printf("ExpdtT2: %f\n", ExpdtT2 );
-                                                //printf("bufferMy: %f\n", bufferMy);
-                                                //printf("My: %f\n", My);
-                                                //}
+                                                if (tid == 0){
+                                                printf("------------------------\n");
+                                                printf("ExpdtT2: %f\n", ExpdtT2 );
+                                                printf("bufferMy: %f\n", bufferMy);
+                                                printf("My: %f\n", My);
+                                                printf("bufferMx: %f\n", bufferMx);
+                                                printf("Mx: %f\n", Mx);
+                                                printf("bufferMz: %f\n", bufferMz);
+                                                printf("Mz: %f\n", Mz);
+                                                }
+
                                                 
                                                 *p_d_Mx  = Mx;
                                                 *p_d_My  = My;
@@ -803,10 +808,12 @@ for (int i = 0; i < MaxStep; i++){
 
         /*tsLine contains timeline of if events happen at this timestep or not for event event
         */
-        std::cout << "------" << std::endl;                    
-        std::cout << i << "Mx: " << Mx[263809] << std::endl;
-        std::cout << i << "My: " << My[263809] << std::endl;
-        std::cout << i << "Mz: " << Mz[263809] << std::endl;
+
+        /*Print doesn't work because i++ in while loop */
+        //std::cout << "------" << std::endl;                    
+        //std::cout << i << "Mx: " << Mx[263809] << std::endl;
+        //std::cout << i << "My: " << My[263809] << std::endl;
+        //std::cout << i << "Mz: " << Mz[263809] << std::endl;
 
         //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
