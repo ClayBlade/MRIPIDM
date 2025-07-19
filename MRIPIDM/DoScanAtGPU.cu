@@ -1045,7 +1045,7 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( RxCoily, d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 				}
 
-                if (2500 % 100 == 0){
+                if (i % 100 == 0){
                     std::cout << i << "mx: " << Mx[0] << std::endl;
                     std::cout << i << "my: " << My[0] << std::endl;
                     std::cout << i << "mx: " << Mz[0] << std::endl;
