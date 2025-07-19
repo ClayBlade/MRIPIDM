@@ -808,11 +808,6 @@ for (int i = 0; i < MaxStep; i++){
         /*tsLine contains timeline of if events happen at this timestep or not for event event
         */
 
-        /*Print doesn't work because i++ in while loop */
-        std::cout << "------" << std::endl;                    
-        std::cout << i << "Mx: " << Mx[263809] << std::endl;
-        std::cout << i << "My: " << My[263809] << std::endl;
-        std::cout << i << "Mz: " << Mz[263809] << std::endl;
 
         //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
@@ -1130,7 +1125,15 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( d_TxCoilpe, TxCoilpe, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
 					cudaMemcpy( d_RxCoilx, RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
 					cudaMemcpy( d_RxCoily, RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
-				}
+				
+                            /*Print doesn't work because i++ in while loop */
+                    std::cout << "------" << std::endl;                    
+                    std::cout << i << "Mx: " << Mx[263809] << std::endl;
+                    std::cout << i << "My: " << My[263809] << std::endl;
+                    std::cout << i << "Mz: " << Mz[263809] << std::endl;
+
+                
+                }
             }
             (*Exti)++;
         }
