@@ -592,7 +592,7 @@ int main(){
 
             for (int d = 0; d < *SpinNum; d++){
                 int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
-                dWRnd[idx] = (std::rand() / (float)RAND_MAX); // Random value between 0 and 1
+                dWRnd[idx] = 0; // Random value between 0 and 1
                 //std::cout << "dWRnd[" << idx << "] = " << dWRnd[idx] << std::endl;
             }
 
@@ -855,7 +855,7 @@ for (int i = 0; i < MaxStep; i++){
 			}
 		}
         //std::cout << "checkpoint2.1" << std::endl;
-        if (flag[1]==1 ){ /* update GzAmp */
+        if (flag[1]>=1 ){ /* update GzAmp */
             if (fabs(*(GzAmpLine+ *Gzi)) <= fabs(*(GzAmpLine + (int)min((*Gzi)+1, MaxGzStep-1))))
                 *GzAmp = *(GzAmpLine+ *Gzi);
             else
@@ -867,7 +867,7 @@ for (int i = 0; i < MaxStep; i++){
 		
         //std::cout << "checkpoint2.2" << std::endl;
 
-        if (flag[2]==1 ){ /* update GyAmp */
+        if (flag[2]>=1 ){ /* update GyAmp */
             if (fabs(*(GyAmpLine + *Gyi)) <= fabs(*(GyAmpLine + (int)min(*Gyi+1, MaxGyStep-1))))
                 *GyAmp = *(GyAmpLine+ *Gyi);
             else
@@ -879,7 +879,7 @@ for (int i = 0; i < MaxStep; i++){
 		
         //std::cout << "checkpoint2.3" << std::endl;
 
-        if (flag[3]==1 ){ /* update GxAmp */
+        if (flag[3]>=1 ){ /* update GxAmp */
             if (fabs(*(GxAmpLine+ *Gxi)) <= fabs(*(GxAmpLine + (int)min(*Gxi+1, MaxGxStep-1))))
                 *GxAmp = *(GxAmpLine+ *Gxi);
             else
