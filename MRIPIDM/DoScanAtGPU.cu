@@ -501,7 +501,7 @@ int main(){
 
     /*VSeq*/
     utsLine         = new double[MaxutsStep];
-    tsLine          = new double[MaxStep * 6];
+    tsLine          = new double[MaxStep];
     rfAmpLine       = new double[MaxrfStep];
     rfPhaseLine     = new double[MaxrfStep];
     rfFreqLine      = new double[MaxrfStep];
@@ -668,7 +668,7 @@ for (int i = 0; i < MaxStep; i++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
     }
     for (int j = 0; j < 6; j++){
-        tsLine[i * 6 + j] = *dt * i;
+        tsLine[i] = *dt * i;
         flagsLine[i * 6] = rfAmpLine[i];
         flagsLine[i * 6 + 1] = GzAmpLine[i]; 
         flagsLine[i * 6 + 2] = GyAmpLine[i];
