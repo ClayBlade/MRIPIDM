@@ -661,14 +661,14 @@ for (int i = 0; i < MaxStep; i++){
         ADCLine[i] = 1;
     }
     if (i >= 900){
-        rfAmpLine[i] = 0;
+        rfAmpLine[i] = 3;
     } 
 
     for (int j = 0; j < 10; j++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
     }
     for (int j = 0; j < 6; j++){
-        tsLine[i] = *dt * i;
+        tsLine[i * 6 + j] = *dt * i;
         flagsLine[i * 6] = rfAmpLine[i];
         flagsLine[i * 6 + 1] = GzAmpLine[i]; 
         flagsLine[i * 6 + 2] = GyAmpLine[i];
@@ -898,13 +898,13 @@ for (int i = 0; i < MaxStep; i++){
         //std::cout << "checkpoint3" << std::endl;
 
         *ADC = 0;   /* avoid ADC overflow */
-        if (flag[4]>=1){ /* update ADC */
+        if (flag[4]==1){ /* update ADC */
             *ADC = *(ADCLine+ *ADCi);
             (*ADCi)++;
         }
 		if (*dt > 0) g_Sig.push_back((float)*ADC);
 		
-		if (*ADC >= 1){
+		if (*ADC == 1){
 			/* update k-space */
             Kz[Signali] += *KzTmp;
             Ky[Signali] += *KyTmp;
