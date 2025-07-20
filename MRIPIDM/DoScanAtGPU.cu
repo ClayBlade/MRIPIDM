@@ -1060,9 +1060,9 @@ for (int i = 0; i < MaxStep; i++){
 
                                                 /*Print doesn't work because i++ in while loop */
                     std::cout << "------" << std::endl;                    
-                    std::cout << i << "Mx: " << Mx[SpinMxNum/2 * SpinMxSliceNum/2] << std::endl;
-                    std::cout << i << "My: " << My[SpinMxNum/2 * SpinMxSliceNum/2] << std::endl;
-                    std::cout << i << "Mz: " << Mz[SpinMxNum/2 * SpinMxSliceNum/2] << std::endl;
+                    std::cout << i << "Mx: " << Mx[263809] << std::endl;
+                    std::cout << i << "My: " << My[263809] << std::endl;
+                    std::cout << i << "Mz: " << Mz[263809] << std::endl;
 				//}
 
 
