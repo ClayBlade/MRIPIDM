@@ -327,7 +327,9 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                 //printf("bufferMz: %f\n", bufferMz);
                                                 //printf("Mz: %f\n", Mz);
                                                 //}
-
+                                                if (isnan(Mx)) printf("ERROR: NaN at tid=%d\n", tid);
+                                                if (isnan(My)) printf("ERROR: NaN at tid=%d\n", tid);
+                                                if (isnan(Mz)) printf("ERROR: NaN at tid=%d\n", tid);
                                                 
                                                 *p_d_Mx  = Mx;
                                                 *p_d_My  = My;
