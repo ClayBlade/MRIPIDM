@@ -317,16 +317,16 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                     My = bufferMy * ExpdtT2;
                                                     Mz = bufferMz * ExpdtT1 - M0dtT1;
                                                 }
-                                                if (tid == 0){
-                                                printf("------------------------\n");
-                                                printf("ExpdtT2: %f\n", ExpdtT2 );
+                                                //if (tid == 0){
+                                                //printf("------------------------\n");
+                                                //printf("ExpdtT2: %f\n", ExpdtT2 );
                                                 //printf("bufferMy: %f\n", bufferMy);
                                                 //printf("My: %f\n", My);
                                                 //printf("bufferMx: %f\n", bufferMx);
                                                 //printf("Mx: %f\n", Mx);
                                                 //printf("bufferMz: %f\n", bufferMz);
                                                 //printf("Mz: %f\n", Mz);
-                                                }
+                                                //}
 
                                                 
                                                 *p_d_Mx  = Mx;
@@ -628,18 +628,18 @@ for (int i = 0; i < MaxStep; i++){
     ExtLine[i] = 1;
     tsLine[i] = *dt * i;
     if (i <= 128){ 
-        rfAmpLine[i] = 90/(*Gyro * *dt); 
-        rfPhaseLine[i] = 1;  
+        rfAmpLine[i] = sin(i*(3*3.14f)/128)/i;
+        rfPhaseLine[i] = 1f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 1;
         GyAmpLine[i] = 0;
         GxAmpLine[i] = 0;
         ADCLine[i] = 0;
-    } //90 degree pulse
+    }
     if (i >= 320 && i >= 192){
-        rfAmpLine[i] = 180/(*Gyro * *dt);
-        rfPhaseLine[i] = 1;  
+        rfAmpLine[i] = sin((3*3.14f*(i-64))/128)/i-64;
+        rfPhaseLine[i] = 3.14f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 1;
@@ -650,7 +650,7 @@ for (int i = 0; i < MaxStep; i++){
             GxAmpLine[i] = 1;
             GyAmpLine[i] = 1;
         }
-    } //180 degree pulse
+    }
     if (i >= 324){
         rfAmpLine[i] = 0;
         rfPhaseLine[i] = 0;  
