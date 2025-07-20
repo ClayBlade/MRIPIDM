@@ -632,7 +632,7 @@ for (int i = 0; i < MaxStep; i++){
     ADCLine[i] = 1;
 
     if (i <= 100){
-        rfAmpLine[i] = PI*0.01/2;//0.1*(sin(360/128 * i)/(360/128 * i));
+        rfAmpLine[i] = PI/2;//0.1*(sin(360/128 * i)/(360/128 * i));
         rfPhaseLine[i] = 0;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
