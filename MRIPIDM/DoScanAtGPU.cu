@@ -629,7 +629,7 @@ for (int i = 0; i < MaxStep; i++){
     tsLine[i] = *dt * i;
     if (i <= 128){ 
         rfAmpLine[i] = 90/(*Gyro * *dt); 
-        rfPhaseLine[i] = 1f;  
+        rfPhaseLine[i] = 1;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 1;
@@ -639,7 +639,7 @@ for (int i = 0; i < MaxStep; i++){
     } //90 degree pulse
     if (i >= 320 && i >= 192){
         rfAmpLine[i] = 180/(*Gyro * *dt);
-        rfPhaseLine[i] = 1f;  
+        rfPhaseLine[i] = 1;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 1;
