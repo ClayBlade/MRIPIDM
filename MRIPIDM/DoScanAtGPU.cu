@@ -317,9 +317,9 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                     My = bufferMy * ExpdtT2;
                                                     Mz = bufferMz * ExpdtT1 - M0dtT1;
                                                 }
-                                                //if (tid == 0){
-                                                //printf("------------------------\n");
-                                                //printf("ExpdtT2: %f\n", ExpdtT2 );
+                                                if (tid == 0){
+                                                printf("------------------------\n");
+                                                printf("ExpdtT2: %f\n", ExpdtT2 );
                                                 //printf("bufferMy: %f\n", bufferMy);
                                                 //printf("My: %f\n", My);
                                                 //printf("bufferMx: %f\n", bufferMx);
@@ -628,18 +628,18 @@ for (int i = 0; i < MaxStep; i++){
     ExtLine[i] = 1;
     tsLine[i] = *dt * i;
     if (i <= 128){ 
-        rfAmpLine[i] = sin(i*(3*3.14f)/128)/i;
-        rfPhaseLine[i] = 3.14f;  
+        rfAmpLine[i] = 90/(*Gyro * *dt); 
+        rfPhaseLine[i] = 1f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 1;
         GyAmpLine[i] = 0;
         GxAmpLine[i] = 0;
         ADCLine[i] = 0;
-    }
+    } //90 degree pulse
     if (i >= 320 && i >= 192){
-        rfAmpLine[i] = sin((3*3.14f*(i-64))/128)/i-64;
-        rfPhaseLine[i] = 3.14f;  
+        rfAmpLine[i] = 180/(*Gyro * *dt);
+        rfPhaseLine[i] = 1f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 1;
@@ -650,7 +650,7 @@ for (int i = 0; i < MaxStep; i++){
             GxAmpLine[i] = 1;
             GyAmpLine[i] = 1;
         }
-    }
+    } //180 degree pulse
     if (i >= 324){
         rfAmpLine[i] = 0;
         rfPhaseLine[i] = 0;  
@@ -1060,30 +1060,30 @@ for (int i = 0; i < MaxStep; i++){
                 /* execute extended process */
 				
                 /* update pointers, avoid pointer change between Matlab and Mex call */
-                //*t               += *dt;
-                ////*dt              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "dt"));
-                //*rfAmp           = rfAmpLine[i];
-                //*rfPhase         = rfPhaseLine[i];
-                //*rfFreq          = rfFreqLine[i];
-                //*rfCoil          = rfCoilLine[i];
-                //*rfRef           = 0; //rfRefLine[i];
-                //*GzAmp           = GzAmpLine[i];
-                //*GyAmp           = GyAmpLine[i];
-                //*GxAmp           = GxAmpLine[i];
-                //*ADC             = ADCLine[i];
-                //*Ext             = ExtLine[i];
-                ////*KzTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kz"));
-                ////*KyTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Ky"));
-                ////*KxTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kx"));
-                ////*gpuFetch     	= (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "gpuFetch"));
-                //*utsi            = i * 10;
-                //*rfi             = i;
-                //*Gzi             = i;
-                //*Gyi             = i;
-                //*Gxi             = i;
-                //*ADCi            = i;
-                //*Exti            = i;
-                //*TRCount         += 1;
+                *t               += *dt;
+                //*dt              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "dt"));
+                *rfAmp           = rfAmpLine[i];
+                *rfPhase         = rfPhaseLine[i];
+                *rfFreq          = rfFreqLine[i];
+                *rfCoil          = rfCoilLine[i];
+                *rfRef           = 0; //rfRefLine[i];
+                *GzAmp           = GzAmpLine[i];
+                *GyAmp           = GyAmpLine[i];
+                *GxAmp           = GxAmpLine[i];
+                *ADC             = ADCLine[i];
+                *Ext             = ExtLine[i];
+                //*KzTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kz"));
+                //*KyTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Ky"));
+                //*KxTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kx"));
+                //*gpuFetch     	= (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "gpuFetch"));
+                *utsi            = i * 10;
+                *rfi             = i;
+                *Gzi             = i;
+                *Gyi             = i;
+                *Gxi             = i;
+                *ADCi            = i;
+                *Exti            = i;
+                *TRCount         += 1;
 
 				//if (*gpuFetch !=0){
 				//	*gpuFetch =0;
