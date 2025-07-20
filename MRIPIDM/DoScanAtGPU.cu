@@ -632,8 +632,8 @@ for (int i = 0; i < MaxStep; i++){
     ADCLine[i] = 1;
 
     if (i <= 10){
-        rfAmpLine[i] = 0.1*(sin(360/128 * i)/(360/128 * i));
-        rfPhaseLine[i] = 3.14f;  
+        rfAmpLine[i] = PI*0.01/2;//0.1*(sin(360/128 * i)/(360/128 * i));
+        rfPhaseLine[i] = 0;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 0;
@@ -934,10 +934,6 @@ for (int i = 0; i < MaxStep; i++){
         *KzTmp +=(*GzAmp)*(*dt)*(*Gyro/(2*PI));
         *KyTmp +=(*GyAmp)*(*dt)*(*Gyro/(2*PI));
         *KxTmp +=(*GxAmp)*(*dt)*(*Gyro/(2*PI));
-		
-
-        //if (flag[5] != 0){ std::cout << "flag passed" << std::endl; }
-        //if (*Ext !=0){std::cout << "ext" << *Ext << std::endl;}
 
         
 
@@ -984,11 +980,7 @@ for (int i = 0; i < MaxStep; i++){
 
                     /* call GPU kernel for spin discrete precessing */
 
-                    //std::cout << "Grid: (" << dimGridImg.x << ", " << dimGridImg.y << ", " << dimGridImg.z << ")" << std::endl;
-                    //std::cout << "Block: (" << dimBlockImg.x << ", " << dimBlockImg.y << ", " << dimBlockImg.z << ")" << std::endl;
-                    //std::cout << "SBufferLen: " << SBufferLen << std::endl;
-
-					BlochKernelNormalGPU<<< dimGridImg, dimBlockImg, SBufferLen >>>
+ 					BlochKernelNormalGPU<<< dimGridImg, dimBlockImg, SBufferLen >>>
 										((float)*Gyro, d_CS, d_Rho, d_T1, d_T2, d_Mz, d_My, d_Mx,
 										d_dB0, d_dWRnd, d_Gzgrid, d_Gygrid, d_Gxgrid, d_TxCoilmg, d_TxCoilpe, d_RxCoilx, d_RxCoily,
 										d_Sig, (float)*RxCoilDefault, (float)*TxCoilDefault,

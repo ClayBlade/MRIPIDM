@@ -168,17 +168,6 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 								buffer4 = buffer2;
 							}
 							
-							/* rfRef for demodulating rf Phase */
-							//if (rfRef!=0){
-							//	buffer1 = cos(-rfRef) * buffer1;
-							//	buffer2 = -sin(-rfRef) * buffer2;
-							//	buffer3 = sin(-rfRef) * buffer3;
-							//	buffer4 = cos(-rfRef) * buffer4;
-							//	buffer1 = buffer1 + buffer2;
-							//	buffer3 = buffer3 + buffer4;
-							//}else{
-							//	buffer3 = buffer4;
-							//}
 							
 							/* signal buffer pointer */
 							p_d_Sx = d_Sx + tid + t * (SpinMxNum * SignalLen * RxCoilNum) + c * (SpinMxNum * SignalLen) + Signalptr * SpinMxNum;
@@ -221,33 +210,6 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 							cosPhi   = cos(-buffer2);
 							sinPhi   = sin(-buffer2);
 						}
-						//else{
-						//	buffer3 = 0;
-						//	buffer4 = 0;
-						//	for (int c = 0; c<TxCoilNum; c++){ /* multi-Tx,  sum all (B1+ * rf) */
-						//		rfAmp   = p_d_rfAmp[c*3];
-						//		rfPhase = p_d_rfPhase[c*3];
-						//		rfFreq  = p_d_rfFreq[c*3]; /* note rfFreq is defined as fB0-frf */
-						//		if (rfAmp !=0 ){
-						//			dW      += 2 * PI * rfFreq;
-						//			buffer1  = *(p_d_TxCoilmg + c * SpinMxAllNum) * rfAmp;
-						//			buffer2  = *(p_d_TxCoilpe + c * SpinMxAllNum) + rfPhase;
-						//			buffer3 += buffer1 * cos(buffer2);
-						//			buffer4 += buffer1 * sin(buffer2);
-						//		}
-						//	}
-						//	buffer1 = sqrt(pow(buffer3, 2) + pow(buffer4,2));
-						//	buffer2 = atan2(buffer4, buffer3);
-//
-						//	Alpha	  = sqrt(pow(dW,2) + pow(buffer1,2) * pow(Gyro,2)) * (*p_d_dt);  /* calculate alpha */
-						//	Beta      = atan(dW/(buffer1 * Gyro));  /* calculate beta */
-						//	sinAlpha  = sin(Alpha);
-						//	sinBeta   = sin(Beta);
-						//	cosAlpha  = cos(Alpha);
-						//	cosBeta   = cos(Beta);
-						//	cosPhi    = cos(-buffer2);
-						//	sinPhi    = sin(-buffer2);
-						//}
 
 						buffer1 = pow(cosBeta,2)*cosPhi - sinBeta*(sinAlpha*sinPhi - cosAlpha*cosPhi*sinBeta);
 						buffer2 = sinPhi*pow(cosBeta,2) + sinBeta*(cosPhi*sinAlpha + cosAlpha*sinBeta*sinPhi);
