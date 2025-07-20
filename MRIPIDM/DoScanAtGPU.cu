@@ -326,7 +326,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                 //printf("Mx: %f\n", Mx);
                                                 //printf("bufferMz: %f\n", bufferMz);
                                                 //printf("Mz: %f\n", Mz);
-                                                //}
+                                                }
 
                                                 
                                                 *p_d_Mx  = Mx;
