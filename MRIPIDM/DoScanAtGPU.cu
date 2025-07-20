@@ -501,7 +501,7 @@ int main(){
 
     /*VSeq*/
     utsLine         = new double[MaxutsStep];
-    tsLine          = new double[MaxStep * 6];
+    tsLine          = new double[MaxStep];
     rfAmpLine       = new double[MaxrfStep];
     rfPhaseLine     = new double[MaxrfStep];
     rfFreqLine      = new double[MaxrfStep];
@@ -626,6 +626,7 @@ int main(){
 
 for (int i = 0; i < MaxStep; i++){
     ExtLine[i] = 1;
+    tsLine[i] = *dt * i;
     if (i <= 128){ 
         rfAmpLine[i] = sin(i*(3*3.14f)/128)/i;
         rfPhaseLine[i] = 3.14f;  
@@ -668,7 +669,6 @@ for (int i = 0; i < MaxStep; i++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
     }
     for (int j = 0; j < 6; j++){
-        tsLine[i * 6 + j] = *dt * i;
         flagsLine[i * 6] = rfAmpLine[i];
         flagsLine[i * 6 + 1] = GzAmpLine[i]; 
         flagsLine[i * 6 + 2] = GyAmpLine[i];
@@ -898,7 +898,7 @@ for (int i = 0; i < MaxStep; i++){
         //std::cout << "checkpoint3" << std::endl;
 
         *ADC = 0;   /* avoid ADC overflow */
-        if (flag[4]==1){ /* update ADC */
+        if (flag[4]>=1){ /* update ADC */
             *ADC = *(ADCLine+ *ADCi);
             (*ADCi)++;
         }
@@ -927,8 +927,6 @@ for (int i = 0; i < MaxStep; i++){
 
             *Ext = *(ExtLine+ *Exti);
             /* execute extended process */
-            //std::cout << "Passed flag" << std::endl;
-            //std::cout << "ext: " << *Ext << std::endl;
             if (*Ext != 0){
                 //std::cout << "Passed Ext" << std::endl;
                 //std::cout << "g.sig: " << g_Sig.size() << std::endl;
@@ -1060,44 +1058,39 @@ for (int i = 0; i < MaxStep; i++){
 
 
                 /* execute extended process */
-                /*ExtCall = mexEvalString("DoExtPlugin");
-                if (ExtCall){
-                    mexErrMsgTxt("Extended process encounters ERROR!");
-                    return;
-                }*/
 				
                 /* update pointers, avoid pointer change between Matlab and Mex call */
-                *t               += *dt;
-                //*dt              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "dt"));
-                *rfAmp           = rfAmpLine[i];
-                *rfPhase         = rfPhaseLine[i];
-                *rfFreq          = rfFreqLine[i];
-                *rfCoil          = rfCoilLine[i];
-                *rfRef           = 0; //rfRefLine[i];
-                *GzAmp           = GzAmpLine[i];
-                *GyAmp           = GyAmpLine[i];
-                *GxAmp           = GxAmpLine[i];
-                *ADC             = ADCLine[i];
-                *Ext             = ExtLine[i];
-                //*KzTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kz"));
-                //*KyTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Ky"));
-                //*KxTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kx"));
-                //*gpuFetch     	= (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "gpuFetch"));
-                *utsi            = i * 10;
-                *rfi             = i;
-                *Gzi             = i;
-                *Gyi             = i;
-                *Gxi             = i;
-                *ADCi            = i;
-                *Exti            = i;
-                *TRCount         += 1;
+                //*t               += *dt;
+                ////*dt              = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "dt"));
+                //*rfAmp           = rfAmpLine[i];
+                //*rfPhase         = rfPhaseLine[i];
+                //*rfFreq          = rfFreqLine[i];
+                //*rfCoil          = rfCoilLine[i];
+                //*rfRef           = 0; //rfRefLine[i];
+                //*GzAmp           = GzAmpLine[i];
+                //*GyAmp           = GyAmpLine[i];
+                //*GxAmp           = GxAmpLine[i];
+                //*ADC             = ADCLine[i];
+                //*Ext             = ExtLine[i];
+                ////*KzTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kz"));
+                ////*KyTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Ky"));
+                ////*KxTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kx"));
+                ////*gpuFetch     	= (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "gpuFetch"));
+                //*utsi            = i * 10;
+                //*rfi             = i;
+                //*Gzi             = i;
+                //*Gyi             = i;
+                //*Gxi             = i;
+                //*ADCi            = i;
+                //*Exti            = i;
+                //*TRCount         += 1;
 
 				//if (*gpuFetch !=0){
 				//	*gpuFetch =0;
 				//	/* update pointers, avoid pointer change between Matlab and Mex call */
-//
+
                 //    /*Unchanging fields for now*/
-//
+
 				//	//Mz          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mz"));
 				//	//My          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "My"));
 				//	//Mx          = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VObj"), 0, "Mx"));
@@ -1114,28 +1107,7 @@ for (int i = 0; i < MaxStep; i++){
 				//	//TxCoilpe    = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "TxCoilpe"));
 				//	//RxCoilx     = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "RxCoilx"));
 				//	//RxCoily     = (float*) mxGetData(mxGetField(mexGetVariablePtr("global", "VCoi"), 0, "RxCoily"));
-//
-				//	/* send data back to GPU */
-				//	cudaMemcpy( d_Mz, Mz.data(), SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_My, My.data(), SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_Mx, Mx.data(), SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_dWRnd, dWRnd, SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_Rho, Rho.data(), SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_T1, T1.data(), SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_T2, T2.data(), SpinMxNum * SpinMxSliceNum * (*TypeNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_Gzgrid, Gzgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_Gygrid, Gygrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_Gxgrid, Gxgrid, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_dB0, dB0, SpinMxNum * SpinMxSliceNum * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_TxCoilmg, TxCoilmg, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_TxCoilpe, TxCoilpe, SpinMxNum * SpinMxSliceNum * (*TxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_RxCoilx, RxCoilx, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//	cudaMemcpy( d_RxCoily, RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyHostToDevice );
-				//
-//
-//
-                //
-                //}
+
             }
             (*Exti)++;
         }
