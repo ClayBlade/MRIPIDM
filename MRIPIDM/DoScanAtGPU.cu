@@ -639,7 +639,7 @@ for (int i = 0; i < MaxStep; i++){
         GzAmpLine[i] = 0;
         GyAmpLine[i] = 0;
         GxAmpLine[i] = 0;
-        ADCLine[i] = 0;
+        //ADCLine[i] = 0;
     }
 
 
