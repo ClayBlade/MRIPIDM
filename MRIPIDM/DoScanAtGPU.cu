@@ -629,6 +629,22 @@ int main(){
 for (int i = 0; i < MaxStep; i++){
     ExtLine[i] = 1;
     tsLine[i] = *dt * i;
+    ADCLine[i] = 1;
+
+    if (i <= 10){
+        rfAmpLine[i] = 0.1*(sin(360/128 * i)/(360/128 * i));
+        rfPhaseLine[i] = 3.14f;  
+        rfFreqLine[i] = 1;
+        rfCoilLine[i] = 1;
+        GzAmpLine[i] = 0;
+        GyAmpLine[i] = 0;
+        GxAmpLine[i] = 0;
+        ADCLine[i] = 0;
+    }
+
+
+
+    /*
     if (i <= 128){ 
         rfAmpLine[i] = 0.1*(sin(360/128 * i)/(360/128 * i));
         rfPhaseLine[i] = 3.14f;  
@@ -640,7 +656,7 @@ for (int i = 0; i < MaxStep; i++){
         ADCLine[i] = 0;
     }
     if (i >= 320 && i >= 192){
-        rfAmpLine[i] = sin((3*3.14f*(i-64))/128)/i-64;
+        rfAmpLine[i] = 0.1*(sin(360/128 * i)/(360/128 * i));
         rfPhaseLine[i] = 3.14f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
@@ -665,7 +681,8 @@ for (int i = 0; i < MaxStep; i++){
     }
     //if (i >= 900){
     //    rfAmpLine[i] = 1;
-    //} 
+    //*/
+    } 
 
     for (int j = 0; j < 10; j++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
