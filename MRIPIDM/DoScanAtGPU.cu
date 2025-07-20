@@ -593,7 +593,7 @@ int main(){
 
    for (int x = 0; x < xSiz; x++){
     for (int y = 0; y < ySiz; y++){
-    for (int b = 0; b < SpinMxSliceNum; b++){
+     for (int b = 0; b < SpinMxSliceNum; b++){
             dB0[b * xSiz * ySiz + y * xSiz + x] = 0.0;
             Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((b-SpinMxSliceNum)/2) * 0.25/SpinMxSliceNum; /*0.2/size*/
             Gygrid[b * xSiz * ySiz + y * xSiz + x] = (y-ySiz/2) * 0.25/ySiz; /*0.2/size*/
@@ -636,7 +636,7 @@ for (int i = 0; i < MaxStep; i++){
         rfPhaseLine[i] = 0;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
-        GzAmpLine[i] = 0;
+        GzAmpLine[i] = (2 * PI * 0.005) / (0.2 * (*Gyro)); //0.1*(sin(360/128 * i)/(360/128 * i));
         GyAmpLine[i] = 0;
         GxAmpLine[i] = 0;
         //ADCLine[i] = 0;
