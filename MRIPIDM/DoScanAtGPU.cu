@@ -522,7 +522,7 @@ int main(){
 	t               = new double;
     *t              =  0;
     dt              = new double;
-    *dt             = 20e-6; /* 20 us */
+    *dt             = 10e-6; /* 10 us */
     rfAmp           = new double;
     *rfAmp          =  0;
     rfPhase         = new double;
@@ -608,7 +608,7 @@ int main(){
             for (int e = 0; e < *TxCoilNum; e++){
                 int idx = e * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
                 TxCoilmg[idx] = 1;
-                TxCoilpe[idx] = 1;
+                TxCoilpe[idx] = PI;
                 //std::cout << "TxCoilmg[" << idx << "] = " << TxCoilmg[idx] << std::endl;
             }
 
@@ -632,7 +632,7 @@ for (int i = 0; i < MaxStep; i++){
     ADCLine[i] = 1;
 
     if (i <= 100){
-        rfAmpLine[i] = PI*0.001/(100 * *Gyro);//0.1*(sin(360/128 * i)/(360/128 * i));
+        rfAmpLine[i] = (PI/2)/(Gyro * 128 * (*dt));//0.1*(sin(360/128 * i)/(360/128 * i));
         rfPhaseLine[i] = 0;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;

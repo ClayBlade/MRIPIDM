@@ -168,6 +168,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
 								buffer4 = buffer2;
 							}
 							
+
 							
 							/* signal buffer pointer */
 							p_d_Sx = d_Sx + tid + t * (SpinMxNum * SignalLen * RxCoilNum) + c * (SpinMxNum * SignalLen) + Signalptr * SpinMxNum;
