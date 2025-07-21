@@ -473,9 +473,9 @@ int main(){
     dB0 = new float[SpinMxNum * SpinMxSliceNum]; /*Initialized as 0*/
     dWRnd = new float[SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum)]; 
     Gzgrid = new float[SpinMxNum * SpinMxSliceNum];
-    Gygrid = new float[SpinMxNum * SpinMxSliceNum];
+    Gygrid = new float[SpixSliceNum];
     Gxgrid = new float[SpinMxNum * SpinMxSliceNum];
-
+nMxNum * SpinM
     std::cout << SpinMxNum * SpinMxSliceNum << " spins in total." << std::endl;
     
     /*VCoi*/
@@ -494,12 +494,12 @@ int main(){
     
      
 
-    MaxStep         = 2500;
+    MaxStep         = 1024;
     MaxutsStep      = MaxStep * 10;
-    MaxrfStep       = 2500; 
-    MaxGzStep       = 2500;
-    MaxGyStep       = 2500;
-    MaxGxStep       = 2500;
+    MaxrfStep       = 1024; 
+    MaxGzStep       = 1024;
+    MaxGyStep       = 1024;
+    MaxGxStep       = 1024;
 
     /*VSeq*/
     utsLine         = new double[MaxutsStep];
@@ -595,9 +595,9 @@ int main(){
     for (int y = 0; y < ySiz; y++){
      for (int b = 0; b < SpinMxSliceNum; b++){
             dB0[b * xSiz * ySiz + y * xSiz + x] = 0.0;
-            Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((b-SpinMxSliceNum)/2) * 0.25/SpinMxSliceNum; /*0.2/size*/
-            Gygrid[b * xSiz * ySiz + y * xSiz + x] = (y-ySiz/2) * 0.25/ySiz; /*0.2/size*/
-            Gxgrid[b * xSiz * ySiz + y * xSiz + x] = (x-xSiz/2) * 0.25/xSiz; /*0.2/size*/
+            Gzgrid[b * xSiz * ySiz + y * xSiz + x] = ((b-SpinMxSliceNum)/2) * 0.20/SpinMxSliceNum; /*0.2/size*/
+            Gygrid[b * xSiz * ySiz + y * xSiz + x] = (y-ySiz/2) * 0.20/ySiz; /*0.2/size*/
+            Gxgrid[b * xSiz * ySiz + y * xSiz + x] = (x-xSiz/2) * 0.20/xSiz; /*0.2/size*/
 
             for (int d = 0; d < *SpinNum; d++){
                 int idx = d * SpinMxSliceNum * xSiz * ySiz + b * xSiz * ySiz + y * xSiz + x;
@@ -632,8 +632,8 @@ for (int i = 0; i < MaxStep; i++){
     ADCLine[i] = 1;
 
     if (i <= 128){ 
-        rfAmpLine[i] = 1e5*((PI/2)/(*Gyro * 128 * (*dt)));
-        rfPhaseLine[i] = 3.14f;  
+        rfAmpLine[i] = 1e2*((PI/2)/(*Gyro * 128 * (*dt)));
+        rfPhaseLine[i] = PI;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
         GzAmpLine[i] = 1;
@@ -641,33 +641,34 @@ for (int i = 0; i < MaxStep; i++){
         GxAmpLine[i] = 0;
         ADCLine[i] = 0;
     }
-    //if (i >= 320 && i >= 192){
-    //    rfAmpLine[i] = (PI/2)/(*Gyro * 128 * (*dt));
-    //    rfPhaseLine[i] = 3.14f;  
-    //    rfFreqLine[i] = 1;
-    //    rfCoilLine[i] = 1;
-    //    GzAmpLine[i] = 1;
-    //    GyAmpLine[i] = 0;
-    //    GxAmpLine[i] = 0;
-    //    ADCLine[i] = 0;
-    //    if (i >= 300){
-    //        GxAmpLine[i] = 1;
-    //        GyAmpLine[i] = 1;
-    //    }
-    //}
-    //if (i >= 324){
-    //    rfAmpLine[i] = 0;
-    //    rfPhaseLine[i] = 0;  
-    //    rfFreqLine[i] = 0;
-    //    rfCoilLine[i] = 0;
-    //    GzAmpLine[i] = 1;
-    //    GyAmpLine[i] = 1;
-    //    GxAmpLine[i] = 1;
-    //    ADCLine[i] = 1;
-    //}
-    //if (i >= 900){
-    //    rfAmpLine[i] = 1;
-    //}*/
+    if (i == 200){
+        GyAmpLine[i] = 1;
+    }
+    if (i <= 343 && i >= 296){
+        rfAmpLine[i] = 1e3* (PI/2)/(*Gyro * 48 * (*dt));
+        rfPhaseLine[i] = PI;  
+        rfFreqLine[i] = 1;
+        rfCoilLine[i] = 1;
+        GzAmpLine[i] = 1;
+        GyAmpLine[i] = 0;
+        GxAmpLine[i] = 0;
+        ADCLine[i] = 0;
+        if (i >= 300){
+            GxAmpLine[i] = 1;
+            GyAmpLine[i] = 1;
+        }
+    }
+    if (i >= 512 && i <= 640){
+        rfAmpLine[i] = 0;
+        rfPhaseLine[i] = 0;  
+        rfFreqLine[i] = 0;
+        rfCoilLine[i] = 0;
+        GzAmpLine[i] = 0;
+        GyAmpLine[i] = 0;
+        GxAmpLine[i] = 1;
+        ADCLine[i] = 1;
+    }
+
 
     for (int j = 0; j < 10; j++){
         utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
