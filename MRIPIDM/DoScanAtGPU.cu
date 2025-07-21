@@ -631,26 +631,8 @@ for (int i = 0; i < MaxStep; i++){
     tsLine[i] = *dt * i;
     ADCLine[i] = 1;
 
-    if (i <= 1){
-        rfAmpLine[i] = (PI/2)/(*Gyro * (*dt));//0.1*(sin(360/128 * i)/(360/128 * i));
-        rfPhaseLine[i] = 0;  
-        rfFreqLine[i] = 1;
-        rfCoilLine[i] = 1;
-        GzAmpLine[i] = (2 * PI * 0.005) / (0.2 * (*Gyro)); //0.1*(sin(360/128 * i)/(360/128 * i));
-        GyAmpLine[i] = 0;
-        GxAmpLine[i] = 0;
-        //ADCLine[i] = 0;
-
-        if (i == 1){
-
-        }
-    }
-
-
-
-    /*
     if (i <= 128){ 
-        rfAmpLine[i] = 0.1*(sin(360/128 * i)/(360/128 * i));
+        rfAmpLine[i] = (PI/2)/(*Gyro * 128 * (*dt));
         rfPhaseLine[i] = 3.14f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
@@ -660,7 +642,7 @@ for (int i = 0; i < MaxStep; i++){
         ADCLine[i] = 0;
     }
     if (i >= 320 && i >= 192){
-        rfAmpLine[i] = 0.1*(sin(360/128 * i)/(360/128 * i));
+        rfAmpLine[i] = (PI/2)/(*Gyro * 128 * (*dt));
         rfPhaseLine[i] = 3.14f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
