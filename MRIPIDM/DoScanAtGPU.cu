@@ -233,7 +233,7 @@ __global__ void BlochKernelNormalGPU(float Gyro, double *d_CS, float *d_Rho, flo
                                                         rfAmpSum+=fabs(p_d_rfAmp[c*3]);
                                                     }
 
-                                                    if (rfAmpSum != 0){
+                                                    if (rfAmpSum != 0){ 
                                                         if (TxCoilNum == 1) { /* single-Tx */
                                                             rfAmp   = p_d_rfAmp[0];
                                                             rfPhase = p_d_rfPhase[0];
@@ -829,8 +829,8 @@ for (int i = 0; i < MaxStep; i++){
 
         //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
-        *t 	= *(utsLine + *utsi);
-        *dt 	= *(utsLine + (int)min(*utsi+1, MaxutsStep-1))-*(utsLine + *utsi);
+        *t 	= *(tsLine + *utsi);
+        *dt 	= *(tsLine + (int)min(*utsi+1, MaxutsStep-1))-*(tsLine + *utsi); //changed from utsLine to tsLine
         *utsi = (int)min(*utsi+1, MaxutsStep-1);
 		if (*dt > 0) g_Sig.push_back((float)*dt);
 		
@@ -1086,7 +1086,7 @@ for (int i = 0; i < MaxStep; i++){
                 //*KyTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Ky"));
                 //*KxTmp           = (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "Kx"));
                 //*gpuFetch     	= (double*) mxGetData(mxGetField(mexGetVariablePtr("global", "VVar"), 0, "gpuFetch"));
-                *utsi            = i * 10;
+                *utsi            = i;
                 *rfi             = i;
                 *Gzi             = i;
                 *Gyi             = i;
