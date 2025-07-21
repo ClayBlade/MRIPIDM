@@ -1068,9 +1068,9 @@ for (int i = 0; i < MaxStep; i++){
                         netMy += My[i];
                         netMz += Mz[i];
                     }
-                    std::cout << i << "Mx: " << netMx / (spinMxNum*SpinmxSliceNum) << std::endl;
-                    std::cout << i << "My: " << netMy / (spinMxNum*SpinmxSliceNum)<< std::endl;
-                    std::cout << i << "Mz: " << netMz / (spinMxNum*SpinmxSliceNum)<< std::endl;
+                    std::cout << i << "Mx: " << netMx / (SpinMxNum*SpinMxSliceNum) << std::endl;
+                    std::cout << i << "My: " << netMy / (SpinMxNum*SpinMxSliceNum) << std::endl;
+                    std::cout << i << "Mz: " << netMz / (SpinMxNum*SpinMxSliceNum) << std::endl;
 				//}
 
 
