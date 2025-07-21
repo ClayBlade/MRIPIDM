@@ -1,5 +1,7 @@
 #Only in slicer cli
-#only works once slicer is running???
+#running this file clones itself into main dir 
+#Delete this file and place in utils
+
 
 import slicer
 import slicer.util
@@ -31,14 +33,14 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
     ySize = label_array.shape[1]
     xSize = label_array.shape[2]
 
-    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    My = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    Mz = np.ones((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    My = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    Mz = np.ones((zSize, ySize, xSize), dtype=np.float32)
 
-    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32)
 
     for i, label in enumerate(label_array.flatten()):
         if label == 1: #Grey Matter
@@ -62,22 +64,21 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
             T2star[i] = 0.025
             Rho[i] = 0.5
 
-    data_obj = {
-        "Gyro" : 4257.59, #MHz/T
-        "xSize" : xSize,
-        "ySize" : ySize,
-        "zSize" : zSize,
-        "Mx" : Mx.tolist(),
-        "My" : My.tolist(),     
-        "Mz" : Mz.tolist(),
-        "T1" : T1.tolist(),
-        "T2" : T2.tolist(),
-        "T2star" : T2star.tolist(),
-        "Rho" : Rho.tolist()
-    }
-
-    with open(rf"D:/Projects/MRIPIDMoutput/labeledSpace/{folder}.pkl", "wb") as f:
-        pickle.dump(data_obj, f)
+    
+    outpath = f"D:/Projects/MRIPIDMoutput/ParametricMaps/{folder}.npz"
+    
+    np.savez_compressed(outpath,
+                        Gyro=4257.59,
+                        xSize=xSize,
+                        ySize=ySize,
+                        zSize=zSize,
+                        Mx=Mx,
+                        My=My,
+                        Mz=Mz,
+                        T1=T1,
+                        T2=T2,
+                        T2star=T2star,
+                        Rho=Rho)
 
 
     slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
@@ -102,14 +103,14 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
     ySize = label_array.shape[1]
     xSize = label_array.shape[2]
 
-    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    My = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    Mz = np.ones((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    Mx = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    My = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    Mz = np.ones((zSize, ySize, xSize), dtype=np.float32)
 
-    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
-    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32, order = "F").flatten()
+    T1 = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    T2 = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32)
+    Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32)
 
     for i, label in enumerate(label_array.flatten()):
         if label == 1: #Grey Matter
@@ -133,22 +134,20 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
             T2star[i] = 0.025
             Rho[i] = 0.5
 
-    data_obj = {
-        "Gyro" : 4257.59, #MHz/T
-        "xSize" : xSize,
-        "ySize" : ySize,
-        "zSize" : zSize,
-        "Mx" : Mx.tolist(),
-        "My" : My.tolist(),     
-        "Mz" : Mz.tolist(),
-        "T1" : T1.tolist(),
-        "T2" : T2.tolist(),
-        "T2star" : T2star.tolist(),
-        "Rho" : Rho.tolist()
-    }
-
-    with open(rf"D:/Projects/MRIPIDMoutput/labeledSpace/{folder}.pkl", "wb") as f:
-        pickle.dump(data_obj, f)
+    outpath = f"D:/Projects/MRIPIDMoutput/ParametricMaps/{folder}.npz"
+    
+    np.savez_compressed(outpath,
+                        Gyro=4257.59,
+                        xSize=xSize,
+                        ySize=ySize,
+                        zSize=zSize,
+                        Mx=Mx,
+                        My=My,
+                        Mz=Mz,
+                        T1=T1,
+                        T2=T2,
+                        T2star=T2star,
+                        Rho=Rho)
 
     slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
     slicer.mrmlScene.RemoveNode(segNode)
