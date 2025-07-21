@@ -830,7 +830,7 @@ for (int i = 0; i < MaxStep; i++){
         //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
         *t 	= *(tsLine + *utsi);
-        *dt 	= *(tsLine + (int)min(*utsi+1, MaxutsStep-1))-*(tsLine + *utsi); //changed from utsLine to tsLine
+        *dt 	= *(tsLine + (int)min(*utsi+1, MaxutsStep-1))-*(tsLine + *utsi); //changed from utsLine
         *utsi = (int)min(*utsi+1, MaxutsStep-1);
 		if (*dt > 0) g_Sig.push_back((float)*dt);
 		
@@ -1059,18 +1059,10 @@ for (int i = 0; i < MaxStep; i++){
 					cudaMemcpy( RxCoily, d_RxCoily, SpinMxNum * SpinMxSliceNum * (*RxCoilNum) * sizeof(float), cudaMemcpyDeviceToHost );
 
                                                 /*Print doesn't work because i++ in while loop */
-                    std::cout << "------" << std::endl;
-                    float netMx = 0;
-                    float netMy = 0;
-                    float netMz = 0; 
-                    for (int i = 0; i < SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum); i++) {
-                        netMx += Mx[i];
-                        netMy += My[i];
-                        netMz += Mz[i];
-                    }
-                    std::cout << i << "Mx: " << netMx / (SpinMxNum*SpinMxSliceNum) << std::endl;
-                    std::cout << i << "My: " << netMy / (SpinMxNum*SpinMxSliceNum) << std::endl;
-                    std::cout << i << "Mz: " << netMz / (SpinMxNum*SpinMxSliceNum) << std::endl;
+                    std::cout << "------" << std::endl;                    
+                    std::cout << i << "Mx: " << Mx[263809] << std::endl;
+                    std::cout << i << "My: " << My[263809] << std::endl;
+                    std::cout << i << "Mz: " << Mz[263809] << std::endl;
 				//}
 
 
