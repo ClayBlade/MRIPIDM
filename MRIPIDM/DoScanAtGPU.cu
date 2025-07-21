@@ -636,35 +636,35 @@ for (int i = 0; i < MaxStep; i++){
         rfPhaseLine[i] = 3.14f;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
-        GzAmpLine[i] = 1;
+        GzAmpLine[i] = 0.02;
         GyAmpLine[i] = 0;
         GxAmpLine[i] = 0;
         ADCLine[i] = 0;
     }
-    if (i >= 320 && i >= 192){
-        rfAmpLine[i] = (PI/2)/(*Gyro * 128 * (*dt));
-        rfPhaseLine[i] = 3.14f;  
-        rfFreqLine[i] = 1;
-        rfCoilLine[i] = 1;
-        GzAmpLine[i] = 1;
-        GyAmpLine[i] = 0;
-        GxAmpLine[i] = 0;
-        ADCLine[i] = 0;
-        if (i >= 300){
-            GxAmpLine[i] = 1;
-            GyAmpLine[i] = 1;
-        }
-    }
-    if (i >= 324){
-        rfAmpLine[i] = 0;
-        rfPhaseLine[i] = 0;  
-        rfFreqLine[i] = 0;
-        rfCoilLine[i] = 0;
-        GzAmpLine[i] = 1;
-        GyAmpLine[i] = 1;
-        GxAmpLine[i] = 1;
-        ADCLine[i] = 1;
-    }
+    //if (i >= 320 && i >= 192){
+    //    rfAmpLine[i] = (PI/2)/(*Gyro * 128 * (*dt));
+    //    rfPhaseLine[i] = 3.14f;  
+    //    rfFreqLine[i] = 1;
+    //    rfCoilLine[i] = 1;
+    //    GzAmpLine[i] = 1;
+    //    GyAmpLine[i] = 0;
+    //    GxAmpLine[i] = 0;
+    //    ADCLine[i] = 0;
+    //    if (i >= 300){
+    //        GxAmpLine[i] = 1;
+    //        GyAmpLine[i] = 1;
+    //    }
+    //}
+    //if (i >= 324){
+    //    rfAmpLine[i] = 0;
+    //    rfPhaseLine[i] = 0;  
+    //    rfFreqLine[i] = 0;
+    //    rfCoilLine[i] = 0;
+    //    GzAmpLine[i] = 1;
+    //    GyAmpLine[i] = 1;
+    //    GxAmpLine[i] = 1;
+    //    ADCLine[i] = 1;
+    //}
     //if (i >= 900){
     //    rfAmpLine[i] = 1;
     //}*/
