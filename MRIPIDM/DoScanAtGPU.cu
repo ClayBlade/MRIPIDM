@@ -473,7 +473,7 @@ int main(){
     dB0 = new float[SpinMxNum * SpinMxSliceNum]; /*Initialized as 0*/
     dWRnd = new float[SpinMxNum * SpinMxSliceNum * (*SpinNum) * (*TypeNum)]; 
     Gzgrid = new float[SpinMxNum * SpinMxSliceNum];
-    Gygrid = new float[SpinMxNum * SpinMSliceNum];
+    Gygrid = new float[SpinMxNum * SpinMxSliceNum];
     Gxgrid = new float[SpinMxNum * SpinMxSliceNum];
 
     std::cout << SpinMxNum * SpinMxSliceNum << " spins in total." << std::endl;
