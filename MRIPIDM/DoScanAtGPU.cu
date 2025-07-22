@@ -632,7 +632,7 @@ for (int i = 0; i < MaxStep; i++){
     ADCLine[i] = 1;
 
     if (i <= 128){ 
-        rfAmpLine[i] = 1e3*((PI/2)/(*Gyro * 128 * (*dt)));
+        rfAmpLine[i] = 1e4*((PI/2)/(*Gyro * 128 * (*dt)));
         rfPhaseLine[i] = PI;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
@@ -645,7 +645,7 @@ for (int i = 0; i < MaxStep; i++){
         GyAmpLine[i] = 1;
     }
     if (i <= 343 && i >= 296){
-        rfAmpLine[i] = 1e3* (PI/2)/(*Gyro * 48 * (*dt));
+        rfAmpLine[i] = 1e4* (PI/2)/(*Gyro * 48 * (*dt));
         rfPhaseLine[i] = PI;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
