@@ -376,7 +376,7 @@ int main(){
 	double *p_Sx, *p_Sy;
 	
 /* loop control */
-    int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=1, SignalLen=1, SBufferLen=0, Typei, RxCoili, TxCoili;
+    int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=0, SignalLen=0, SBufferLen=0, Typei, RxCoili, TxCoili;
     int MaxStep, MaxutsStep, MaxrfStep, MaxGzStep, MaxGyStep, MaxGxStep, *SpinNum, *TxCoilNum, *RxCoilNum, *SignalNum;
     double flag[6];
     
@@ -522,7 +522,7 @@ int main(){
 	t               = new double;
     *t              =  0;
     dt              = new double;
-    *dt             = 10e-6; /* 10 us */
+    *dt             = 0; /* 10 us */
     rfAmp           = new double;
     *rfAmp          =  0;
     rfPhase         = new double;
@@ -1236,24 +1236,6 @@ for (int i = 0; i < MaxStep; i++){
 	cudaFree(d_Sx);
 	cudaFree(d_Sy);
 
-    std::cout << "Mx beginning:" << std::endl;
-    for (int i = 0; i < 100; i++) {
-        if (Mx[i] != 0){
-            std::cout << Mx[i] << " ";
-        }
-    }
-    std::cout << "Mx middlle" << std::endl;
-    for (int i = 300; i < 400; i++) {
-            if (Mx[i] != 0){
-                std::cout << Mx[i] << " ";
-        }
-    }
-    std::cout << "Mx end:" << std::endl;
-    for (int i = 900; i < 1000; i++) {
-        if (Mx[i] != 0){
-            std::cout << Mx[i] << " ";
-        }
-    }
 
     std::cout << "Simulation completed!" << std::endl;
 	
