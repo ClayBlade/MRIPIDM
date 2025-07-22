@@ -522,7 +522,7 @@ int main(){
 	t               = new double;
     *t              =  0;
     dt              = new double;
-    *dt             = 10e-6; /* 10 us */
+    *dt             = 1e-6; /* 10 us */
     rfAmp           = new double;
     *rfAmp          =  0;
     rfPhase         = new double;
@@ -632,7 +632,7 @@ for (int i = 0; i < MaxStep; i++){
     ADCLine[i] = 1;
 
     if (i <= 128){ 
-        rfAmpLine[i] = 1e4*((PI/2)/(*Gyro * 128 * (*dt)));
+        rfAmpLine[i] = 1e3*((PI/2)/(*Gyro * 128 * (*dt)));
         rfPhaseLine[i] = PI;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
@@ -645,7 +645,7 @@ for (int i = 0; i < MaxStep; i++){
         GyAmpLine[i] = 1;
     }
     if (i <= 343 && i >= 296){
-        rfAmpLine[i] = 1e4* (PI/2)/(*Gyro * 48 * (*dt));
+        rfAmpLine[i] = 1e3* (PI/2)/(*Gyro * 48 * (*dt));
         rfPhaseLine[i] = PI;  
         rfFreqLine[i] = 1;
         rfCoilLine[i] = 1;
@@ -671,7 +671,7 @@ for (int i = 0; i < MaxStep; i++){
 
 
     for (int j = 0; j < 10; j++){
-        utsLine[i * 10 + j] = *dt * i + j * 0.1f; // Just an example, adjust as needed
+        utsLine[i * 10 + j] = *dt * i + j * 0.1f * (*dt); 
     }
     for (int j = 0; j < 6; j++){
         flagsLine[i * 6] = rfAmpLine[i];
@@ -817,7 +817,7 @@ for (int i = 0; i < MaxStep; i++){
         //std::cout << "checkpoint1" << std::endl;
         /* update pulse status */
         *t 	= *(tsLine + *utsi);
-        *dt 	= *(tsLine + (int)min(*utsi+1, MaxutsStep-1))-*(tsLine + *utsi); //changed from utsLine
+        *dt 	= *(utsLine + (int)min(*utsi+1, MaxutsStep-1))-*(tsLine + *utsi); //changed from utsLine
         *utsi = (int)min(*utsi+1, MaxutsStep-1);
 		if (*dt > 0) g_Sig.push_back((float)*dt);
 		
@@ -929,10 +929,7 @@ for (int i = 0; i < MaxStep; i++){
             *Ext = *(ExtLine+ *Exti);
             /* execute extended process */
             if (*Ext != 0){
-                //std::cout << "Passed Ext" << std::endl;
-                //std::cout << "g.sig: " << g_Sig.size() << std::endl;
 				if (g_Sig.size() !=0){
-                    //std::cout << "passed g_sig" << std::endl;
 				
 					/* calculate signal length */
 					SignalLen = Signali-Signalptr;
