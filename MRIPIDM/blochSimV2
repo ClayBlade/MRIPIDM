@@ -1,135 +1,215 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import json 
-import os
+from scipy.spatial.transform import Rotation
+from mpl_toolkits.mplot3d import Axes3D
 
+# Constants
+gamma = 42.577e6 * 2 * np.pi  # Gyromagnetic ratio (rad/s/T)
 
-for file in os.listdir(r"D:/Projects/MRIPIDMoutput/labeledSpaceJSON"):
-    with open(f"D:/Projects/MRIPIDMoutput/labeledSpaceJSON/{file}", 'r') as f:
-        data = json.load(f)
-    # Constants
-    GAM = 42.58e6  # [Hz/T] Gyromagnetic ratio for proton
-    M0 = 2.5e-6     # Equilibrium magnetization
+class SpinSystem:
+    def __init__(self, positions, M0=1.0, T1=1.0, T2=0.1):
+        """
+        Initialize the spin system.
+        
+        Parameters:
+            positions (np.array): Nx3 array of spin positions (x, y, z) in meters
+            M0 (float): Equilibrium magnetization
+            T1 (float): Longitudinal relaxation time (s)
+            T2 (float): Transverse relaxation time (s)
+        """
+        self.positions = positions
+        self.n_spins = positions.shape[0]
+        self.M = np.zeros((self.n_spins, 3))
+        self.M[:, 2] = M0  # Initial magnetization along z-axis
+        self.T1 = T1
+        self.T2 = T2
+        self.M0 = M0
 
-    # Simulation parameters
-    FOV = 0.2  # 20 cm field of view
-    Nx, Ny = data["xSize"], data["ySize"]  # Grid size
-    x = np.linspace(-FOV/2, FOV/2, Nx)
-    y = np.linspace(-FOV/2, FOV/2, Ny)
-    xx, yy = np.meshgrid(x, y, indexing='ij')
+    def apply_rf_gradient(self, B1, G, t, rf_phase=0): #RF and Gz 
+        """
+        Apply RF pulse with simultaneous gradient.
+        
+        Parameters:
+            B1 (np.array): RF waveform (T)
+            G (np.array): Gradient waveform (Nx3) (T/m)
+            t (np.array): Time points (s)
+            rf_phase (float): Phase of RF pulse (rad)
+        """
+        dt = t[1] - t[0]
+        
+        for i in range(len(t)):
+            # Effective B-field components
+            B_eff = np.zeros((self.n_spins, 3))
+            B_eff[:, 0] = B1[i] * np.cos(rf_phase)
+            B_eff[:, 1] = B1[i] * np.sin(rf_phase)
+            B_eff[:, 2] = np.dot(self.positions, G[i])
+            
+            # Rotation angle and axis
+            rotation_angle = gamma * np.linalg.norm(B_eff, axis=1) * dt
+            rotation_axis = B_eff / np.linalg.norm(B_eff, axis=1, keepdims=True)
+            
+            # Apply rotation to each spin
+            for j in range(self.n_spins):
+                if rotation_angle[j] > 1e-10:  # Avoid division by zero
+                    rot = Rotation.from_rotvec(rotation_axis[j] * rotation_angle[j])
+                    self.M[j] = rot.apply(self.M[j])
+            
+            # Apply relaxation during pulse
+            self.M[:, :2] *= np.exp(-dt / self.T2) #Everything except Mz    
+            self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * np.exp(-dt / self.T1) #Mz
 
+    def apply_gradient(self, G, duration): #both Gx and Gy 
+        """
+        Apply gradient for phase encoding or readout.
+        
+        Parameters:
+            G (np.array): 3D gradient vector (T/m)
+            duration (float): Gradient duration (s)
+        """
+        # Phase accumulation due to gradient
+        phase_accumulation = gamma * duration * np.dot(self.positions, G)
+        
+        # Convert Mxy to complex for easy phase rotation
+        Mxy = self.M[:, 0] + 1j * self.M[:, 1]
+        Mxy *= np.exp(-1j * phase_accumulation)
+        
+        # Apply relaxation
+        decay = np.exp(-duration / self.T2)
+        Mxy *= decay
+        self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * np.exp(-duration / self.T1)
+        
+        # Convert back to real components
+        self.M[:, 0] = Mxy.real
+        self.M[:, 1] = Mxy.imag
 
-    # Time parameters
-    dt = 1e-6  # 1 us time step
-    Nt = 1024
-    t = np.arange(Nt) * dt
+    def acquire_signal(self, G_read, t_read, adc_delay=0):
+        """
+        Acquire signal during readout gradient.
+        
+        Parameters:
+            G_read (np.array): Readout gradient (T/m)
+            t_read (np.array): Readout time points (s)
+            adc_delay (float): Delay before ADC starts (s)
+            
+        Returns:
+            np.array: Acquired signal (complex)
+        """
+        dt = t_read[1] - t_read[0]
+        signal = np.zeros(len(t_read), dtype=complex)
+        
+        # Apply ADC delay
+        if adc_delay > 0:
+            self.apply_gradient(G_read, adc_delay)
+        
+        # Readout loop
+        for i, ti in enumerate(t_read):
+            # Apply gradient for one timestep
+            self.apply_gradient(G_read, dt)
+            
+            # Sum transverse magnetization
+            signal[i] = np.sum(self.M[:, 0] + 1j * self.M[:, 1])
+            
+        return signal
 
-    # Relaxation times
-    T1 = 0.8  # seconds
-    T2 = 0.1  # seconds
+    def reset_magnetization(self):
+        """Reset magnetization to equilibrium."""
+        self.M[:, :] = 0
+        self.M[:, 2] = self.M0
 
-    # RF pulse (hard 90 degree pulse)
-    flip_angle = 90  # degrees
-    rf_dur = 256e-6
-    rf_steps = int(rf_dur / dt)
-    B1_amp = flip_angle / (360 * GAM * rf_dur)  # Tesla
-    B1 = np.zeros(Nt, dtype=complex)
-    B1[:rf_steps] = B1_amp  # Apply RF in x-direction
+def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
+    """
+    Design a slice-selective sinc RF pulse.
+    
+    Parameters:
+        flip_angle (float): Target flip angle (rad)
+        duration (float): Pulse duration (s)
+        n_lobes (int): Number of sinc lobes
+        bandwidth (float): Pulse bandwidth (Hz)
+        
+    Returns:
+        tuple: (B1 waveform, time array)
+    """
+    t = np.linspace(-duration/2, duration/2, 100)
+    lobe_factor = 2 * n_lobes / duration
+    envelope = np.sinc(lobe_factor * t)
+    
+    # Normalize for flip angle
+    area = np.trapz(envelope, t)
+    B1_max = flip_angle / (gamma * area)
+    B1 = B1_max * envelope
+    
+    return B1, t
 
-    B1[352:416] = 180 / (360 * GAM * 64)
+def simulate_mri_sequence():
+    """Full MRI sequence simulation."""
+    # Create spin system (5x5 grid in a slice)
+    x = np.linspace(-0.05, 0.05, 5)
+    y = np.linspace(-0.05, 0.05, 5)
+    z = np.array([0])  # Single slice
+    X, Y, Z = np.meshgrid(x, y, z)
+    positions = np.vstack([X.ravel(), Y.ravel(), Z.ravel()]).T
+    spins = SpinSystem(positions, T1=0.8, T2=0.05)
+    
+    # Design RF pulse (90° flip)
+    B1, t_rf = design_sinc_rf(np.pi/2, 2e-3)
+    G_slice = np.array([0, 0, 0.01])  # Slice-select gradient (T/m)
+    
+    # Apply slice-selective excitation
+    spins.apply_rf_gradient(B1, np.tile(G_slice, (len(t_rf), 1)), t_rf)
+    
+    # Phase encoding
+    G_phase = np.array([0, 0.005, 0])  # Phase-encode gradient (T/m)
+    spins.apply_gradient(G_phase, 2e-3)
+    
+    # Readout parameters
+    t_read = np.linspace(0, 5e-3, 128)
+    G_read = np.array([0.01, 0, 0])  # Readout gradient (T/m)
+    
+    # Acquire signal
+    signal = spins.acquire_signal(G_read, t_read)
+    
+    return signal, spins
 
-    # Gradient waveforms
-    Gx = np.zeros(Nt)
-    Gy = np.zeros(Nt)
+# Run simulation and plot results
+signal, spins = simulate_mri_sequence()
 
-    readout_start, readout_end = 400, 900
-    Gx[readout_start:readout_end] = 0.02  # T/m readout gradient
-    Gy[350] = 0.03  # phase encoding blip
+# Plot results
+plt.figure(figsize=(12, 8))
 
-    # Magnetization arrays
-    Mx = np.random.uniform(low = 2.5e-6, high = 3e-6, size = (Nx, Ny))
-    My = np.random.uniform(low = 2.5e-6, high = 3e-6, size = (Nx, Ny))
-    Mz = M0 * np.ones((Nx, Ny))
+# Magnetization vectors
+ax1 = plt.subplot(221, projection='3d')
+for m in spins.M:
+    ax1.quiver(0, 0, 0, m[0], m[1], m[2], length=0.5, normalize=True)
+ax1.set_title('Magnetization Vectors')
+ax1.set_xlim([-1, 1])
+ax1.set_ylim([-1, 1])
+ax1.set_zlim([-1, 1])
 
-    # K-space collection
+# Signal
+plt.subplot(222)
+plt.plot(np.real(signal), label='Real')
+plt.plot(np.imag(signal), label='Imag')
+plt.plot(np.abs(signal), label='Magnitude')
+plt.title('Acquired Signal')
+plt.xlabel('Time point')
+plt.ylabel('Signal (a.u.)')
+plt.legend()
 
-    kspace = np.zeros((Nx, Ny), dtype = 'complex')
-    Gy_amps = np.linspace(-0.03, 0.03, Ny)
-    kx = 0
-    ky = 0
-    kx_max = 0
-    ky_max = 0
+# Position of spins
+plt.subplot(223)
+plt.scatter(spins.positions[:, 0], spins.positions[:, 1])
+plt.title('Spin Positions')
+plt.xlabel('x (m)')
+plt.ylabel('y (m)')
 
-    for i in range(Nt):
-        kx_max += Gx[i]
-        ky_max += Gy[i]
-
-    kx_max = kx_max * GAM * dt
-    ky_max = ky_max * GAM * dt
-
-
-
-    # Time loop for Bloch simulation
-    #for z, Gz_amp in enumerate():  # For each z slice
-    for n, Gy_amp in enumerate(Gy_amps): #For each y line in kspace
-        Mx = np.zeros((Nx, Ny))
-        My = np.zeros((Nx, Ny))
-        Mz = M0 * np.ones((Nx, Ny))
-        Gy = np.zeros(Nt)
-        Gy[350] = Gy_amp  # Use varying Gy_amp in each TR
-        for i in range(Nt): #For x line in kspace
-            # Fields
-            Bx_rf = np.real(B1[i])
-            By_rf = np.imag(B1[i])
-            Bz_grad = Gx[i]*xx + Gy[i]*yy
-            Bx = Bx_rf * np.ones_like(xx)
-            By = By_rf * np.ones_like(yy)
-            Bz = Bz_grad
-            # Rotation axis and angle
-            Bmag = np.sqrt(Bx**2 + By**2 + Bz**2)
-            angle = -2 * np.pi * GAM * Bmag * dt
-            with np.errstate(divide='ignore', invalid='ignore'):
-                bx = np.where(Bmag != 0, Bx / Bmag, 0)
-                by = np.where(Bmag != 0, By / Bmag, 0)
-                bz = np.where(Bmag != 0, Bz / Bmag, 0)
-            # Rodrigues' rotation
-            c = np.cos(angle)
-            s = np.sin(angle)
-            dot = bx*Mx + by*My + bz*Mz
-            Mx_rot = Mx * c + s * (by * Mz - bz * My) + (1 - c) * dot * bx
-            My_rot = My * c + s * (bz * Mx - bx * Mz) + (1 - c) * dot * by
-            Mz_rot = Mz * c + s * (bx * My - by * Mx) + (1 - c) * dot * bz
-            # Relaxation
-            Mx = Mx_rot * np.exp(-dt / T2)
-            My = My_rot * np.exp(-dt / T2)
-            Mz = Mz_rot * np.exp(-dt / T1) + M0 * (1 - np.exp(-dt / T1))
-            #print(f"Step {i}, Mx: {Mx[11, 11]}, My: {My[11, 11]}, Mz: {Mz[11, 11]}")
-            # Signal acquisition
-            if readout_start <= i < readout_end:
-                kx += GAM * Gx[i] * dt
-                ky += GAM * Gy[i] * dt
-                #print(f"kx: {kx}, ky: {ky}")
-                delta_kx = 1 / FOV
-                delta_ky = 1 / FOV
-                kx_idx = int(kx / kx_max)
-                #kx_idx = np.clip(kx_idx, 0, Nx - 1)
-                ky_idx = int(ky / ky_max)
-                phase = np.exp(-1j * 2 * np.pi * (kx_idx * xx + ky_idx * yy))
-                Mxy = Mx + 1j * My
-                s_t = np.sum(Mxy * phase)
-                kspace[kx_idx, ky_idx] = s_t
-                #print(f"kx_idx: {kx_idx}, ky_idx: {ky_idx}, s_t: {s_t}")
-                #print("------------")
-
-# Reshape and reconstruct
-
-
-kspace = np.reshape(kspace, (Ny, Nx)) 
-image = np.fft.ifft2(np.fft.ifftshift(kspace, axes=1))
-
-# Display result
-plt.imshow(np.abs(image), cmap='gray')
-plt.title("Reconstructed Image")
+# Mxy distribution
+plt.subplot(224)
+Mxy = np.abs(spins.M[:, 0] + 1j * spins.M[:, 1])
+plt.scatter(spins.positions[:, 0], spins.positions[:, 1], c=Mxy, cmap='viridis')
+plt.title('Transverse Magnetization (|Mxy|)')
+plt.xlabel('x (m)')
+plt.ylabel('y (m)')
 plt.colorbar()
-plt.show()
 
+plt.tight_layout()
+plt.show()
