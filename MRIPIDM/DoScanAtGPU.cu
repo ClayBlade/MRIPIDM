@@ -376,7 +376,7 @@ int main(){
 	double *p_Sx, *p_Sy;
 	
 /* loop control */
-    int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=0, SignalLen=0, SBufferLen=0, Typei, RxCoili, TxCoili;
+    int i=0, j=0, s=0, Signali=0, Signalptr=0, PreSignalLen=1, SignalLen=1, SBufferLen=0, Typei, RxCoili, TxCoili;
     int MaxStep, MaxutsStep, MaxrfStep, MaxGzStep, MaxGyStep, MaxGxStep, *SpinNum, *TxCoilNum, *RxCoilNum, *SignalNum;
     double flag[6];
     
@@ -522,7 +522,7 @@ int main(){
 	t               = new double;
     *t              =  0;
     dt              = new double;
-    *dt             = 0; /* 10 us */
+    *dt             = 10e-6; /* 10 us */
     rfAmp           = new double;
     *rfAmp          =  0;
     rfPhase         = new double;
