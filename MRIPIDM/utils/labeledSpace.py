@@ -9,7 +9,7 @@ import numpy as np
 import os
 import pickle
 
-os.makedirs("D:\Projects\MRIPIDMoutput\labeledSpace", exist_ok=True)
+os.makedirs("D:/Projects/MRIPIDMoutput/ParametricMaps", exist_ok=True)
 
 
 for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data/MR Brain Segmentation Challenge 2018 Data/test/test"):
@@ -42,27 +42,27 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
     T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32)
     Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32)
 
-    for i, label in enumerate(label_array.flatten()):
+    for idx, label in np.ndenumerate(label_array):
         if label == 1: #Grey Matter
-            T1[i] = 0.95
-            T2[i] = 0.1
-            T2star[i] = 0.05
-            Rho[i] = 0.8
+            T1[idx] = 0.95
+            T2[idx] = 0.1
+            T2star[idx] = 0.05
+            Rho[idx] = 0.8
         elif label == 3: #White Matter
-            T1[i] = 0.6 
-            T2[i] = 0.08
-            T2star[i] = 0.04
-            Rho[i] = 0.65
+            T1[idx] = 0.6 
+            T2[idx] = 0.08
+            T2star[idx] = 0.04
+            Rho[idx] = 0.65
         elif label == 5 or label == 6 or label == 4 or label == 2 or label == 7 or label == 8: #CSF
-            T1[i] = 4.5
-            T2[i] = 2.2
-            T2star[i] = 1.1
-            Rho[i] = 1
+            T1[idx] = 4.5
+            T2[idx] = 2.2
+            T2star[idx] = 1.1
+            Rho[idx] = 1
         else: #Background
-            T1[i] = 0.05
-            T2[i] = 0.05
-            T2star[i] = 0.025
-            Rho[i] = 0.5
+            T1[idx] = 0.05
+            T2[idx] = 0.05
+            T2star[idx] = 0.025
+            Rho[idx] = 0.5
 
     
     outpath = f"D:/Projects/MRIPIDMoutput/ParametricMaps/{folder}.npz"
@@ -112,27 +112,27 @@ for folder in os.listdir(r"D:/Users/clayt/NotDownloads/3d medical Diffusion data
     T2star = np.zeros((zSize, ySize, xSize), dtype=np.float32)
     Rho = np.zeros((zSize, ySize, xSize), dtype=np.float32)
 
-    for i, label in enumerate(label_array.flatten()):
+    for idx, label in np.ndenumerate(label_array):
         if label == 1: #Grey Matter
-            T1[i] = 0.95
-            T2[i] = 0.1
-            T2star[i] = 0.05
-            Rho[i] = 0.8
+            T1[idx] = 0.95
+            T2[idx] = 0.1
+            T2star[idx] = 0.05
+            Rho[idx] = 0.8
         elif label == 3: #White Matter
-            T1[i] = 0.6 
-            T2[i] = 0.08
-            T2star[i] = 0.04
-            Rho[i] = 0.65
+            T1[idx] = 0.6 
+            T2[idx] = 0.08
+            T2star[idx] = 0.04
+            Rho[idx] = 0.65
         elif label == 5 or label == 6 or label == 4 or label == 2 or label == 7 or label == 8: #CSF
-            T1[i] = 4.5
-            T2[i] = 2.2
-            T2star[i] = 1.1
-            Rho[i] = 1
+            T1[idx] = 4.5
+            T2[idx] = 2.2
+            T2star[idx] = 1.1
+            Rho[idx] = 1
         else: #Background
-            T1[i] = 0.05
-            T2[i] = 0.05
-            T2star[i] = 0.025
-            Rho[i] = 0.5
+            T1[idx] = 0.05
+            T2[idx] = 0.05
+            T2star[idx] = 0.025
+            Rho[idx] = 0.5
 
     outpath = f"D:/Projects/MRIPIDMoutput/ParametricMaps/{folder}.npz"
     

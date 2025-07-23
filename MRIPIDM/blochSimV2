@@ -4,81 +4,85 @@ from scipy.spatial.transform import Rotation
 from mpl_toolkits.mplot3d import Axes3D
 
 # Constants
+data = np.load("D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz")
+Nx = data['xSize']
+Ny = data['ySize']
+Nz = data['zSize']
+T1 = data['T1']
+T2 = data['T2']
+
+T1vert = np.zeros((len(T1), Nz), dtype=np.float32)
+T2vert = np.zeros((len(T2), Nz), dtype=np.float32)
+
+T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, Nz)
+T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, Nz)
+
+
+
+
 gamma = 42.577e6 * 2 * np.pi  # Gyromagnetic ratio (rad/s/T)
 
 class SpinSystem:
-    def __init__(self, positions, M0=1.0, T1=1.0, T2=0.1):
+    def __init__(self, positions, T1, T2, M0=1.0):
         """
         Initialize the spin system.
         
         Parameters:
-            positions (np.array): Nx3 array of spin positions (x, y, z) in meters
+            positions (np.array): (N, 3) array of spin positions
+            T1 (np.array): (N,) array of T1 values
+            T2 (np.array): (N,) array of T2 values
             M0 (float): Equilibrium magnetization
-            T1 (float): Longitudinal relaxation time (s)
-            T2 (float): Transverse relaxation time (s)
         """
         self.positions = positions
         self.n_spins = positions.shape[0]
         self.M = np.zeros((self.n_spins, 3))
-        self.M[:, 2] = M0  # Initial magnetization along z-axis
-        self.T1 = T1
-        self.T2 = T2
+        self.M[:, 2] = M0
+        self.T1 = T1  # Shape: (n_spins,)
+        self.T2 = T2  # Shape: (n_spins,)
         self.M0 = M0
 
-    def apply_rf_gradient(self, B1, G, t, rf_phase=0): #RF and Gz 
-        """
-        Apply RF pulse with simultaneous gradient.
-        
-        Parameters:
-            B1 (np.array): RF waveform (T)
-            G (np.array): Gradient waveform (Nx3) (T/m)
-            t (np.array): Time points (s)
-            rf_phase (float): Phase of RF pulse (rad)
-        """
+    def apply_rf_gradient(self, B1, G, t, rf_phase=0):
         dt = t[1] - t[0]
+        history = []
         
         for i in range(len(t)):
-            # Effective B-field components
+            history.append(self.M.copy())
+            
+            # Effective B-field 
             B_eff = np.zeros((self.n_spins, 3))
             B_eff[:, 0] = B1[i] * np.cos(rf_phase)
             B_eff[:, 1] = B1[i] * np.sin(rf_phase)
             B_eff[:, 2] = np.dot(self.positions, G[i])
-            
-            # Rotation angle and axis
+
+            # Rotation
             rotation_angle = gamma * np.linalg.norm(B_eff, axis=1) * dt
             rotation_axis = B_eff / np.linalg.norm(B_eff, axis=1, keepdims=True)
-            
-            # Apply rotation to each spin
             for j in range(self.n_spins):
-                if rotation_angle[j] > 1e-10:  # Avoid division by zero
+                if rotation_angle[j] > 1e-10:
                     rot = Rotation.from_rotvec(rotation_axis[j] * rotation_angle[j])
                     self.M[j] = rot.apply(self.M[j])
             
-            # Apply relaxation during pulse
-            self.M[:, :2] *= np.exp(-dt / self.T2) #Everything except Mz    
-            self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * np.exp(-dt / self.T1) #Mz
+            # Relaxation - FIXED
+            decay_factor = np.exp(-dt / self.T2)[:, np.newaxis]
+            self.M[:, :2] *= decay_factor
+            self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * np.exp(-dt / self.T1)
+            
+        return np.array(history)
 
-    def apply_gradient(self, G, duration): #both Gx and Gy 
-        """
-        Apply gradient for phase encoding or readout.
-        
-        Parameters:
-            G (np.array): 3D gradient vector (T/m)
-            duration (float): Gradient duration (s)
-        """
-        # Phase accumulation due to gradient
+    def apply_gradient(self, G, duration):
+        # Phase accumulation
         phase_accumulation = gamma * duration * np.dot(self.positions, G)
         
-        # Convert Mxy to complex for easy phase rotation
+        # Convert to complex
         Mxy = self.M[:, 0] + 1j * self.M[:, 1]
         Mxy *= np.exp(-1j * phase_accumulation)
         
-        # Apply relaxation
+        # Relaxation - FIXED
         decay = np.exp(-duration / self.T2)
         Mxy *= decay
         self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * np.exp(-duration / self.T1)
         
-        # Convert back to real components
+        # Convert back
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
 
@@ -140,38 +144,139 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
     
     return B1, t
 
-def simulate_mri_sequence():
-    """Full MRI sequence simulation."""
-    # Create spin system (5x5 grid in a slice)
-    x = np.linspace(-0.05, 0.05, 5)
-    y = np.linspace(-0.05, 0.05, 5)
-    z = np.array([0])  # Single slice
-    X, Y, Z = np.meshgrid(x, y, z)
-    positions = np.vstack([X.ravel(), Y.ravel(), Z.ravel()]).T
-    spins = SpinSystem(positions, T1=0.8, T2=0.05)
+def plot_rf_dynamics(history, t):
+    """Plot magnetization components over time during RF pulse"""
+    plt.figure(figsize=(12, 8))
     
-    # Design RF pulse (90° flip)
-    B1, t_rf = design_sinc_rf(np.pi/2, 2e-3)
-    G_slice = np.array([0, 0, 0.01])  # Slice-select gradient (T/m)
+    # Average across all spins
+    M_avg = np.mean(history, axis=1)
     
-    # Apply slice-selective excitation
+    # Plot components
+    plt.subplot(211)
+    plt.plot(t, M_avg[:, 0], 'r-', label='Mx')
+    plt.plot(t, M_avg[:, 1], 'b-', label='My')
+    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
+    plt.ylabel('Magnetization')
+    plt.title('Average Magnetization During RF Pulse')
+    plt.legend()
+    plt.grid(True)
+    
+    # Plot magnitude
+    plt.subplot(212)
+    Mxy = np.sqrt(M_avg[:, 0]**2 + M_avg[:, 1]**2)
+    plt.plot(t, Mxy, 'm-', label='|Mxy|')
+    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
+    plt.plot(t, np.sqrt(Mxy**2 + M_avg[:, 2]**2), 'k--', label='|M|')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Magnitude')
+    plt.title('Magnetization Magnitude')
+    plt.legend()
+    plt.grid(True)
+
+
+def simulate_spin_echo(Nx, Ny, TE, k, G_phase=np.array([0, 0.05, 0])):
+    """Simulate spin echo sequence for slice k"""
+    # Create positions for one slice
+    x = np.linspace(-0.2, 0.2, Nx)
+    y = np.linspace(-0.2, 0.2, Ny)
+    z = 0  # Single slice
+    X, Y = np.meshgrid(x, y)
+    positions = np.column_stack([X.ravel(), Y.ravel(), np.full(X.size, z)])
+    
+    spins = SpinSystem(
+        positions,
+        T1=T1_reshaped[:, k],  # Per-spin T1 for slice k
+        T2=T2_reshaped[:, k]   # Per-spin T2 for slice k
+    )
+    
+    # Timing parameters
+    rf90dur = 2e-3
+    rf180dur = 2e-3
+    rephasedur = 1e-3
+    Gphase_dur = 2e-3
+    Gread_dur = 5e-3
+    Greadrephasedur = 2.5e-3
+
+    # 90° excitation
+    B1, t_rf = design_sinc_rf(np.pi/2, rf90dur)
+    G_slice = np.array([0, 0, 0.00])
     spins.apply_rf_gradient(B1, np.tile(G_slice, (len(t_rf), 1)), t_rf)
     
     # Phase encoding
-    G_phase = np.array([0, 0.005, 0])  # Phase-encode gradient (T/m)
-    spins.apply_gradient(G_phase, 2e-3)
+    spins.apply_gradient(G_phase, Gphase_dur)
+
+    # Wait TE/2
+    wait_time = TE/2 - (rf90dur/2 + rf180dur/2 + rephasedur + Gphase_dur)
+    if wait_time > 0:
+        spins.apply_gradient(np.zeros(3), wait_time)
+
+    # 180° refocusing
+    B1_refocus, t_rf_refocus = design_sinc_rf(np.pi, rf180dur)
+    spins.apply_rf_gradient(B1_refocus, np.tile(G_slice, (len(t_rf_refocus), 1)), t_rf_refocus)
     
-    # Readout parameters
-    t_read = np.linspace(0, 5e-3, 128)
-    G_read = np.array([0.01, 0, 0])  # Readout gradient (T/m)
-    
-    # Acquire signal
+    # Wait TE/2
+    wait_time = TE/2 - (rf180dur/2 + Gread_dur/2 + Greadrephasedur)
+    if wait_time > 0:
+        spins.apply_gradient(np.zeros(3), wait_time)
+
+    # Readout
+    t_read = np.linspace(0, Gread_dur, Nx)
+    G_read = np.array([0.01, 0, 0])
     signal = spins.acquire_signal(G_read, t_read)
     
     return signal, spins
 
-# Run simulation and plot results
-signal, spins = simulate_mri_sequence()
+def simulateMultiTR(Nx, Ny, TE=12e-3, TR=100e-3):
+    """Simulate multi-TR acquisition"""
+    G_phase_amp = np.linspace(-0.01, 0.01, Ny) 
+    k_space = np.zeros((Ny, Nx), dtype=complex)
+
+    for k in range(Nz):  # For each slice
+        for i, G_phase in enumerate(G_phase_amp):
+            signal, spins = simulate_spin_echo(
+                Nx, Ny, TE, k, 
+                G_phase=np.array([0, G_phase, 0])
+            )
+            
+            # Wait until next TR
+            wait_time = TR - (TE + 5e-3)  # Adjust based on sequence timing
+            if wait_time > 0:
+                spins.apply_gradient(np.zeros(3), wait_time)
+                
+            k_space[i, :] = signal
+
+    return signal, spins, k_space
+
+# Run simulation
+signal, spins, k_space = simulateMultiTR(Nx, Ny, TE=12e-3)
+
+def reconstruct_image(k_space):
+    # 1. Apply 2D Inverse Fourier Transform
+    image = np.fft.ifft2(k_space)
+    
+    # 2. Shift k-space quadrants (center low frequencies)
+    image = np.fft.ifftshift(image)
+    
+    # 3. Take absolute value (magnitude image)
+    image_mag = np.abs(image)
+    
+    return image_mag
+
+# Reconstruct
+image = reconstruct_image(k_space)
+
+# Display
+plt.imshow(image, cmap='gray', extent=[-0.05, 0.05, -0.05, 0.05])
+plt.xlabel('x (m)'); plt.ylabel('y (m)')
+plt.title('Reconstructed Image')
+
+
+# Usage in simulation
+B1, t_rf = design_sinc_rf(np.pi/2, 2e-3)
+G_slice = np.tile([0, 0, 0.01], (len(t_rf), 1))
+history = spins.apply_rf_gradient(B1, G_slice, t_rf)  # Capture history
+plot_rf_dynamics(history, t_rf)
+
 
 # Plot results
 plt.figure(figsize=(12, 8))
@@ -213,3 +318,5 @@ plt.colorbar()
 
 plt.tight_layout()
 plt.show()
+
+
