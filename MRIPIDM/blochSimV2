@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
 from mpl_toolkits.mplot3d import Axes3D
+import torch
+from torchgeometry import angle_axis_to_rotation_matrix
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Constants
 data = np.load("D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz")
@@ -62,7 +66,7 @@ class SpinSystem:
                     rot = Rotation.from_rotvec(rotation_axis[j] * rotation_angle[j])
                     self.M[j] = rot.apply(self.M[j])
             
-            # Relaxation - FIXED
+            # Relaxation 
             decay_factor = np.exp(-dt / self.T2)[:, np.newaxis]
             self.M[:, :2] *= decay_factor
             self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * np.exp(-dt / self.T1)
