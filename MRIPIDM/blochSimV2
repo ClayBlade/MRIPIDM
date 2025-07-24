@@ -26,7 +26,8 @@ T2_reshaped = torch.tensor(T2_reshaped, device=device, dtype=dtype)
 
 
 
-gamma = 42.577e6 * 2 * np.pi  # Gyromagnetic ratio (rad/s/T)
+gamma_rad = 42.577e6 * 2 * np.pi  # Original value
+gamma = torch.tensor(gamma_rad, device=device, dtype=dtype)  # GPU tensor
 
 class SpinSystem:
     def __init__(self, positions, T1, T2, M0=1.0):
@@ -103,12 +104,15 @@ class SpinSystem:
 
     def apply_gradient(self, G, duration):
         # Phase accumulation
-        G_tensor = G.clone().detach().to(device=device, dtype=dtype) if isinstance(G, torch.Tensor) else torch.tensor(G, device=device, dtype=dtype)
+        if isinstance(G, torch.Tensor):
+            G_tensor = G.to(device, dtype)
+        else:
+            G_tensor = torch.tensor(G, device=device, dtype=dtype)
         phase_accumulation = gamma * duration * torch.matmul(self.positions, G_tensor)
         
-        # Convert to complex
-        Mxy = torch.complex(self.M[:, 0], self.M[:, 1])
-        Mxy *= torch.exp(torch.complex(torch.tensor(0.0), -phase_accumulation))
+        # GPU-compatible complex operations
+        Mxy = self.M[:, 0] + 1j * self.M[:, 1]
+        Mxy = Mxy * torch.exp(-1j * phase_accumulation)
         
         # Relaxation - FIXED
         decay = torch.exp(-duration / self.T2)  # Use torch.exp instead of np.exp
@@ -256,7 +260,7 @@ def simulate_spin_echo(Nx, Ny, TE, k, G_phase, T1_data, T2_data):
 
     # Readout
     t_read = torch.linspace(0, Gread_dur, Nx, device=device, dtype=dtype)
-    G_read = np.array([0.01, 0, 0])
+    G_read = torch.tensor([0.01, 0, 0], device=device, dtype=dtype)
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
     return signal, spins
@@ -273,7 +277,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
         torch.rand(100, device=device, dtype=dtype),
         torch.rand(100, device=device, dtype=dtype)
     )
-    warm_up_spins.apply_gradient(np.zeros(3), 1e-3)
+    warm_up_spins.apply_gradient(torch.zeros(3, device=device), 1e-3)
 
     print("Starting simulation...")
     start_time = time.time()
