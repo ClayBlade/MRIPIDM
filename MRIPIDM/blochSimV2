@@ -23,7 +23,8 @@ T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, Nz)
 T1_reshaped = torch.tensor(T1_reshaped, device=device, dtype=dtype)
 T2_reshaped = torch.tensor(T2_reshaped, device=device, dtype=dtype)
 
-
+print(f"T1_reshaped shape: {T1_reshaped.shape}")  # Should be (Nx*Ny, Nz)
+print(f"T2_reshaped shape: {T2_reshaped.shape}")  # Should be (Nx*Ny, Nz)
 
 
 gamma_rad = 42.577e6 * 2 * np.pi  # Original value
@@ -175,7 +176,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
     envelope = torch.sinc(lobe_factor * t)
     
     # Normalize for flip angle
-    area = np.trapz(envelope, t)
+    area = torch.trapz(envelope, t)
     B1_max = flip_angle / (gamma * area)
     B1 = B1_max * envelope
     
@@ -220,8 +221,8 @@ def simulate_spin_echo(Nx, Ny, TE, k, T1_data, T2_data, G_phase):
     positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
     
     # Use T1/T2 values for slice k
-    T1_slice = T1_data[:, k].to(device, dtype)
-    T2_slice = T2_data[:, k].to(device, dtype)
+    T1_slice = T1_data[:, k]  # Correct slicing for 2D tensor
+    T2_slice = T2_data[:, k]  # Correct slicing for 2D tensor
     
     spins = SpinSystem(positions, T1_slice, T2_slice)
     
