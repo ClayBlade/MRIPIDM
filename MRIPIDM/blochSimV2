@@ -169,9 +169,10 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
     Returns:
         tuple: (B1 waveform, time array)
     """
-    t = np.linspace(-duration/2, duration/2, 100)
+    t = torch.linspace(-duration/2, duration/2, 100, device=device, dtype=dtype)
     lobe_factor = 2 * n_lobes / duration
-    envelope = np.sinc(lobe_factor * t)
+
+    envelope = torch.sinc(lobe_factor * t)
     
     # Normalize for flip angle
     area = np.trapz(envelope, t)
@@ -210,8 +211,7 @@ def plot_rf_dynamics(history, t):
     plt.grid(True)
 
 
-def simulate_spin_echo(Nx, Ny, TE, k, G_phase, T1_data, T2_data):
-    """Simulate spin echo sequence for slice k (GPU-optimized)"""
+def simulate_spin_echo(Nx, Ny, TE, k, T1_data, T2_data, G_phase):
     # Create positions for one slice
     x = torch.linspace(-0.2, 0.2, Nx, device=device, dtype=dtype)
     y = torch.linspace(-0.2, 0.2, Ny, device=device, dtype=dtype)
@@ -223,43 +223,36 @@ def simulate_spin_echo(Nx, Ny, TE, k, G_phase, T1_data, T2_data):
     T1_slice = T1_data[:, k].to(device, dtype)
     T2_slice = T2_data[:, k].to(device, dtype)
     
-    spins = SpinSystem(positions,T1_slice, T2_slice)   # Per-spin T2 for slice k; 
-    
+    spins = SpinSystem(positions, T1_slice, T2_slice)
     
     # Timing parameters
     rf90dur = 2e-3
     rf180dur = 2e-3
-    rephasedur = 1e-3
-    Gphase_dur = 2e-3
-    Gread_dur = 5e-3
-    Greadrephasedur = 2.5e-3
-
-    # 90° excitation
-    B1, t_rf = design_sinc_rf(np.pi/2, rf90dur)
-    B1_tensor = torch.tensor(B1, device=device, dtype=dtype)
-    G_slice = np.array([0, 0, 0.00])
-    spins.apply_rf_gradient(B1_tensor, np.tile(G_slice, (len(t_rf), 1)), t_rf)
+    
+    # 90° excitation - returns PyTorch tensors
+    B1, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
+    G_slice = torch.zeros(3, device=device, dtype=dtype)
+    spins.apply_rf_gradient(B1, G_slice.repeat(len(t_rf), 1), t_rf)
     
     # Phase encoding
-    spins.apply_gradient(G_phase, Gphase_dur)
+    spins.apply_gradient(G_phase, 2e-3)  # Gphase_dur = 2e-3
 
     # Wait TE/2
-    wait_time = TE/2 - (rf90dur/2 + rf180dur/2 + rephasedur + Gphase_dur)
+    wait_time = TE/2 - (rf90dur/2 + rf180dur/2 + 1e-3 + 2e-3)  # rephasedur=1e-3, Gphase_dur=2e-3
     if wait_time > 0:
-        spins.apply_gradient(np.zeros(3), wait_time)
+        spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
     # 180° refocusing
-    B1_refocus, t_rf_refocus = design_sinc_rf(np.pi, rf180dur)
-    B1_refocus_tensor = torch.tensor(B1_refocus, device=device, dtype=dtype)
-    spins.apply_rf_gradient(B1_refocus_tensor, np.tile(G_slice, (len(t_rf_refocus), 1)), t_rf_refocus)
+    B1_refocus, t_rf_refocus = design_sinc_rf(torch.tensor(np.pi, device=device, dtype=dtype), rf180dur)
+    spins.apply_rf_gradient(B1_refocus, G_slice.repeat(len(t_rf_refocus), 1), t_rf_refocus)
     
     # Wait TE/2
-    wait_time = TE/2 - (rf180dur/2 + Gread_dur/2 + Greadrephasedur)
+    wait_time = TE/2 - (rf180dur/2 + 5e-3/2 + 2.5e-3)  # Gread_dur=5e-3, Greadrephasedur=2.5e-3
     if wait_time > 0:
-        spins.apply_gradient(np.zeros(3), wait_time)
+        spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
     # Readout
-    t_read = torch.linspace(0, Gread_dur, Nx, device=device, dtype=dtype)
+    t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)  # Gread_dur=5e-3
     G_read = torch.tensor([0.01, 0, 0], device=device, dtype=dtype)
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
