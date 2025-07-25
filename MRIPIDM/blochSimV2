@@ -230,7 +230,6 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     T1_slice = T1_data  
     T2_slice = T2_data 
 
-    print(f"T1_slice in sim_spin_echo: {T1_slice.shape}, T2_slice_in sim_spin_echo: {T2_slice.shape}") 
     
     spins = SpinSystem(positions, T1_slice, T2_slice)
     
@@ -286,6 +285,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
 
     for slice_idx in range(Nz):
         for phase_idx in range(Ny):
+            print(f"slice_idx: {slice_idx}, phase_idx: {phase_idx}")
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
             
