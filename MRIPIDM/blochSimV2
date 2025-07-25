@@ -31,6 +31,7 @@ print(f"T2_reshaped shape: {T2_reshaped.shape}")  # Should be (Nx*Ny, Nz)
 
 gamma_rad = 42.577e6 * 2 * np.pi  # Original value
 gamma = torch.tensor(gamma_rad, device=device, dtype=dtype)  # GPU tensor
+history = []
 
 class SpinSystem:
     def __init__(self, positions, T1, T2, M0=1.0):
@@ -155,7 +156,7 @@ class SpinSystem:
             self.apply_gradient(G_read, dt)
             
             # Sum transverse magnetization
-            signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1])
+            signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1]) / len(self.M)
         return signal.cpu().numpy()
 
     def reset_magnetization(self):
@@ -177,9 +178,11 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
         tuple: (B1 waveform, time array)
     """
     t = torch.linspace(-duration/2, duration/2, 100, device=device, dtype=dtype)
-    lobe_factor = 2 * n_lobes / duration
-
+    lobe_factor = 4 * n_lobes / duration
     envelope = torch.sinc(lobe_factor * t)
+
+    window = torch.hamming_window(len(t), device=device)
+    envelope *= window
     
     # Normalize for flip angle
     area = torch.trapz(envelope, t)
@@ -261,10 +264,10 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
 
     # Readout
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)  # Gread_dur=5e-3
-    G_read = torch.tensor([0.01, 0, 0], device=device, dtype=dtype)
+    G_read = torch.tensor([0.03, 0, 0], device=device, dtype=dtype)
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
-    return signal, spins
+    return signal, spins, t_rf
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     """Simulate multi-TR acquisition"""
@@ -289,7 +292,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
             
-            signal, _ = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
+            signal, _, ts = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
             
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
             
@@ -311,7 +314,9 @@ if __name__ == "__main__":
     
     # Reconstruction
     def reconstruct_image(k_space_slice):
-        image = np.fft.ifft2(np.fft.ifftshift(k_space_slice))
+        # Apply proper k-space centering
+        k_centered = np.fft.ifftshift(k_space_slice)
+        image = np.fft.ifft2(k_centered)
         return np.abs(image)
     
     # Display results
@@ -331,9 +336,13 @@ if __name__ == "__main__":
     diff_image = np.abs(recon_image - np.rot90(recon_image, 2))
     axes[2].imshow(diff_image, cmap='hot')
     axes[2].set_title("Symmetry Difference")
+
     
     plt.tight_layout()
-    plt.savefig("/root/output/ReconstructedMRI/mri_simulation_results.png", dpi=300) #add a test if test
+    plt.savefig("/root/output/ReconstructedMRI/test_mri_simulation_results.png", dpi=300) #add a test if test
+
+
+
     plt.show()
 
 
@@ -355,17 +364,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid(True)
     
-    # Plot magnitude
-    plt.subplot(212)
-    Mxy = np.sqrt(M_avg[:, 0]**2 + M_avg[:, 1]**2)
-    plt.plot(t, Mxy, 'm-', label='|Mxy|')
-    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
-    plt.plot(t, np.sqrt(Mxy**2 + M_avg[:, 2]**2), 'k--', label='|M|')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Magnitude')
-    plt.title('Magnetization Magnitude')
-    plt.legend()
-    plt.grid(True)
+    
 
     def reconstruct_image(k_space):
     # 1. Apply 2D Inverse Fourier Transform

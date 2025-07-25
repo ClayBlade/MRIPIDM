@@ -20,7 +20,7 @@ scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] (-r) \[file/(directory)] root@
 
 Scp from remote to local:
 
-scp (-r) root@\[ip]:\[source] \[file/(directory)]
+scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] root@143.55.45.86:/root/MRIPIDM/MRIPIDM/mri\_simulation\_results.png "D:\\Projects\\MRIPIDMoutput\\ReconstructedMRI"
 
 
 
@@ -72,7 +72,7 @@ Test change:
 
 **rm -r MRIPIDM**
 
-**git clone -b master https://github.com/ClayBlade/MRIPIDM** 
+**git clone -b master https://github.com/ClayBlade/MRIPIDM**
 
 **cd MRIPIDM/MRIPIDM**
 
@@ -93,6 +93,4 @@ sudo apt install python3 python3-pip python3-venv -y
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 pip install numpy matplotlib scipy
-
-
 
