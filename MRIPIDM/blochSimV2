@@ -66,7 +66,7 @@ class SpinSystem:
         
         for i in range(len(t)):
             #history.append(self.M.copy())
-            history.append(self.M.copy())
+            history.append(self.M.clone())
             # Effective B-field 
             B_eff = torch.zeros_like(self.positions)
             B_eff[:, 0] = B1[i] * np.cos(rf_phase)
