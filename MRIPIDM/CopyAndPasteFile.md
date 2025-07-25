@@ -6,23 +6,27 @@ cd output
 
 mkdir /root/output/labeledSpaceJSON
 
+mkdir /root/output/ParametricMaps
+
+mkdir /root/output/ReconstructedMRI
 
 
 
-
-Scp:
+Scp from local to remote:
 
 scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] (-r) \[file/(directory)] root@\[ip]:\[destination]
 
 
+
+Scp from remote to local:
+
+scp (-r) root@\[ip]:\[source] \[file/(directory)]
 
 
 
 git clone:
 
 git clone -b master https://github.com/ClayBlade/MRIPIDM
-
-
 
 
 
@@ -38,13 +42,7 @@ sudo dpkg -i cuda-keyring\_1.1-1\_all.deb
 
 sudo apt-get update
 
-sudo apt-get install -y cuda-toolkit-12-4 \[**nvidia-smi and nvcc --version have to match**]
-
-export PATH=/usr/local/cuda-12.1/bin:$PATH
-
-export LD\_LIBRARY\_PATH=/usr/local/cuda-12.1/lib64:$LD\_\_LIRBRARY\_PATH
-
-
+sudo apt-get install -y cuda-toolkit-12-4 \[\[Or whatever version nvidia-smi returns, I really don't know]]
 
 
 
@@ -52,51 +50,49 @@ Installing ipps:
 
 wget https://registrationcenter-download.intel.com/akdlm/IRC\_NAS/d9649232-67ed-489e-8cd8-2c4c54b06135/intel-ipp-2022.2.0.583\_offline.sh
 
-sudo sh ./intel-ipp-2022.2.0.583\_offline.sh
-
 chmod +x intel-ipp-2022.2.0.583\_offline.sh
 
-sudo apt -y install ncurses-term
+sudo ./intel-ipp-2022.2.0.583\_offline.sh
 
 sudo sh ./intel-ipp-2022.2.0.583\_offline.sh -a --silent --eula accept
 
-export IPP\_ROOT=/opt/intel/ipp\_2022.2.0
-
-export CPATH=$IPP\_ROOT/include:$CPATH
-
-export LD\_LIBRARY\_PATH=$IPP\_ROOT/lib:$LD\_LIBRARY\_PATH
 
 
 
 
-
-Activate Environment
+On restarting VM instance:
 
 source /opt/intel/oneapi/setvars.sh
 
 
 
-
-
 Test change:
 
-cd /root
+**cd /root**
 
-rm -r MRIPIDM
+**rm -r MRIPIDM**
 
-git clone -b master https://github.com/ClayBlade/MRIPIDM 
+**git clone -b master https://github.com/ClayBlade/MRIPIDM** 
 
-cd MRIPIDM/MRIPIDM
+**cd MRIPIDM/MRIPIDM**
 
 nvcc -I/opt/intel/oneapi/ipp/2022.2/include/ipp DoScanAtGPU.cu helperFuncs.cpp -o Bloch -L/opt/intel/oneapi/ipp/latest/lib/intel64 -lipps -lippcore -Xcompiler -fopenmp
 
 
 
-upload to git:
+Alt:
 
-git add MRIPIDM
+sudo apt update \&\& sudo apt upgrade -y
 
-git commit -am"\[some message]"
+sudo apt install python3 python3-pip python3-venv -y
 
-git push https://github.com/ClayBlade/MRIPIDM HEAD:master
+**python3 -m venv venv**
+
+**source venv/bin/activate**
+
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+pip install numpy matplotlib scipy
+
+
 

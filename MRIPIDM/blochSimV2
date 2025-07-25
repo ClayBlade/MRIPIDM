@@ -8,7 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("/root/output/ParametricMaps/test.npz") #  "D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz" or "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
+data = np.load("D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz") #  "D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz" or "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = int(data['zSize'])
@@ -333,6 +333,106 @@ if __name__ == "__main__":
     axes[2].set_title("Symmetry Difference")
     
     plt.tight_layout()
-    plt.savefig("mri_simulation_results.png", dpi=300)
+    plt.savefig("/root/output/ReconstructedMRI/mri_simulation_results.png", dpi=300) #add a test if test
     plt.show()
 
+
+
+'''def plot_rf_dynamics(history, t):
+    """Plot magnetization components over time during RF pulse"""
+    plt.figure(figsize=(12, 8))
+    
+    # Average across all spins
+    M_avg = np.mean(history, axis=1)
+    
+    # Plot components
+    plt.subplot(211)
+    plt.plot(t, M_avg[:, 0], 'r-', label='Mx')
+    plt.plot(t, M_avg[:, 1], 'b-', label='My')
+    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
+    plt.ylabel('Magnetization')
+    plt.title('Average Magnetization During RF Pulse')
+    plt.legend()
+    plt.grid(True)
+    
+    # Plot magnitude
+    plt.subplot(212)
+    Mxy = np.sqrt(M_avg[:, 0]**2 + M_avg[:, 1]**2)
+    plt.plot(t, Mxy, 'm-', label='|Mxy|')
+    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
+    plt.plot(t, np.sqrt(Mxy**2 + M_avg[:, 2]**2), 'k--', label='|M|')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Magnitude')
+    plt.title('Magnetization Magnitude')
+    plt.legend()
+    plt.grid(True)
+
+    def reconstruct_image(k_space):
+    # 1. Apply 2D Inverse Fourier Transform
+    image = np.fft.ifft2(k_space)
+    
+    # 2. Shift k-space quadrants (center low frequencies)
+    image = np.fft.ifftshift(image)
+    
+    # 3. Take absolute value (magnitude image)
+    image_mag = np.abs(image)
+    
+    return image_mag
+
+# Reconstruct
+image = reconstruct_image(k_space)
+
+# Display
+plt.imshow(image, cmap='gray', extent=[-0.05, 0.05, -0.05, 0.05])
+plt.xlabel('x (m)'); plt.ylabel('y (m)')
+plt.title('Reconstructed Image')
+
+
+# Usage in simulation
+B1, t_rf = design_sinc_rf(np.pi/2, 2e-3)
+G_slice = np.tile([0, 0, 0.01], (len(t_rf), 1))
+history = spins.apply_rf_gradient(B1, G_slice, t_rf)  # Capture history
+plot_rf_dynamics(history, t_rf)
+
+
+# Plot results
+plt.figure(figsize=(12, 8))
+
+# Magnetization vectors
+ax1 = plt.subplot(221, projection='3d')
+for m in spins.M:
+    ax1.quiver(0, 0, 0, m[0], m[1], m[2], length=0.5, normalize=True)
+ax1.set_title('Magnetization Vectors')
+ax1.set_xlim([-1, 1])
+ax1.set_ylim([-1, 1])
+ax1.set_zlim([-1, 1])
+
+# Signal
+plt.subplot(222)
+plt.plot(np.real(signal), label='Real')
+plt.plot(np.imag(signal), label='Imag')
+plt.plot(np.abs(signal), label='Magnitude')
+plt.title('Acquired Signal')
+plt.xlabel('Time point')
+plt.ylabel('Signal (a.u.)')
+plt.legend()
+
+# Position of spins
+plt.subplot(223)
+plt.scatter(spins.positions[:, 0], spins.positions[:, 1])
+plt.title('Spin Positions')
+plt.xlabel('x (m)')
+plt.ylabel('y (m)')
+
+# Mxy distribution
+plt.subplot(224)
+Mxy = np.abs(spins.M[:, 0] + 1j * spins.M[:, 1])
+plt.scatter(spins.positions[:, 0], spins.positions[:, 1], c=Mxy, cmap='viridis')
+plt.title('Transverse Magnetization (|Mxy|)')
+plt.xlabel('x (m)')
+plt.ylabel('y (m)')
+plt.colorbar()
+
+plt.tight_layout()
+plt.show()
+'''
