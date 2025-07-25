@@ -8,15 +8,17 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("/root/output/ParametricMaps/1.npz")
+data = np.load("D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz") # or "D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz"
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = int(data['zSize'])
 T1 = data['T1']
 T2 = data['T2']
+print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 T1vert = np.zeros((len(T1), Nz), dtype=np.float32)
 T2vert = np.zeros((len(T2), Nz), dtype=np.float32)
+
 
 T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, Nz)
 T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, Nz)
@@ -99,6 +101,10 @@ class SpinSystem:
             # Apply relaxation
             decay_factor = torch.exp(-dt / self.T2).unsqueeze(1)
             self.M[:, :2] *= decay_factor
+
+            #print(f"self.M0: {self.M0}, self.M[:, 2]: {self.M[:, 2].shape}, self.T1: {self.T1.shape}]")
+            #print(f"T1_reshaped: {T1_reshaped[:, 0].shape}, T2_reshaped: {T2_reshaped[:, 0].shape}]")
+
             self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * torch.exp(-dt / self.T1)
             
         return np.array(history)
@@ -212,7 +218,7 @@ def plot_rf_dynamics(history, t):
     plt.grid(True)
 
 
-def simulate_spin_echo(Nx, Ny, TE, k, T1_data, T2_data, G_phase):
+def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     # Create positions for one slice
     x = torch.linspace(-0.2, 0.2, Nx, device=device, dtype=dtype)
     y = torch.linspace(-0.2, 0.2, Ny, device=device, dtype=dtype)
@@ -221,8 +227,10 @@ def simulate_spin_echo(Nx, Ny, TE, k, T1_data, T2_data, G_phase):
     positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
     
     # Use T1/T2 values for slice k
-    T1_slice = T1_data[:, k]  # Correct slicing for 2D tensor
-    T2_slice = T2_data[:, k]  # Correct slicing for 2D tensor
+    T1_slice = T1_data  
+    T2_slice = T2_data 
+
+    print(f"T1_slice in sim_spin_echo: {T1_slice.shape}, T2_slice_in sim_spin_echo: {T2_slice.shape}") 
     
     spins = SpinSystem(positions, T1_slice, T2_slice)
     
@@ -267,7 +275,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     # Warm-up GPU
     print("Warming up GPU...")
     warm_up_spins = SpinSystem(
-        torch.rand(100, 3, device=device, dtype=dtype),
+        torch.rand(100, 3, device=device, dtype=dtype), #Need 3 there or else err
         torch.rand(100, device=device, dtype=dtype),
         torch.rand(100, device=device, dtype=dtype)
     )
@@ -281,7 +289,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
             
-            signal, _ = simulate_spin_echo(Nx, Ny, TE, slice_idx, G_phase, T1_reshaped, T2_reshaped)
+            signal, _ = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
             
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
             
