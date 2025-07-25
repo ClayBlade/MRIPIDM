@@ -339,7 +339,7 @@ if __name__ == "__main__":
 
     
     plt.tight_layout()
-    plt.savefig("/root/output/ReconstructedMRI/test_mri_simulation_results.png", dpi=300) #add a test if test
+    plt.savefig("/root/output/ReconstructedMRI/mri_simulation_results1.png", dpi=300) #add a test if test
 
 
 
