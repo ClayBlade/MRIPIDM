@@ -3,7 +3,7 @@ import random
  
 xSize = 3
 ySize = 3
-zSize = 3
+zSize = 1
 
 Mx = np.zeros((5, 5, 2), dtype=np.float32)
 My = np.zeros((5, 5, 2), dtype=np.float32)
