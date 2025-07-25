@@ -3,15 +3,15 @@ import random
  
 xSize = 3
 ySize = 3
-zSize = 1
+zSize = 3
 
-Mx = np.zeros((5, 5, 2), dtype=np.float32)
-My = np.zeros((5, 5, 2), dtype=np.float32)
-Mz = np.ones((5, 5, 2), dtype=np.float32)
-T1 = np.zeros((5, 5, 2), dtype=np.float32)
-T2 = np.zeros((5, 5, 2), dtype=np.float32)
-T2star = np.zeros((5, 5, 2), dtype=np.float32)
-Rho = np.zeros((5, 5, 2), dtype=np.float32)
+Mx = np.zeros((3, 3, 3), dtype=np.float32)
+My = np.zeros((3, 3, 3), dtype=np.float32)
+Mz = np.ones((3, 3, 3), dtype=np.float32)
+T1 = np.zeros((3, 3, 3), dtype=np.float32)
+T2 = np.zeros((3, 3, 3), dtype=np.float32)
+T2star = np.zeros((3, 3, 3), dtype=np.float32)
+Rho = np.zeros((3, 3, 3), dtype=np.float32)
 
 for i, val in np.ndenumerate(Mx):
     T1[i] = random.random()
