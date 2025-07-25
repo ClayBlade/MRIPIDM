@@ -20,7 +20,7 @@ scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] (-r) \[file/(directory)] root@
 
 Scp from remote to local:
 
-scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] root@143.55.45.86:/root/MRIPIDM/MRIPIDM/mri\_simulation\_results.png "D:\\Projects\\MRIPIDMoutput\\ReconstructedMRI"
+scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] root@143.55.45.86:/root/MRIPIDM/MRIPIDM/\[mon\_day\_time].png "D:\\Projects\\MRIPIDMoutput\\ReconstructedMRI"
 
 
 

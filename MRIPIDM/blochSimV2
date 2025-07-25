@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
 import time
+from datetime import date
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
@@ -31,7 +32,9 @@ print(f"T2_reshaped shape: {T2_reshaped.shape}")  # Should be (Nx*Ny, Nz)
 
 gamma_rad = 42.577e6 * 2 * np.pi  # Original value
 gamma = torch.tensor(gamma_rad, device=device, dtype=dtype)  # GPU tensor
+
 history = []
+#history_grad = []
 
 class SpinSystem:
     def __init__(self, positions, T1, T2, M0=1.0):
@@ -63,7 +66,7 @@ class SpinSystem:
         
         for i in range(len(t)):
             #history.append(self.M.copy())
-            
+            history.append(self.M.copy())
             # Effective B-field 
             B_eff = torch.zeros_like(self.positions)
             B_eff[:, 0] = B1[i] * np.cos(rf_phase)
@@ -108,9 +111,10 @@ class SpinSystem:
 
             self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * torch.exp(-dt / self.T1)
             
-        return np.array(history)
+        
 
     def apply_gradient(self, G, duration):
+        #history_grad.append(self.M.copy())
         # Phase accumulation
         if isinstance(G, torch.Tensor):
             G_tensor = G.to(device, dtype)
@@ -130,6 +134,7 @@ class SpinSystem:
         # Convert back
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
+
 
     def acquire_signal(self, G_read, t_read, adc_delay=0):
         """
@@ -190,35 +195,6 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
     B1 = B1_max * envelope
     
     return B1, t
-
-def plot_rf_dynamics(history, t):
-    """Plot magnetization components over time during RF pulse"""
-    plt.figure(figsize=(12, 8))
-    
-    # Average across all spins
-    M_avg = np.mean(history, axis=1)
-    
-    # Plot components
-    plt.subplot(211)
-    plt.plot(t, M_avg[:, 0], 'r-', label='Mx')
-    plt.plot(t, M_avg[:, 1], 'b-', label='My')
-    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
-    plt.ylabel('Magnetization')
-    plt.title('Average Magnetization During RF Pulse')
-    plt.legend()
-    plt.grid(True)
-    
-    # Plot magnitude
-    plt.subplot(212)
-    Mxy = np.sqrt(M_avg[:, 0]**2 + M_avg[:, 1]**2)
-    plt.plot(t, Mxy, 'm-', label='|Mxy|')
-    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
-    plt.plot(t, np.sqrt(Mxy**2 + M_avg[:, 2]**2), 'k--', label='|M|')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Magnitude')
-    plt.title('Magnetization Magnitude')
-    plt.legend()
-    plt.grid(True)
 
 
 def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
@@ -292,7 +268,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
             
-            signal, _, ts = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
+            signal, _, t = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
             
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
             
@@ -303,15 +279,49 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
                 pass
 
     print(f"Simulation completed in {time.time() - start_time:.2f} seconds")
-    return k_space.cpu().numpy()
+    return k_space.cpu().numpy(), t
+
+
+def plot_rf_dynamics(history, t):
+    """Plot magnetization components over time during RF pulse"""
+    plt.figure(figsize=(12, 8))
+    
+    # Average across all spins
+    M_avg = np.mean(history, axis=1)
+    
+    # Plot components
+    plt.subplot(211)
+    plt.plot(t, M_avg[:, 0], 'r-', label='Mx')
+    plt.plot(t, M_avg[:, 1], 'b-', label='My')
+    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
+    plt.ylabel('Magnetization')
+    plt.title('Average Magnetization During RF Pulse')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("/root/output/ReconstructedMRI/avgMagnetizationRF.png")
+    
+    # Plot magnitude
+    plt.subplot(212)
+    Mxy = np.sqrt(M_avg[:, 0]**2 + M_avg[:, 1]**2)
+    plt.plot(t, Mxy, 'm-', label='|Mxy|')
+    plt.plot(t, M_avg[:, 2], 'g-', label='Mz')
+    plt.plot(t, np.sqrt(Mxy**2 + M_avg[:, 2]**2), 'k--', label='|M|')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Magnitude')
+    plt.title('Magnetization Magnitude')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("/root/output/ReconstructedMRI/MagnetizationMag.png")
 
 
 
 # Run simulation
 if __name__ == "__main__":
     # Run full simulation
-    k_space = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
+    k_space, t = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
     
+    plot_rf_dynamics(history, t)
+
     # Reconstruction
     def reconstruct_image(k_space_slice):
         # Apply proper k-space centering
@@ -339,7 +349,7 @@ if __name__ == "__main__":
 
     
     plt.tight_layout()
-    plt.savefig("/root/output/ReconstructedMRI/mri_simulation_results1.png", dpi=300) #add a test if test
+    plt.savefig("/root/output/ReconstructedMRI/7_25_10:46.png", dpi=300) 
 
 
 
