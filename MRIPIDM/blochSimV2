@@ -8,7 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz") # or "D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz"
+data = np.load("/root/output/ParametricMaps/1.npz") #  "D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz" or /root/output/ParametricMaps/1.npz
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = int(data['zSize'])
