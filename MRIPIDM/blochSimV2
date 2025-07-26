@@ -343,7 +343,7 @@ def plot_signal_evolution(signals, B1):
     plt.title("First Readout Signal")
     
     plt.tight_layout()
-    plt.savefig("/root/otuput/ReconstructedMRI/debug.png")
+    plt.savefig("/root/output/ReconstructedMRI/debug.png")
 
 
 # Run simulation
