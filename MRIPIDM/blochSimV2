@@ -104,13 +104,10 @@ class SpinSystem:
             decay_factor = torch.exp(-dt / self.T2).unsqueeze(1)
             self.M[:, :2] *= decay_factor
 
-            #print(f"self.M0: {self.M0}, self.M[:, 2]: {self.M[:, 2].shape}, self.T1: {self.T1.shape}]")
-            #print(f"T1_reshaped: {T1_reshaped[:, 0].shape}, T2_reshaped: {T2_reshaped[:, 0].shape}]")
-
             self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * torch.exp(-dt / self.T1)
             
-        print(f"RF Pulse: Max B1={torch.max(B1):.4f} T, Min B1={torch.min(B1):.4f} T")
-        print(f"Rotation angles: Min={torch.min(rotation_angle):.4f} rad, Max={torch.max(rotation_angle):.4f} rad")
+        #print(f"RF Pulse: Max B1={torch.max(B1):.4f} T, Min B1={torch.min(B1):.4f} T")
+        #print(f"Rotation angles: Min={torch.min(rotation_angle):.4f} rad, Max={torch.max(rotation_angle):.4f} rad")
             
         
 
@@ -136,8 +133,8 @@ class SpinSystem:
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
         
-        print(f"Gradient: {G_tensor} T/m, Duration={duration:.4f}s")
-        print(f"Phase accumulation: Min={torch.min(phase_accumulation):.4f} rad, Max={torch.max(phase_accumulation):.4f} rad")
+        #print(f"Gradient: {G_tensor} T/m, Duration={duration:.4f}s")
+        #print(f"Phase accumulation: Min={torch.min(phase_accumulation):.4f} rad, Max={torch.max(phase_accumulation):.4f} rad")
 
 
 
@@ -159,24 +156,24 @@ class SpinSystem:
         
         # Apply ADC delay
         if adc_delay > 0:
-            print("ADC delay")
+            #print("ADC delay")
             self.apply_gradient(G_read, adc_delay)
-            print("\n")
+            #print("\n")
 
         
         # Readout loop
         for i, ti in enumerate(t_read):
             # Apply gradient for one timestep
-            print("ReadLoop")
+            #print("ReadLoop")
             self.apply_gradient(G_read, dt)
-            print("\n")
+            #print("\n")
 
 
             # Sum transverse magnetization
             signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1]) / len(self.M)
 
         Mxy = self.M[:, 0] + 1j * self.M[:, 1]
-        print(f"ADC Sample {i}: Max |Mxy|={torch.max(torch.abs(Mxy)):.6f}, Avg |Mxy|={torch.mean(torch.abs(Mxy)):.6f}") #Max Mxy = Avg Mxy
+        #print(f"ADC Sample {i}: Max |Mxy|={torch.max(torch.abs(Mxy)):.6f}, Avg |Mxy|={torch.mean(torch.abs(Mxy)):.6f}") #Max Mxy = Avg Mxy
 
         return signal.cpu().numpy()
 
@@ -197,8 +194,8 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
     area = torch.trapz(envelope, t) 
     B1_max = flip_angle / (gamma * area)
     
-    # DEBUG PRINT
-    print(f"Design_sinc_pulse: \n        RF Pulse: Area={area.item():.4f}, B1_max={B1_max.item():.6f} T")
+    # DEBUG 
+    #print(f"Design_sinc_pulse: \n        RF Pulse: Area={area.item():.4f}, B1_max={B1_max.item():.6f} T")
     
     return B1_max * envelope, t
 
@@ -228,45 +225,45 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     
     
     # 90° excitation - returns PyTorch tensors
-    print("90 degree RF")
+    #print("90 degree RF")
     B1, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
     G_slice = torch.zeros(3, device=device, dtype=dtype)
     spins.apply_rf_gradient(B1, G_slice.repeat(len(t_rf), 1), t_rf)
-    print("\n")
+    #print("\n")
     
     
     # Phase encoding
-    print("Phase encode")
+    #print("Phase encode")
     spins.apply_gradient(G_phase, 2e-3)  # Gphase_dur = 2e-3
-    print("\n")
+    #print("\n")
 
     
     # Wait TE/2
-    print("Wait1")
+    #print("Wait1")
     wait_time = TE/2 - (rf90dur/2 + rf180dur/2 + 1e-3 + 2e-3)  # rephasedur=1e-3, Gphase_dur=2e-3
     if wait_time > 0:
         spins.apply_gradient(torch.zeros(3, device=device), wait_time)
-    print("\n")
+    #print("\n")
 
     
     # 180° refocusing
-    print("180 degree RF")
+    #print("180 degree RF")
     B1_refocus, t_rf_refocus = design_sinc_rf(torch.tensor(np.pi, device=device, dtype=dtype), rf180dur)
     spins.apply_rf_gradient(B1_refocus, G_slice.repeat(len(t_rf_refocus), 1), t_rf_refocus)
-    print("\n")
+    #print("\n")
 
     # Wait TE/2
     wait_time = TE/2 - (rf180dur/2 + 5e-3/2 + 2.5e-3)  # Gread_dur=5e-3, Greadrephasedur=2.5e-3
     if wait_time > 0:
-        print("wait2")
+        #print("wait2")
         spins.apply_gradient(torch.zeros(3, device=device), wait_time)
-        print("\n")
+        #print("\n")
 
 
     # Readout
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)  # Gread_dur=5e-3
     G_read = torch.tensor([3e-5, 0, 0], device=device, dtype=dtype)
-    print("AcqSig")
+    #print("AcqSig")
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
 
     #history.append(spins.M)
