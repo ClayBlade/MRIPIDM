@@ -20,7 +20,7 @@ scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] (-r) \[file/(directory)] root@
 
 Scp from remote to local:
 
-scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P \[port] root@143.55.45.86:/root/MRIPIDM/MRIPIDM/\[mon\_day\_time].png "D:\\Projects\\MRIPIDMoutput\\ReconstructedMRI"
+scp -i C:\\Users\\clayt\\.ssh\\id\_rsa -P 38568 root@213.181.122.2:/root/output/ReconstructedMRI/mri\_result.png "D:\\Projects\\MRIPIDMoutput\\ReconstructedMRI"
 
 
 
@@ -80,7 +80,7 @@ nvcc -I/opt/intel/oneapi/ipp/2022.2/include/ipp DoScanAtGPU.cu helperFuncs.cpp -
 
 
 
-Alt:
+Alt: location dependent
 
 sudo apt update \&\& sudo apt upgrade -y
 
@@ -88,7 +88,7 @@ sudo apt install python3 python3-pip python3-venv -y
 
 python3 -m venv venv
 
-**source venv/bin/activate**
+**source venv/bin/activate** 
 
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
