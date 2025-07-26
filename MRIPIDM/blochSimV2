@@ -349,12 +349,17 @@ def plot_signal_evolution(signals, B1):
 # Run simulation
 if __name__ == "__main__":
     # Run full simulation
-    k_space, t, B1 = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
-
+    try:
+        k_space, t, B1 = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
+    except:
+        print("simulateMultiTR error")
 
     #history = [np.array(h) for h in history]
     #print(f"Mx Mean: {np.mean(history)}, My Mean: {np.mean(history)}, Mx Mean: {np.mean(history)}")
-    plot_signal_evolution(k_space, B1)
+    try:
+        plot_signal_evolution(k_space, B1)
+    except:
+        print("plot signal evo error")
 
     # Reconstruction
     def reconstruct_image(k_space_slice):
