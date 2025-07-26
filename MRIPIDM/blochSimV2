@@ -9,7 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("D:/Projects/MRIPIDMoutput/test.npz") #  "D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz" or "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
+data = np.load("/root/output/ParametricMaps/1.npz") #  "D:/Projects/MRIPIDMoutput/ParametricMaps/1.npz" or "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = int(data['zSize'])
@@ -346,7 +346,7 @@ def plot_signal_evolution(signals, B1):
     plt.title("First Readout Signal")
     
     plt.tight_layout()
-    #plt.savefig("/root/otuput/ReconstructedMRI/debug.png")
+    plt.savefig("/root/otuput/ReconstructedMRI/debug.png")
 
 
 # Run simulation
@@ -387,7 +387,7 @@ if __name__ == "__main__":
     
     plt.tight_layout()
     #plt.savefig("/root/output/ReconstructedMRI/test.png", dpi=300)
-    
+    plt.savefig("/root/output/ReconstructedMRI/mri_result", dpi = 300)
 
     plt.show()
 
