@@ -33,7 +33,7 @@ print(f"T2_reshaped shape: {T2_reshaped.shape}")  # Should be (Nx*Ny, Nz)
 
 gamma_rad = 42.577e6 * 2 * np.pi  # Original value
 gamma = torch.tensor(gamma_rad, device=device, dtype=dtype)  # GPU tensor
-history = []
+
 
 class SpinSystem:
     def __init__(self, positions, T1, T2, M0=1.0):
@@ -61,7 +61,7 @@ class SpinSystem:
         dt = t[1] - t[0]
         history = []
 
-        G_tensor = G.clone().detach().to(device=device, dtype=dtype) if isinstance(G, torch.Tensor) else torch.tensor(G, device=device, dtype=dtype)
+        #G_tensor = G.clone().detach().to(device=device, dtype=dtype) if isinstance(G, torch.Tensor) else torch.tensor(G, device=device, dtype=dtype)
         
         for i in range(len(t)):
             #history.append(self.M.copy())
@@ -70,7 +70,7 @@ class SpinSystem:
             B_eff = torch.zeros_like(self.positions)
             B_eff[:, 0] = B1[i] * np.cos(rf_phase)
             B_eff[:, 1] = B1[i] * np.sin(rf_phase)
-            B_eff[:, 2] = torch.matmul(self.positions, G_tensor[i])
+            #B_eff[:, 2] = torch.matmul(self.positions, G_tensor[i])
 
              # Compute rotation angles and axes
             norm_B = torch.linalg.norm(B_eff, dim=1, keepdim=True)
