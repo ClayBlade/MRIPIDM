@@ -322,7 +322,7 @@ if __name__ == "__main__":
         return np.abs(image)
     
     # Display results
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig, axes = plt.subplots(1, 5, figsize=(15, 5))
     
     # Middle slice 
     mid_slice = k_space[:, Nz//2, :]
@@ -341,7 +341,13 @@ if __name__ == "__main__":
     axes[2].imshow(diff_image, cmap='hot')
     axes[2].set_title("Symmetry Difference")
 
+    t1_slice = data["T1"][0, :, :]
+    axes[3].imshow(t1_slice.T, origin='lower', cmap='viridis')
+    axes[3].set_title("T1 map")
 
+    t2_slice = data["T2"][0, :, :]
+    axes[4].imshow(t2_slice.T, origin='lower', cmap='viridis')
+    axes[4].set_title("T2 map")
     
     plt.tight_layout()
     plt.savefig("/root/output/ReconstructedMRI/results.png", dpi=300) #add a test if test
