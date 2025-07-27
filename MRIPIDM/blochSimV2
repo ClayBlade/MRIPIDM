@@ -52,7 +52,7 @@ class SpinSystem:
         self.M0 = M0
 
         self.M = torch.zeros((len(positions), 3), device=device, dtype=dtype)
-        self.M[: 2] = M0
+        self.M[:, 2] = M0
 
         self.rotation_matrices = torch.eye(3, device=device, dtype=dtype).repeat(len(positions), 1, 1)
 
