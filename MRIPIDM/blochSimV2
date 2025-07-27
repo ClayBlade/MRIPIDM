@@ -158,7 +158,7 @@ class SpinSystem:
             self.apply_gradient(G_read, dt)
             
             # Sum transverse magnetization
-            signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1]) / len(self.M) #prob error
+            signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1]) #/ len(self.M) #prob error
         return signal.cpu().numpy()
 
     def reset_magnetization(self):
@@ -324,8 +324,10 @@ if __name__ == "__main__":
     # Display results
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
     
-    # Middle slice k-space magnitude
+    # Middle slice 
     mid_slice = k_space[:, Nz//2, :]
+
+    #k-space magnitude
     axes[0].imshow(np.log(np.abs(mid_slice) + 1e-9), cmap='viridis')
     axes[0].set_title("k-Space (Magnitude)")
     
