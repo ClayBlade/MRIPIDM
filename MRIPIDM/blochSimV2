@@ -13,9 +13,9 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz") #  "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = int(data['zSize'])
-T1 = data['T1']#[:2, :, :]
-T2 = data['T2']#[:2, :, :]
+Nz = 2#int(data['zSize'])
+T1 = data['T1'][:2, :, :]
+T2 = data['T2'][:2, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 T1vert = np.zeros((len(T1), Nz), dtype=np.float32)
@@ -266,7 +266,7 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
 
     # Readout
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)  # Gread_dur=5e-3
-    G_read = torch.tensor([0.05, 0, 0], device=device, dtype=dtype) #Base case of 0.03
+    G_read = torch.tensor([0.03, 0, 0], device=device, dtype=dtype) #Base case of 0.03
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
     return signal, spins, t_rf
@@ -326,10 +326,15 @@ if __name__ == "__main__":
     
     # Middle slice 
     mid_slice = k_space[:, Nz//2, :]
+    k_vis = np.fft.fftshift(mid_slice)
 
     #k-space magnitude
-    axes[0].imshow(np.log(np.abs(mid_slice) + 1e-9), cmap='viridis')
+    img = np.log(np.abs(k_vis) + 1e-9)
+    img -= img.min()
+    img /= img.max()
+    plt.imshow(img, cmap='Greys')
     axes[0].set_title("k-Space (Magnitude)")
+
     
     # Reconstructed image
     recon_image = reconstruct_image(mid_slice)
@@ -340,6 +345,7 @@ if __name__ == "__main__":
     diff_image = np.abs(recon_image - np.rot90(recon_image, 2))
     axes[2].imshow(diff_image, cmap='hot')
     axes[2].set_title("Symmetry Difference")
+
 
     
     plt.tight_layout()
