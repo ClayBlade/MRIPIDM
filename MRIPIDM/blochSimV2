@@ -341,11 +341,11 @@ if __name__ == "__main__":
     axes[2].imshow(diff_image, cmap='hot')
     axes[2].set_title("Symmetry Difference")
 
-    t1_slice = data["T1"][0, :, :]
+    t1_slice = data["T1"][22, :, :]
     axes[3].imshow(t1_slice.T, origin='lower', cmap='viridis')
     axes[3].set_title("T1 map")
 
-    t2_slice = data["T2"][0, :, :]
+    t2_slice = data["T2"][22, :, :]
     axes[4].imshow(t2_slice.T, origin='lower', cmap='viridis')
     axes[4].set_title("T2 map")
     
