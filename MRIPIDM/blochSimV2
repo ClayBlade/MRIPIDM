@@ -266,14 +266,14 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
 
     # Readout
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)  # Gread_dur=5e-3
-    G_read = torch.tensor([0.05, 0, 0], device=device, dtype=dtype) #Base case of 0.03
+    G_read = torch.tensor([0.1, 0, 0], device=device, dtype=dtype) #Base case of 0.03
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
     return signal, spins, t_rf
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     """Simulate multi-TR acquisition"""
-    G_phase_amp = torch.linspace(-0.001, 0.001, Ny, device=device, dtype=dtype)
+    G_phase_amp = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
     k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
 
     # Warm-up GPU
