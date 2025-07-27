@@ -246,7 +246,7 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     
     # 90° excitation - returns PyTorch tensors
     B1, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
-    G_slice = torch.zeros(3, device=device, dtype=dtype)
+    G_slice = torch.zeros(2, device=device, dtype=dtype)
     spins.apply_rf_gradient(B1, G_slice.repeat(len(t_rf), 1), t_rf)
     
     # Phase encoding
@@ -255,7 +255,7 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     # Wait TE/2
     wait_time = TE/2 - (rf90dur/2 + rf180dur/2 + 1e-3 + 2e-3)  # rephasedur=1e-3, Gphase_dur=2e-3
     if wait_time > 0:
-        spins.apply_gradient(torch.zeros(3, device=device), wait_time)
+        spins.apply_gradient(torch.zeros(2, device=device), wait_time)
 
     # 180° refocusing
     B1_refocus, t_rf_refocus = design_sinc_rf(torch.tensor(np.pi, device=device, dtype=dtype), rf180dur)
@@ -264,11 +264,11 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     # Wait TE/2
     wait_time = TE/2 - (rf180dur/2 + 5e-3/2 + 2.5e-3)  # Gread_dur=5e-3, Greadrephasedur=2.5e-3
     if wait_time > 0:
-        spins.apply_gradient(torch.zeros(3, device=device), wait_time)
+        spins.apply_gradient(torch.zeros(2, device=device), wait_time)
 
     # Readout
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)  # Gread_dur=5e-3
-    G_read = torch.tensor([0.05, 0, 0], device=device, dtype=dtype) #Base case of 0.03
+    G_read = torch.tensor([0.05, 0], device=device, dtype=dtype) #Base case of 0.03
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
     return signal, spins, t_rf
@@ -276,7 +276,7 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     """Simulate multi-TR acquisition"""
     G_phase_amp = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
-    k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
+    k_space = torch.zeros((Ny, Nx), dtype=torch.complex64, device=device)
 
     # Warm-up GPU
     print("Warming up GPU...")
@@ -285,7 +285,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
         torch.rand(100, device=device, dtype=dtype),
         torch.rand(100, device=device, dtype=dtype)
     )
-    warm_up_spins.apply_gradient(torch.zeros(3, device=device), 1e-3)
+    warm_up_spins.apply_gradient(torch.zeros(2, device=device), 1e-3)
 
     print("Starting simulation...")
     start_time = time.time()
@@ -293,7 +293,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     for slice_idx in range(Nz):
         for phase_idx in range(Ny):
             print(f"slice_idx: {slice_idx}, phase_idx: {phase_idx}")
-            G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
+            G_phase = torch.tensor([0, float(G_phase_amp[phase_idx])], 
                                   device=device, dtype=dtype)
             
             signal, _, ts = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
