@@ -326,13 +326,8 @@ if __name__ == "__main__":
     
     # Middle slice 
     mid_slice = k_space[:, Nz//2, :]
-    k_vis = np.fft.fftshift(mid_slice)
-
     #k-space magnitude
-    img = np.log(np.abs(k_vis) + 1e-9)
-    img -= img.min()
-    img /= img.max()
-    plt.imshow(img, cmap='Greys')
+    axes[0].imshow(np.log(np.abs(mid_slice) + 1e-9), cmap='Greys')
     axes[0].set_title("k-Space (Magnitude)")
 
     
