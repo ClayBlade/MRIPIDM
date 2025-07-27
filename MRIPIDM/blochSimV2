@@ -13,9 +13,9 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz") #  "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 10 #int(data['zSize'])
-T1 = data['T1'][:10, :, :]
-T2 = data['T2'][:10, :, :]
+Nz = 4 #int(data['zSize'])
+T1 = data['T1'][:4, :, :]
+T2 = data['T2'][:4, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 T1vert = np.zeros((len(T1), Nz), dtype=np.float32)
