@@ -158,7 +158,7 @@ class SpinSystem:
             self.apply_gradient(G_read, dt)
             
             # Sum transverse magnetization
-            signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1]) #/ len(self.M) #prob error
+            signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1]) / len(self.M) #prob error
         return signal.cpu().numpy()
 
     def reset_magnetization(self):
