@@ -225,8 +225,8 @@ def plot_rf_dynamics(history, t):
 
 def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     # Create positions for one slice
-    x = torch.linspace(-0.2, 0.2, Nx, device=device, dtype=dtype)
-    y = torch.linspace(-0.2, 0.2, Ny, device=device, dtype=dtype)
+    x = torch.linspace(-0.1, 0.1, Nx, device=device, dtype=dtype)
+    y = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
     z = torch.tensor([0.0], device=device, dtype=dtype)
     X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
     positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
@@ -266,7 +266,7 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
 
     # Readout
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)  # Gread_dur=5e-3
-    G_read = torch.tensor([0.01, 0, 0], device=device, dtype=dtype)
+    G_read = torch.tensor([0.01, 0, 0], device=device, dtype=dtype) #Base case of 0.03
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
     return signal, spins, t_rf
