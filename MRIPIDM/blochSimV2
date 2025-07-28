@@ -126,7 +126,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
 def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     x = torch.linspace(-0.1, 0.1, Nx, device=device, dtype=dtype)
     y = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
-    z = torch.zeros(1, device=device, dtype=dtype)
+    z = torch.tensor([0.0], device=device, dtype=dtype)
     X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
     positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
     
@@ -160,7 +160,7 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     del spins
     torch.cuda.empty_cache()
     
-    return signal, t_rf
+    return signal, spins, B1
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     G_phase_amp = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
@@ -169,14 +169,13 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     print("Starting simulation...")
     start_time = time.time()
 
-    # CORRECTED: Loop over valid slice indices (0 to Nz-1)
     for slice_idx in range(Nz):
         print(f"Simulating slice {slice_idx+1}/{Nz}")
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
 
-            signal, _ = simulate_spin_echo(Nx, Ny, TE, 
+            signal, spins, B1= simulate_spin_echo(Nx, Ny, TE, 
                                           T1_data[:, slice_idx], 
                                           T2_data[:, slice_idx], 
                                           G_phase)
@@ -184,7 +183,43 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
 
     print(f"Simulation completed in {time.time() - start_time:.2f} seconds")
-    return k_space.cpu().numpy()
+
+    print("Final magnetization state:")
+    print(f"  Mx: min={spins.M[:,0].min().item():.4f}, max={spins.M[:,0].max().item():.4f}")
+    print(f"  My: min={spins.M[:,1].min().item():.4f}, max={spins.M[:,1].max().item():.4f}")
+    print(f"  Mz: min={spins.M[:,2].min().item():.4f}, max={spins.M[:,2].max().item():.4f}")
+
+    print(f"Gamma value: {gamma.item()} rad/s/T")
+    print(f"Expected gamma: {42.577e6 * 2 * np.pi} rad/s/T")
+
+    print(f"Position range: x={spins.positions[:, 0].min().item()}-{spins.positions[:, 0].max().item()}m, "
+      f"y={spins.positions[:, 1].min().item()}-{spins.positions[:, 1].max().item()}m")
+
+    print(f"RF Pulse: Duration={2e-3}s, Max B1={B1.max().item()}T")
+    return k_space.cpu().numpy(), B1, signal
+
+
+def plot_signal_evolution(signals, B1):
+    """Plot signal evolution through sequence"""
+    plt.figure(figsize=(12, 4))
+    
+    # Plot RF pulse
+    plt.subplot(131)
+    plt.plot(B1.cpu().numpy())
+    plt.title("RF Pulse Profile")
+    
+    # Plot k-space magnitude
+    plt.subplot(132)
+    plt.imshow(np.log(np.abs(k_space[:, Nz-1, :]) + 1e-9), cmap='viridis')
+    plt.title("k-Space Magnitude")
+    
+    # Plot signal through readout
+    plt.subplot(133)
+    plt.plot(np.abs(signals[0]))
+    plt.title("First Readout Signal")
+    
+    plt.tight_layout()
+    plt.savefig("/root/output/ReconstructedMRI/debug.png")
 
 def reconstruct_image(k_space_slice):
     k_centered = np.fft.ifftshift(k_space_slice)
@@ -192,10 +227,15 @@ def reconstruct_image(k_space_slice):
     return np.abs(image)
 
 if __name__ == "__main__":
-    k_space = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
+    k_space, B1, signal= simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
     
+    try: 
+        plot_signal_evolution(signal, B1)
+    except:
+        print("debug error")
+
     # Display center slice
-    center_slice_idx = Nz -1
+    center_slice_idx = Nz - 1
     k_space_slice = k_space[:, center_slice_idx, :]
     
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
