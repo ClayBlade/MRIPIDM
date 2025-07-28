@@ -152,7 +152,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase):
     
     return signal, spins, B1
 
-def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=20-3):
+def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
     G_phase_amp = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
     k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
 
@@ -176,8 +176,8 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=20-3):
             signal, spins, B1= simulate_spin_echo(spins, Nx, TE, G_phase)
             
 
-            #wait_time = TR - TE - 2.5e-3 #2.5e-3 is half of the readout
-            #spins.apply_gradient(torch.zeros(3, device=device), wait_time)
+            wait_time = TR - TE - 2.5e-3 #2.5e-3 is half of the readout
+            spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
 
