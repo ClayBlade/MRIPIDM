@@ -18,8 +18,8 @@ T1 = data['T1'][Nz, :, :]
 T2 = data['T2'][Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
-T1vert = np.zeros((len(T1), Nz), dtype=np.float32)
-T2vert = np.zeros((len(T2), Nz), dtype=np.float32)
+T1vert = np.zeros((len(T1), 1), dtype=np.float32)
+T2vert = np.zeros((len(T2), 1), dtype=np.float32)
 
 
 T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, Nz)
