@@ -22,8 +22,8 @@ T1vert = np.zeros((len(T1), 1), dtype=np.float32)
 T2vert = np.zeros((len(T2), 1), dtype=np.float32)
 
 
-T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, 1)
-T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, 1)
+T1_reshaped = T1.transpose(1, 2, 0).reshape(-1)
+T2_reshaped = T2.transpose(1, 2, 0).reshape(-1)
 T1_reshaped = torch.tensor(T1_reshaped, device=device, dtype=dtype)
 T2_reshaped = torch.tensor(T2_reshaped, device=device, dtype=dtype)
 
