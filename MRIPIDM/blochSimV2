@@ -13,17 +13,17 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz") #  "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 22 #int(data['zSize'])
-T1 = data['T1'][Nz, :, :]
-T2 = data['T2'][Nz, :, :]
+Nz = 2 #int(data['zSize'])
+T1 = data['T1'][:Nz, :, :]
+T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 T1vert = np.zeros((len(T1), 1), dtype=np.float32)
 T2vert = np.zeros((len(T2), 1), dtype=np.float32)
 
 
-T1_reshaped = T1.transpose(0, 1).reshape(-1, 1)
-T2_reshaped = T2.transpose(0, 1).reshape(-1, 1)
+T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, 1)
+T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, 1)
 T1_reshaped = torch.tensor(T1_reshaped, device=device, dtype=dtype)
 T2_reshaped = torch.tensor(T2_reshaped, device=device, dtype=dtype)
 
