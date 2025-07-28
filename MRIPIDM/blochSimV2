@@ -156,9 +156,6 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     G_read = torch.tensor([0.03, 0, 0], device=device, dtype=dtype)
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
     
-    # Clean up to save GPU memory
-    del spins
-    torch.cuda.empty_cache()
     
     return signal, spins, B1
 
