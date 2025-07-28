@@ -1,4 +1,4 @@
-    # Updated version with fixes
+# Updated version with fixes
 
 import torch
 import numpy as np
@@ -12,9 +12,9 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 2  # Number of slices
-T1 = data['T1'][:Nz, :, :]
-T2 = data['T2'][:Nz, :, :]
+Nz = 22  # Number of slices
+T1 = data['T1']
+T2 = data['T2']
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 # Reshape T1/T2 to (Nx*Ny, Nz)
@@ -177,12 +177,12 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
-
+            
             signal, _ = simulate_spin_echo(Nx, Ny, TE, 
                                           T1_data[:, slice_idx], 
                                           T2_data[:, slice_idx], 
                                           G_phase)
-
+            
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
 
     print(f"Simulation completed in {time.time() - start_time:.2f} seconds")
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     k_space = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
     
     # Display center slice
-    center_slice_idx = Nz-1 
+    center_slice_idx = Nz // 2
     k_space_slice = k_space[:, center_slice_idx, :]
     
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
