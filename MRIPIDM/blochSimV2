@@ -101,7 +101,6 @@ class SpinSystem:
         
         for i, ti in enumerate(t_read):
             self.apply_gradient(G_read, dt)
-            # CORRECTED: Remove normalization by number of spins
             signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1])
         return signal.cpu().numpy()
 
@@ -109,7 +108,7 @@ class SpinSystem:
         self.M[:, :] = 0
         self.M[:, 2] = self.M0
 
-def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
+def design_sinc_rf(flip_angle, duration, n_lobes=4):
     t = torch.linspace(-duration/2, duration/2, 100, device=device, dtype=dtype)
     lobe_factor = 4 * n_lobes / duration
     envelope = torch.sinc(lobe_factor * t)
@@ -123,15 +122,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
     
     return B1, t
 
-def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
-    x = torch.linspace(-0.1, 0.1, Nx, device=device, dtype=dtype)
-    y = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
-    z = torch.tensor([0.0], device=device, dtype=dtype)
-    X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
-    positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
-    
-    spins = SpinSystem(positions, T1_data, T2_data)
-    
+def simulate_spin_echo(spins, Nx, TE, G_phase): 
     rf90dur = 2e-3
     rf180dur = 2e-3
     
@@ -170,14 +161,19 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=20-3):
 
     for slice_idx in range(Nz):
         print(f"Simulating slice {slice_idx+1}/{Nz}")
+        x = torch.linspace(-0.1, 0.1, Nx, device=device, dtype=dtype)
+        y = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
+        z = torch.tensor([0.0], device=device, dtype=dtype)
+        X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
+        positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
+    
+        spins = SpinSystem(positions, T1_data[:, slice_idx], T2_data[:, slice_idx])
+
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
 
-            signal, spins, B1= simulate_spin_echo(Nx, Ny, TE, 
-                                          T1_data[:, slice_idx], 
-                                          T2_data[:, slice_idx], 
-                                          G_phase)
+            signal, spins, B1= simulate_spin_echo(spins, Nx, TE, G_phase)
             
 
             #wait_time = TR - TE - 2.5e-3 #2.5e-3 is half of the readout
