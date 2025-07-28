@@ -9,11 +9,11 @@ mkdir /root/output/ReconstructedMRI
 
 
 Scp from local to remote:
-scp -i C:\Users\clayt\.ssh\id_rsa -P \[port] (-r) \[file/(directory)] root@\[ip]:\[destination]
+scp -i C:\Users\clayt\.ssh\id_rsa -P [port] "D:\Projects\MRIPIDMoutput\1.npz" root@213.181.122.2:/root/output/ParametricMaps
 
 
 Scp from remote to local:
-scp -i C:\Users\clayt\.ssh\id_rsa -P 38568 root@213.181.122.2:/root/output/ReconstructedMRI/mri\_result.png "D:\\Projects\\MRIPIDMoutput\\ReconstructedMRI"
+scp -i C:\Users\clayt\.ssh\id_rsa -P [port] root@213.181.122.2:/root/output/ReconstructedMRI/result.png "D:\Projects\MRIPIDMoutput\ReconstructedMRI"
 
 
 

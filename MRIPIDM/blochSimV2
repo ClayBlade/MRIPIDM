@@ -13,9 +13,9 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz") #  "/root/output/ParametricMaps/1.npz" or "D:/Projects/MRIPIDMoutput/test.npz" or "/root/output/ParametricMaps/test.npz"
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 2#int(data['zSize'])
-T1 = data['T1'][:2, :, :]
-T2 = data['T2'][:2, :, :]
+Nz = 22 #int(data['zSize'])
+T1 = data['T1'][Nz, :, :]
+T2 = data['T2'][Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 T1vert = np.zeros((len(T1), Nz), dtype=np.float32)
@@ -124,7 +124,7 @@ class SpinSystem:
         Mxy = self.M[:, 0] + 1j * self.M[:, 1]
         Mxy = Mxy * torch.exp(-1j * phase_accumulation)
         
-        # Relaxation - FIXED
+        # Relaxation
         decay = torch.exp(-duration / self.T2)  # Use torch.exp instead of np.exp
         Mxy *= decay
         self.M[:, 2] = self.M0 - (self.M0 - self.M[:, 2]) * torch.exp(-duration / self.T1)
@@ -288,21 +288,23 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
     print("Starting simulation...")
     start_time = time.time()
 
-    for slice_idx in range(Nz):
-        for phase_idx in range(Ny):
-            print(f"slice_idx: {slice_idx}, phase_idx: {phase_idx}")
-            G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
-                                  device=device, dtype=dtype)
-            
-            signal, _, ts = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
-            
-            k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
-            
-            # Wait until next TR
-            wait_time = TR - (TE + 5e-3)  # Adjust based on sequence timing
-            if wait_time > 0:
-                # Dummy operation to maintain timing
-                pass
+    #for slice_idx in range(Nz):
+    slice_idx = Nz
+
+    for phase_idx in range(Ny):
+        print(f"slice_idx: {slice_idx}, phase_idx: {phase_idx}")
+        G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
+                              device=device, dtype=dtype)
+        
+        signal, _, ts = simulate_spin_echo(Nx, Ny, TE, T1_data[:, slice_idx], T2_data[:, slice_idx], G_phase)
+        
+        k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
+        
+        # Wait until next TR
+        wait_time = TR - (TE + 5e-3)  # Adjust based on sequence timing
+        if wait_time > 0:
+            # Dummy operation to maintain timing
+            pass
 
     print(f"Simulation completed in {time.time() - start_time:.2f} seconds")
     return k_space.cpu().numpy()
@@ -325,7 +327,7 @@ if __name__ == "__main__":
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
     
     # Middle slice 
-    mid_slice = k_space[:, Nz//2, :]
+    mid_slice = k_space[:, Nz, :]
     #k-space magnitude
     axes[0].imshow(np.log(np.abs(mid_slice) + 1e-9), cmap='Greys')
     axes[0].set_title("k-Space (Magnitude)")
