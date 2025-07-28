@@ -1,5 +1,3 @@
-# Updated version with fixes
-
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,9 +10,9 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 22  # Number of slices
-T1 = data['T1']
-T2 = data['T2']
+Nz = 2  # Number of slices
+T1 = data['T1'][:Nz, :, :]
+T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 # Reshape T1/T2 to (Nx*Ny, Nz)
@@ -128,7 +126,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, bandwidth=2000):
 def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     x = torch.linspace(-0.1, 0.1, Nx, device=device, dtype=dtype)
     y = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
-    z = torch.tensor([0.0], device=device, dtype=dtype)
+    z = torch.zeros(1, device=device, dtype=dtype)
     X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
     positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
     
@@ -177,12 +175,12 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100e-3):
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
                                   device=device, dtype=dtype)
-            
+
             signal, _ = simulate_spin_echo(Nx, Ny, TE, 
                                           T1_data[:, slice_idx], 
                                           T2_data[:, slice_idx], 
                                           G_phase)
-            
+
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
 
     print(f"Simulation completed in {time.time() - start_time:.2f} seconds")
@@ -197,7 +195,7 @@ if __name__ == "__main__":
     k_space = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
     
     # Display center slice
-    center_slice_idx = Nz // 2
+    center_slice_idx = Nz 
     k_space_slice = k_space[:, center_slice_idx, :]
     
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
