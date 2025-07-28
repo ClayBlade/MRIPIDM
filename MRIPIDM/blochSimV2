@@ -197,7 +197,7 @@ if __name__ == "__main__":
     k_space = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
     
     # Display center slice
-    center_slice_idx = Nz 
+    center_slice_idx = Nz-1 
     k_space_slice = k_space[:, center_slice_idx, :]
     
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
