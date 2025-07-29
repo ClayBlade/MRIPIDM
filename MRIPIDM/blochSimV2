@@ -214,7 +214,7 @@ def plot_signal_evolution(signals, B1):
     
     # Plot k-space magnitude
     plt.subplot(132)
-    plt.imshow(np.abs(k_space[:, :, :]), cmap='viridis')
+    plt.imshow(np.log(np.abs(k_space_slice) + 1e-9, cmap='viridis'), cmap='viridis') #kspace always looks the same
     plt.title("k-Space Magnitude")
     
     # Plot signal through readout
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
     
-    axes[0].imshow(np.log(np.abs(k_space_slice) + 1e-9), cmap='viridis')
+    axes[0].imshow(np.abs(k_space_slice), cmap='viridis')
     axes[0].set_title("k-Space (Magnitude)")
     
     recon_image = reconstruct_image(k_space_slice)
