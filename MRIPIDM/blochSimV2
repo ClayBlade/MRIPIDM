@@ -42,10 +42,11 @@ class SpinSystem:
         G_tensor = G.clone().detach().to(device=device, dtype=dtype) if isinstance(G, torch.Tensor) else torch.tensor(G, device=device, dtype=dtype)
         
         for i in range(len(t)):
-            B_eff = torch.zeros_like(self.positions)
+            B_eff = torch.zeros((len(self.positions), 3), device=device, dtype=dtype)  # Fixed: create 3D B_eff
             B_eff[:, 0] = B1[i] * np.cos(rf_phase)
             B_eff[:, 1] = B1[i] * np.sin(rf_phase)
-            B_eff[:, 2] = torch.matmul(self.positions, G_tensor[i])
+            # Calculate z-component using 2D positions and 2D gradient
+            B_eff[:, 2] = torch.matmul(self.positions, G_tensor[i])  # Now works with 2D positions
 
             norm_B = torch.linalg.norm(B_eff, dim=1, keepdim=True)
             rotation_angle = gamma * norm_B.squeeze() * dt
@@ -134,9 +135,9 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     rf180dur = 2e-3
     
     B1, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
-    G_slice = torch.zeros(3, device=device, dtype=dtype)
+    G_slice = torch.zeros(2, device=device, dtype=dtype)  # 2D vector
+
     spins.apply_rf_gradient(B1, G_slice.repeat(len(t_rf), 1), t_rf)
-    
     spins.apply_gradient(G_phase, 2e-3)
 
     wait_time = TE/2 - (rf90dur + rf180dur/2 + 2e-3) #2e-3 = Gy dur
@@ -151,13 +152,13 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
         spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)
-    G_read = torch.tensor([0.03, 0, 0], device=device, dtype=dtype)
+    G_read = torch.tensor([0.03, 0], device=device, dtype=dtype)
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
 
     #maybe relaxation in the tr
     
     
-    return spins.acquire_signal(G_read, t_read.cpu().numpy()), spins, B1
+    return signal, spins, B1
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=20e-3):
     G_phase_amp = torch.linspace(-0.01, 0.01, Ny, device=device)  # Reduced magnitude
@@ -169,8 +170,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=20e-3):
         slice_T2 = T2_reshaped[:, slice_idx]
         
         for phase_idx in range(Ny):
-            # Apply phase encoding ONLY in Y-direction
-            G_phase = torch.tensor([0, float(G_phase_amp[phase_idx])], device=device)
+            G_phase = torch.tensor([0, float(G_phase_amp[phase_idx])], device=device)  # 2D vector
             
             signal, spins, B1 = simulate_spin_echo(Nx, Ny, TE, 
                                         slice_T1, 
@@ -181,7 +181,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=20e-3):
             spins.reset_magnetization()
             
             # Simulate TR delay (only relaxation, not physical time)
-            spins.apply_gradient(torch.zeros(2), TR)
+            spins.apply_gradient(torch.zeros(2), TR)  # 2D zero vector
             
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
     
