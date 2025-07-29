@@ -240,7 +240,7 @@ if __name__ == "__main__":
 
     # Display center slice
     center_slice_idx = Nz - 1
-    k_space_slice = k_space[:, :, center_slice_idx]
+    k_space_slice = k_space[:, :, :]
     
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
     
