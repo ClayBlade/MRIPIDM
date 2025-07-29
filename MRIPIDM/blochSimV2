@@ -214,7 +214,7 @@ def plot_signal_evolution(signals, B1):
     
     # Plot k-space magnitude
     plt.subplot(132)
-    plt.imshow(np.abs(k_space[:, :, Nz-1]), cmap='viridis')
+    plt.imshow(np.abs(k_space[Nz-1, :, :]), cmap='viridis')
     plt.title("k-Space Magnitude")
     
     # Plot signal through readout
