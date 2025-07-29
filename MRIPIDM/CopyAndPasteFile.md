@@ -13,7 +13,7 @@ scp -i C:\Users\clayt\.ssh\id_rsa -P [port] "D:\Projects\MRIPIDMoutput\1.npz" ro
 
 
 Scp from remote to local:
-scp -i C:\Users\clayt\.ssh\id_rsa -P [port] root@213.181.122.2:/root/output/ReconstructedMRI/result.png "D:\Projects\MRIPIDMoutput\ReconstructedMRI"
+scp -i C:\Users\clayt\.ssh\id_rsa -P [port] root@213.181.122.2:/root/output/ReconstructedMRI/results.png "D:\Projects\MRIPIDMoutput\ReconstructedMRI"
 
 
 

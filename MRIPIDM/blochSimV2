@@ -151,7 +151,7 @@ def simulate_spin_echo(Nx, Ny, TE, T1_data, T2_data, G_phase):
     if wait_time > 0:
         spins.apply_gradient(torch.zeros(2, device=device), wait_time)
 
-    t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)
+    t_read = torch.linspace(-2.5e-3, 2.5e-3, Nx, device=device, dtype=dtype)
     G_read = torch.tensor([0.03, 0], device=device, dtype=dtype)
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
 
