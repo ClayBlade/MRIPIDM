@@ -153,8 +153,8 @@ def simulate_spin_echo(spins, Nx, TE, G_phase):
     return signal, spins, B1
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
-    max_Gy = (2 * np.pi) / (gamma * 0.1 * 2e-3)
-    G_phase_amp = torch.linspace(-max_Gy, max_Gy, Ny, device=device, dtype=dtype)
+    #max_Gy = (2 * np.pi) / (gamma * 0.1 * 2e-3)
+    G_phase_amp = torch.linspace(-0.57, .57, Ny, device=device, dtype=dtype)
     k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
 
     print("Starting simulation...")
