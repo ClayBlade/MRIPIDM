@@ -240,11 +240,11 @@ if __name__ == "__main__":
 
     # Display center slice
     center_slice_idx = Nz - 1
-    k_space_slice = k_space[:, center_slice_idx, :]
+    k_space_slice = k_space[:, :, center_slice_idx]
     
     fig, axes = plt.subplots(1, 5, figsize=(15, 5))
     
-    axes[0].imshow(np.abs(k_space_slice), cmap='viridis')
+    axes[0].imshow(np.log(np.abs(k_space_slice) + 1e-9), cmap='viridis')
     axes[0].set_title("k-Space (Magnitude)")
     
     recon_image = reconstruct_image(k_space_slice)
