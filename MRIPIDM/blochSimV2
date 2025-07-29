@@ -144,7 +144,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase):
         spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
     t_read = torch.linspace(-2.5e-3, 2.5e-3, Nx, device=device, dtype=dtype)
-    G_read = torch.tensor([0.03, 0, 0], device=device, dtype=dtype)
+    G_read = torch.tensor([0.0003, 0, 0], device=device, dtype=dtype)
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
 
     #maybe relaxation in the tr
