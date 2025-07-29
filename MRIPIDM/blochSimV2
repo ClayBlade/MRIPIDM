@@ -148,8 +148,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase):
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)
     G_read = torch.tensor([0.03, 0, 0], device=device, dtype=dtype)
 
-    t_readhalf = torch.linspace(0, 2.5e-3, Nx//2, device = device, dtype=dtype)
-    spins.apply_gradient(-G_read, t_readhalf) #rephasing Gx
+    spins.apply_gradient(-G_read, 2.5e-3) #rephasing Gx
 
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
 
@@ -177,8 +176,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
         spins = SpinSystem(positions, T1_data[:, slice_idx], T2_data[:, slice_idx])
 
         for phase_idx in range(Ny):
-            G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], 
-                                  device=device, dtype=dtype)
+            G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], device=device, dtype=dtype)
 
             signal, spins, B1= simulate_spin_echo(spins, Nx, TE, G_phase)
             
