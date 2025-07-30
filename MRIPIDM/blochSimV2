@@ -92,7 +92,7 @@ class SpinSystem:
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
 
-    def acquire_signal(self, G_read, t_read,KX, KY, KZ, iz, iy, kspace ,adc_delay=0):
+    def acquire_signal(self, G_read, t_read,KX, KY, iy, kspace ,adc_delay=0):
         dt = t_read[1] - t_read[0]
         signal = torch.zeros(len(t_read), dtype=torch.complex64, device=device)
         
@@ -102,13 +102,12 @@ class SpinSystem:
         for i, ti in enumerate(t_read):
             self.apply_gradient(G_read, dt)
             
-
             M_trans = torch.sum(self.M[:, 0] + 1j * self.M[:, 1])
             ix = i
             X = self.positions[:, 0]
             Y = self.positions[:, 1]
-            phase = torch.exp(-1j * 2 * np.pi * (KX[iy, 0, ix] * X + KY[iy, 0, ix] * Y))
-            kspace[iy, iz, ix] = M_trans * phase
+            phase = torch.exp(-1j * 2 * np.pi * (KX[ix, iy] * X + KY[ix, iy] * Y))
+            kspace[ix, iy] = M_trans * phase
             signal[i] = M_trans * phase
             
         return signal.cpu().numpy()
@@ -116,6 +115,10 @@ class SpinSystem:
     def reset_magnetization(self):
         self.M[:, :] = 0
         self.M[:, 2] = self.M0
+#End of class
+
+
+
 
 def design_sinc_rf(flip_angle, duration, n_lobes=4):
     t = torch.linspace(-duration/2, duration/2, 100, device=device, dtype=dtype)
@@ -131,7 +134,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4):
     
     return B1, t
 
-def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, KZ, iz, iy, kspace): 
+def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, iz, iy, kspace): 
     rf90dur = 2e-3
     rf180dur = 2e-3
     
@@ -164,7 +167,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, KZ, iz, iy, kspace):
     spins.apply_gradient(-G_read, 2.5e-3) #prephasing Gx
 
 
-    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, KZ, iz, iy, kspace)
+    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, iz, iy, kspace)
 
     #maybe relaxation in the tr
     
@@ -177,12 +180,10 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
 
     kx = torch.fft.fftfreq(Nx, d= 0.2/Nx, device=device, dtype=dtype)  # cycles/m
     ky = torch.fft.fftfreq(Ny, d= 0.2/Ny, device=device, dtype=dtype)
-    kz = torch.tensor([0.0], device=device, dtype=dtype)
-    KY, KZ, KX = torch.meshgrid(ky, kz, kx, indexing='ij')
+    #kz = torch.tensor([0.0], device=device, dtype=dtype)
+    KX, KY = torch.meshgrid(kx, ky, indexing='xy')
 
-    k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
-
-
+    #k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
     print("Starting simulation...")
     start_time = time.time()
 
@@ -195,11 +196,13 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
         positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
     
         spins = SpinSystem(positions, T1_data[:, slice_idx], T2_data[:, slice_idx])
+        k_space = torch.zeros((Nx, Ny), dtype=torch.complex64) #reset at each slice, so only going to show last slice
+
 
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], device=device, dtype=dtype)
 
-            spins, B1, t, signal= simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, KZ, slice_idx, phase_idx, k_space)
+            spins, B1, t, signal= simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, slice_idx, phase_idx, k_space)
             
             spins.reset_magnetization() #basically acts as the TR
             
@@ -271,7 +274,8 @@ if __name__ == "__main__":
 
     # Display center slice
     center_slice_idx = Nz - 1
-    k_space_slice = k_space[:, center_slice_idx, :]
+    #k_space_slice = k_space[:, center_slice_idx, :]
+    k_space_slice = k_space
     
     fig, axes = plt.subplots(1, 6, figsize=(15, 5))
 
