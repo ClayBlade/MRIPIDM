@@ -92,7 +92,7 @@ class SpinSystem:
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
 
-    def acquire_signal(self, G_read, t_read,KX, KY, iy, kspace , adc_delay=0):
+    def acquire_signal(self, G_read, t_read,KX, KY, iy, kspace ,adc_delay=0):
         dt = t_read[1] - t_read[0]
         signal = torch.zeros(len(t_read), dtype=torch.complex64, device=device)
         
@@ -102,6 +102,7 @@ class SpinSystem:
         for i, ti in enumerate(t_read):
             self.apply_gradient(G_read, dt)
             
+
             M_trans = torch.sum(self.M[:, 0] + 1j * self.M[:, 1])
             ix = i
             X = self.positions[:, 0]
@@ -115,10 +116,6 @@ class SpinSystem:
     def reset_magnetization(self):
         self.M[:, :] = 0
         self.M[:, 2] = self.M0
-#End of class
-
-
-
 
 def design_sinc_rf(flip_angle, duration, n_lobes=4):
     t = torch.linspace(-duration/2, duration/2, 100, device=device, dtype=dtype)
@@ -167,7 +164,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, iz, iy, kspace):
     spins.apply_gradient(-G_read, 2.5e-3) #prephasing Gx
 
 
-    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, iy, kspace)
+    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, iz, iy, kspace)
 
     #maybe relaxation in the tr
     
@@ -191,11 +188,12 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
         print(f"Simulating slice {slice_idx+1}/{Nz}")
         x = torch.linspace(-0.1, 0.1, Nx, device=device, dtype=dtype)
         y = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
-        X, Y = torch.meshgrid(x, y, indexing='ij')
-        positions = torch.stack([X.flatten(), Y.flatten()], dim=1)
+        z = torch.tensor([0.0], device=device, dtype=dtype)
+        X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
+        positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
     
         spins = SpinSystem(positions, T1_data[:, slice_idx], T2_data[:, slice_idx])
-        k_space = torch.zeros((Nx, Ny), dtype=torch.complex64) #reset at each slice, so only going to show last slice
+        k_space = torch.zeros((Nx, Ny), dtype=torch.complex64)
 
 
         for phase_idx in range(Ny):
@@ -273,8 +271,7 @@ if __name__ == "__main__":
 
     # Display center slice
     center_slice_idx = Nz - 1
-    #k_space_slice = k_space[:, center_slice_idx, :]
-    k_space_slice = k_space
+    k_space_slice = k_space[:, center_slice_idx, :]
     
     fig, axes = plt.subplots(1, 6, figsize=(15, 5))
 
