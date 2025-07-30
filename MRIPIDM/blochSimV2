@@ -164,7 +164,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, iz, iy, kspace):
     spins.apply_gradient(-G_read, 2.5e-3) #prephasing Gx
 
 
-    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, iz, iy, kspace)
+    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, iy, kspace)
 
     #maybe relaxation in the tr
     
