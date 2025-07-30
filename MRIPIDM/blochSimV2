@@ -175,8 +175,8 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
     #max_Gy = (2 * np.pi) / (gamma * 0.1 * 2e-3)
     G_phase_amp = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
 
-    kx = torch.fft.fftfreq(Nx, d= 0.2/Nx)  # cycles/m
-    ky = torch.fft.fftfreq(Ny, d= 0.2/Ny)
+    kx = torch.fft.fftfreq(Nx, d= 0.2/Nx, device=device, dtype=dtype)  # cycles/m
+    ky = torch.fft.fftfreq(Ny, d= 0.2/Ny, device=device, dtype=dtype)
     kz = torch.tensor([0.0], device=device, dtype=dtype)
     KY, KZ, KX = torch.meshgrid(ky, kz, kx, indexing='yzx')
 
