@@ -105,8 +105,8 @@ class SpinSystem:
 
             M_trans = torch.sum(self.M[:, 0] + 1j * self.M[:, 1])
             ix = i
-            X = self.positions[:, 0, 0]
-            Y = self.positions[0, :, 0]
+            X = self.positions[:, 0]
+            Y = self.positions[:, 1]
             phase = torch.exp(-1j * 2 * np.pi * (KX[ix, iy] * X + KY[ix, iy] * Y))
             kspace[iy, iz, ix] = M_trans * phase
             
