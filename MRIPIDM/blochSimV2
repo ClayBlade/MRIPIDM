@@ -107,8 +107,8 @@ class SpinSystem:
             ix = i #should be from 0 to Nx-1
             X = self.positions[:, 0]
             Y = self.positions[:, 1]
-            phase = torch.exp(-1j * 2 * np.pi * (KX[ix, iy] * X + KY[ix, iy] * Y))
-            kspace[ix, iy] = torch.sum(M_trans * phase)
+            phase = torch.exp(-1j * 2 * np.pi * (KX[iy, ix] * X + KY[iy, ix] * Y))
+            kspace[iy, ix] = torch.sum(M_trans * phase)
             signal[i] = torch.sum(M_trans * phase)
             
         return signal.cpu().numpy()
