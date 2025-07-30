@@ -92,7 +92,7 @@ class SpinSystem:
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
 
-    def acquire_signal(self, G_read, t_read, adc_delay=0):
+    def acquire_signal(self, G_read, t_read,KX, KY, KZ, iz, iy, kspace ,adc_delay=0):
         dt = t_read[1] - t_read[0]
         signal = torch.zeros(len(t_read), dtype=torch.complex64, device=device)
         
@@ -102,6 +102,14 @@ class SpinSystem:
         for i, ti in enumerate(t_read):
             self.apply_gradient(G_read, dt)
             signal[i] = torch.sum(self.M[:, 0] + 1j * self.M[:, 1])
+
+            M_trans = torch.sum(self.M[:, 0] + 1j * self.M[:, 1])
+            ix = i
+            X = self.positions[:, 0, 0]
+            Y = self.positions[0, :, 0]
+            phase = torch.exp(-1j * 2 * np.pi * (KX[ix, iy] * X + KY[ix, iy] * Y))
+            kspace[iy, iz, ix] = M_trans * phase
+            
         return signal.cpu().numpy()
 
     def reset_magnetization(self):
@@ -122,7 +130,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4):
     
     return B1, t
 
-def simulate_spin_echo(spins, Nx, TE, G_phase): 
+def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, KZ, iz, iy, kspace): 
     rf90dur = 2e-3
     rf180dur = 2e-3
     
@@ -155,17 +163,24 @@ def simulate_spin_echo(spins, Nx, TE, G_phase):
     spins.apply_gradient(-G_read, 2.5e-3) #prephasing Gx
 
 
-    signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
+    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, KZ, iz, iy, kspace)
 
     #maybe relaxation in the tr
     
     
-    return signal, spins, B1, t_read
+    return  spins, B1, t_read, signal
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
     #max_Gy = (2 * np.pi) / (gamma * 0.1 * 2e-3)
     G_phase_amp = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
+
+    kx = torch.fft.fftfreq(Nx, d= 0.2/Nx)  # cycles/m
+    ky = torch.fft.fftfreq(Ny, d= 0.2/Ny)
+    kz = torch.fft.fftfreq(0, d = 0)
+    KX, KY, KZ = torch.meshgrid(kx, kz, ky, indexing='xy')
+
     k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
+
 
     print("Starting simulation...")
     start_time = time.time()
@@ -183,14 +198,14 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], device=device, dtype=dtype)
 
-            signal, spins, B1, t = simulate_spin_echo(spins, Nx, TE, G_phase)
+            spins, B1, t, signal= simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, KZ, slice_idx, phase_idx, k_space)
             
             spins.reset_magnetization() #basically acts as the TR
             
             #wait_time = TR - TE - 2.5e-3 #2.5e-3 is half of the readout
             #spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
-            k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
+            #k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
 
 
             if phase_idx == Ny / 2:
@@ -241,9 +256,9 @@ def plot_signal_evolution(signals, B1):
     plt.savefig("/root/output/ReconstructedMRI/debug.png")
 
 def reconstruct_image(k_space_slice):
-    k_centered = np.fft.ifftshift(k_space_slice)
-    image = np.fft.ifft2(k_centered)
-    return np.abs(image)
+    k_centered = torch.fft.ifftshift(k_space_slice)
+    image = torch.fft.ifft2(k_centered)
+    return torch.fft.ifftshift(image)
 
 if __name__ == "__main__":
     k_space, B1, signal, Mid, One, Quarter, t = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
@@ -258,14 +273,17 @@ if __name__ == "__main__":
     k_space_slice = k_space[:, center_slice_idx, :]
     
     fig, axes = plt.subplots(1, 6, figsize=(15, 5))
-    
+
+    recon_image = reconstruct_image(k_space_slice)
+
     axes[0].imshow(np.log(np.abs(k_space_slice) + 1e-9), cmap='viridis')
     axes[0].set_title("k-Space (Magnitude)")
     
-    recon_image = reconstruct_image(k_space_slice)
+
     axes[1].imshow(recon_image, cmap='gray')
     axes[1].set_title("Reconstructed Image")
     
+
     diff_image = np.abs(recon_image - np.rot90(recon_image, 2))
     axes[2].imshow(diff_image, cmap='hot')
     axes[2].set_title("Symmetry Difference")
