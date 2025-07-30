@@ -10,7 +10,7 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 22  # To Nz-th slice
+Nz = 2  # To Nz-th slice
 T1 = data['T1'][:Nz, :, :]
 T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
@@ -200,7 +200,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, slice_select_gradient=0.01):
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     # Phase encoding gradient amplitudes
-    kmax = np.pi / (gamma.cpu().numpy() * 0.001 * 1e-3)  # Adjusted for proper k-space coverage
+    kmax = 0.1#np.pi / (gamma.cpu().numpy() * 0.001 * 1e-3)  # Adjusted for proper k-space coverage
     G_phase_amp = torch.linspace(-kmax, kmax, Ny, device=device, dtype=dtype)
     k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
     
