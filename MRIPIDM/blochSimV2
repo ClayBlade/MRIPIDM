@@ -235,7 +235,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
       f"y={spins.positions[:, 1].min().item()}-{spins.positions[:, 1].max().item()}m")
 
     print(f"RF Pulse: Duration={2e-3}s, Max B1={B1.max().item()}T")
-    return k_space.cpu().numpy(), B1, signal, np.abs(signalMid), np.abs(signalOne), np.abs(signalQuarter), t.detach().cpu().numpy()
+    return k_space, B1, signal, np.abs(signalMid), np.abs(signalOne), np.abs(signalQuarter), t.detach().cpu().numpy()
 
 
 def plot_signal_evolution(signals, B1):
