@@ -178,7 +178,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
     kx = torch.fft.fftfreq(Nx, d= 0.2/Nx, device=device, dtype=dtype)  # cycles/m
     ky = torch.fft.fftfreq(Ny, d= 0.2/Ny, device=device, dtype=dtype)
 
-    print(f"Nx, Ny: {Nx.shape, Ny.shape}")
+    print(f"Nx, Ny: {Nx, Ny}")
     print(f"kx, ky shape {kx.shape, ky.shape}")
     #kz = torch.tensor([0.0], device=device, dtype=dtype)
     KX, KY = torch.meshgrid(kx, ky, indexing='xy')
