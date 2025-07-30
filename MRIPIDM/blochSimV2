@@ -92,7 +92,7 @@ class SpinSystem:
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
 
-    def acquire_signal(self, G_read, t_read,KX, KY, iy, kspace ,adc_delay=0):
+    def acquire_signal(self, G_read, t_read, KX, KY, iy, kspace ,adc_delay=0):
         dt = t_read[1] - t_read[0]
         signal = torch.zeros(len(t_read), dtype=torch.complex64, device=device)
         
@@ -104,9 +104,10 @@ class SpinSystem:
             
 
             M_trans = self.M[:, 0] + 1j * self.M[:, 1]
-            ix = i
+            ix = i #should be from 0 to Nx-1
             X = self.positions[:, 0]
             Y = self.positions[:, 1]
+            print(KX.shape)
             phase = torch.exp(-1j * 2 * np.pi * (KX[ix, iy] * X + KY[ix, iy] * Y))
             kspace[ix, iy] = torch.sum(M_trans * phase)
             signal[i] = torch.sum(M_trans * phase)
@@ -131,7 +132,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4):
     
     return B1, t
 
-def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, iz, iy, kspace): 
+def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, iy, kspace): 
     rf90dur = 2e-3
     rf180dur = 2e-3
     
@@ -199,7 +200,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], device=device, dtype=dtype)
 
-            spins, B1, t, signal= simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, slice_idx, phase_idx, k_space)
+            spins, B1, t, signal= simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, phase_idx, k_space)
             
             spins.reset_magnetization() #basically acts as the TR
             
