@@ -16,8 +16,8 @@ T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 # Reshape T1/T2 to (Nx*Ny, Nz)
-T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, Nz)
-T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, Nz)
+T1_reshaped = T1.transpose(2, 1, 0).reshape(-1, Nz)
+T2_reshaped = T2.transpose(2, 1, 0).reshape(-1, Nz)
 T1_reshaped = torch.tensor(T1_reshaped, device=device, dtype=dtype)
 T2_reshaped = torch.tensor(T2_reshaped, device=device, dtype=dtype)
 
@@ -177,10 +177,13 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
 
     kx = torch.fft.fftfreq(Nx, d= 0.2/Nx, device=device, dtype=dtype)  # cycles/m
     ky = torch.fft.fftfreq(Ny, d= 0.2/Ny, device=device, dtype=dtype)
+
+    print(f"Nx, Ny: {Nx, Ny}")
+    print(f"kx, ky shape {kx, ky}")
     #kz = torch.tensor([0.0], device=device, dtype=dtype)
     KX, KY = torch.meshgrid(kx, ky, indexing='xy')
-    print(KX.shape)
-    print(KY.shape)
+    print(f"KX.shape: {KX.shape}")
+    print(f"KY.shape: {KY.shape}")
     #k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
     print("Starting simulation...")
     start_time = time.time()
