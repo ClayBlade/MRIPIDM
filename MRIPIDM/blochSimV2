@@ -191,9 +191,8 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
         print(f"Simulating slice {slice_idx+1}/{Nz}")
         x = torch.linspace(-0.1, 0.1, Nx, device=device, dtype=dtype)
         y = torch.linspace(-0.1, 0.1, Ny, device=device, dtype=dtype)
-        z = torch.tensor([0.0], device=device, dtype=dtype)
-        X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
-        positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
+        X, Y = torch.meshgrid(x, y, indexing='ij')
+        positions = torch.stack([X.flatten(), Y.flatten()], dim=1)
     
         spins = SpinSystem(positions, T1_data[:, slice_idx], T2_data[:, slice_idx])
         k_space = torch.zeros((Nx, Ny), dtype=torch.complex64) #reset at each slice, so only going to show last slice
