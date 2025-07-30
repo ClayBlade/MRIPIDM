@@ -10,7 +10,7 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 2  # Number of slices
+Nz = 2  # To Nz-th slice
 T1 = data['T1'][:Nz, :, :]
 T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
@@ -130,32 +130,37 @@ def simulate_spin_echo(spins, Nx, TE, G_phase):
     G_slice = torch.zeros(3, device=device, dtype=dtype)
     spins.apply_rf_gradient(B1, G_slice.repeat(len(t_rf), 1), t_rf)
     
+
     spins.apply_gradient(G_phase, 2e-3)
+
 
     wait_time = TE/2 - (rf90dur + rf180dur/2 + 2e-3) #2e-3 = Gy dur
     if wait_time > 0:
         spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
+
     B1_refocus, t_rf_refocus = design_sinc_rf(torch.tensor(np.pi, device=device, dtype=dtype), rf180dur)
     spins.apply_rf_gradient(B1_refocus, G_slice.repeat(len(t_rf_refocus), 1), t_rf_refocus)
     
-    wait_time = TE/2 - (rf180dur/2 + (5e-3)/2 + 2.5e-3) # (5e-3) = Gx since Gx occurs at readout, 2.5e-3 is rephase grad
+
+    wait_time = TE/2 - (rf180dur/2 + (5e-3)/2 + 2.5e-3) # (5e-3) = Gx since Gx occurs at readout, 2.5e-3 is prephase grad
     if wait_time > 0:
         spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
-    
 
     t_read = torch.linspace(0, 5e-3, Nx, device=device, dtype=dtype)
     G_read = torch.tensor([0.03, 0, 0], device=device, dtype=dtype)
 
-    spins.apply_gradient(-G_read, 2.5e-3) #rephasing Gx
+
+    spins.apply_gradient(-G_read, 2.5e-3) #prephasing Gx
+
 
     signal = spins.acquire_signal(G_read, t_read.cpu().numpy())
 
     #maybe relaxation in the tr
     
     
-    return signal, spins, B1
+    return signal, spins, B1, t_read
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
     #max_Gy = (2 * np.pi) / (gamma * 0.1 * 2e-3)
@@ -178,13 +183,22 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
         for phase_idx in range(Ny):
             G_phase = torch.tensor([0, float(G_phase_amp[phase_idx]), 0], device=device, dtype=dtype)
 
-            signal, spins, B1= simulate_spin_echo(spins, Nx, TE, G_phase)
+            signal, spins, B1, t = simulate_spin_echo(spins, Nx, TE, G_phase)
             
-            spins.reset_magnetization()
-            wait_time = TR - TE - 2.5e-3 #2.5e-3 is half of the readout
-            spins.apply_gradient(torch.zeros(3, device=device), wait_time)
+            spins.reset_magnetization() #basically acts as the TR
+            #wait_time = TR - TE - 2.5e-3 #2.5e-3 is half of the readout
+            #spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
             k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
+
+
+            if phase_idx == Ny / 2:
+                signalMid = signal.copy()
+            if phase_idx == Ny / 4:
+                signalQuarter = signal.copy()
+            if phase_idx == 1:
+                signalOne = signal.copy()
+            
 
     print(f"Simulation completed in {time.time() - start_time:.2f} seconds")
 
@@ -200,7 +214,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
       f"y={spins.positions[:, 1].min().item()}-{spins.positions[:, 1].max().item()}m")
 
     print(f"RF Pulse: Duration={2e-3}s, Max B1={B1.max().item()}T")
-    return k_space.cpu().numpy(), B1, signal
+    return k_space.cpu().numpy(), B1, signal, signalMid, signalOne, signalQuarter, t
 
 
 def plot_signal_evolution(signals, B1):
@@ -231,7 +245,7 @@ def reconstruct_image(k_space_slice):
     return np.abs(image)
 
 if __name__ == "__main__":
-    k_space, B1, signal= simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
+    k_space, B1, signal, Mid, One, Quarter, t = simulateMultiTR(Nx, Ny, Nz, T1_reshaped, T2_reshaped)
     
     try: 
         plot_signal_evolution(signal, B1)
@@ -240,9 +254,9 @@ if __name__ == "__main__":
 
     # Display center slice
     center_slice_idx = Nz - 1
-    k_space_slice = k_space[:, :, :]
+    k_space_slice = k_space[:, center_slice_idx, :]
     
-    fig, axes = plt.subplots(1, 5, figsize=(15, 5))
+    fig, axes = plt.subplots(1, 6, figsize=(15, 5))
     
     axes[0].imshow(np.log(np.abs(k_space_slice) + 1e-9), cmap='viridis')
     axes[0].set_title("k-Space (Magnitude)")
@@ -255,14 +269,14 @@ if __name__ == "__main__":
     axes[2].imshow(diff_image, cmap='hot')
     axes[2].set_title("Symmetry Difference")
 
-    # Use same slice index for T1/T2 display
-    t1_slice = data["T1"][center_slice_idx, :, :]
-    axes[3].imshow(t1_slice.T, origin='lower', cmap='viridis')
-    axes[3].set_title("T1 map")
+    axes[3].plot(Mid, t)
+    axes[3].set_title("Signal Middle")
 
-    t2_slice = data["T2"][center_slice_idx, :, :]
-    axes[4].imshow(t2_slice.T, origin='lower', cmap='viridis')
-    axes[4].set_title("T2 map")
+    axes[4].plot(One, t)
+    axes[4].set_title("Signal One")
+
+    axes[5].plot(Quarter, t)
+    axes[5].set_title("Signal Quarter")
     
     plt.tight_layout()
     plt.savefig("/root/output/ReconstructedMRI/results.png", dpi=300)
