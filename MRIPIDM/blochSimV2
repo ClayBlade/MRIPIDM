@@ -186,6 +186,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
             signal, spins, B1, t = simulate_spin_echo(spins, Nx, TE, G_phase)
             
             spins.reset_magnetization() #basically acts as the TR
+            
             #wait_time = TR - TE - 2.5e-3 #2.5e-3 is half of the readout
             #spins.apply_gradient(torch.zeros(3, device=device), wait_time)
 
@@ -214,7 +215,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
       f"y={spins.positions[:, 1].min().item()}-{spins.positions[:, 1].max().item()}m")
 
     print(f"RF Pulse: Duration={2e-3}s, Max B1={B1.max().item()}T")
-    return k_space.cpu().numpy(), B1, signal, signalMid, signalOne, signalQuarter, t.detach().cpu().numpy()
+    return k_space.cpu().numpy(), B1, signal, np.abs(signalMid), np.abs(signalOne), np.abs(signalQuarter), t.detach().cpu().numpy()
 
 
 def plot_signal_evolution(signals, B1):
