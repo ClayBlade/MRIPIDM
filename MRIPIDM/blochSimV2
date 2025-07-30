@@ -92,7 +92,7 @@ class SpinSystem:
         self.M[:, 0] = Mxy.real
         self.M[:, 1] = Mxy.imag
 
-    def acquire_signal(self, G_read, t_read,KX, KY, iy, kspace ,adc_delay=0):
+    def acquire_signal(self, G_read, t_read,KX, KY, iy, kspace , adc_delay=0):
         dt = t_read[1] - t_read[0]
         signal = torch.zeros(len(t_read), dtype=torch.complex64, device=device)
         
@@ -167,7 +167,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, KX, KY, iz, iy, kspace):
     spins.apply_gradient(-G_read, 2.5e-3) #prephasing Gx
 
 
-    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, iz, iy, kspace)
+    signal = spins.acquire_signal(G_read, t_read.cpu().numpy(), KX, KY, iy, kspace)
 
     #maybe relaxation in the tr
     
