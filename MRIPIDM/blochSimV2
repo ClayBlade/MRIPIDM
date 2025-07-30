@@ -214,7 +214,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=12e-3, TR=100-3):
       f"y={spins.positions[:, 1].min().item()}-{spins.positions[:, 1].max().item()}m")
 
     print(f"RF Pulse: Duration={2e-3}s, Max B1={B1.max().item()}T")
-    return k_space.cpu().numpy(), B1, signal, signalMid, signalOne, signalQuarter, t
+    return k_space.cpu().numpy(), B1, signal, signalMid.cpu().numpy(), signalOne.cpu().numpy(), signalQuarter.cpu().numpy(), t
 
 
 def plot_signal_evolution(signals, B1):
@@ -268,6 +268,8 @@ if __name__ == "__main__":
     diff_image = np.abs(recon_image - np.rot90(recon_image, 2))
     axes[2].imshow(diff_image, cmap='hot')
     axes[2].set_title("Symmetry Difference")
+
+    Mid, One, Quarter, t = Mid.detach().cpu().numpy(), One.detach().cpu().numpy(), Quarter.detach().cpu().numpy(), t.detach().cpu().numpy()
 
     axes[3].plot(Mid, t)
     axes[3].set_title("Signal Middle")
