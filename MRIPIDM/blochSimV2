@@ -271,13 +271,13 @@ if __name__ == "__main__":
     axes[2].set_title("Symmetry Difference")
 
 
-    axes[3].plot(Mid, t)
+    axes[3].plot(np.abs(Mid), t)
     axes[3].set_title("Signal Middle")
 
-    axes[4].plot(One, t)
+    axes[4].plot(np.abs(One), t)
     axes[4].set_title("Signal One")
 
-    axes[5].plot(Quarter, t)
+    axes[5].plot(np.abs(Quarter), t)
     axes[5].set_title("Signal Quarter")
     
     plt.tight_layout()
