@@ -327,7 +327,7 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
     plt.colorbar(im3, ax=ax3, fraction=0.046)
     
     # Row 2: Signals
-    time_ms = np.linspace(0, 5, len(debug_signals['center']))
+    time_ms = np.linspace(0, 5, len(debug_signals['center'][slice_idx]))
     
     ax4 = plt.subplot(3, 3, 4)
     ax4.plot(time_ms, np.abs(debug_signals['center'][slice_idx]))
