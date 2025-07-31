@@ -210,7 +210,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     # Store signals for debugging
     debug_signals = {}
     
-    for slice_idx in range(20, Nz):
+    for slice_idx in range(19, Nz):
         print(f"Simulating slice {slice_idx+1}/{Nz + 20}")
         
         # Create spatial positions
