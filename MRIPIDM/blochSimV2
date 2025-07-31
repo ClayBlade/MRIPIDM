@@ -10,7 +10,7 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 22  
+Nz = 3
 T1 = data['T1'][:Nz, :, :]
 T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
@@ -235,11 +235,13 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     
     # Store example signals
     debug_signals = {
-        
+        'center' : [],
+        'quarter' : [],
+        'edge' : [],
     }
     
     # Simulate ALL slices
-    for slice_idx in range(20, Nz):
+    for slice_idx in range(Nz):
         print(f"Simulating slice {slice_idx+1}/{Nz}")
         
         # Create positions for this slice
@@ -266,11 +268,11 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
             # Save debug signals from middle slice
             if slice_idx == Nz - 1:
                 if pe_idx == Ny // 2:
-                    debug_signals['center'] = signal
+                    debug_signals['center'].append(signal)
                 elif pe_idx == Ny // 4:
-                    debug_signals['quarter'] = signal
+                    debug_signals['quarter'].append(signal)
                 elif pe_idx == 0:
-                    debug_signals['edge'] = signal
+                    debug_signals['edge'].append(signal)
             
             # TR period - let magnetization recover
             remaining_TR = TR - TE
@@ -280,18 +282,21 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
             # Spoil transverse magnetization
             spins.M[:, 0] = 0
             spins.M[:, 1] = 0
+
+
+        reconstruct_and_display(k_space, debug_signals, slice_idx)
+
     
     elapsed = time.time() - start_time
     print(f"Simulation completed in {elapsed:.1f} seconds")
     
     return k_space, debug_signals
 
-def reconstruct_and_display(k_space, debug_signals):
+def reconstruct_and_display(k_space, debug_signals, slice_idx):
     """Reconstruct images and create display"""
     fig = plt.figure(figsize=(16, 12))
     
     # Display middle slice
-    slice_idx = k_space.shape[1] // 2
     k_slice = k_space[:, slice_idx, :]
     
     # Row 1: k-space
@@ -326,38 +331,38 @@ def reconstruct_and_display(k_space, debug_signals):
     time_ms = np.linspace(0, 5, len(debug_signals['center']))
     
     ax4 = plt.subplot(3, 3, 4)
-    ax4.plot(time_ms, np.abs(debug_signals['center']))
+    ax4.plot(time_ms, np.abs(debug_signals['center'][slice_idx]))
     ax4.set_title('Signal at center phase')
     ax4.set_xlabel('Time (ms)')
     ax4.set_ylabel('Signal magnitude')
     ax4.grid(True, alpha=0.3)
     
     ax5 = plt.subplot(3, 3, 5)
-    ax5.plot(time_ms, np.abs(debug_signals['quarter']))
+    ax5.plot(time_ms, np.abs(debug_signals['quarter'][slice_idx]))
     ax5.set_title('Signal at ky=Ny/4')
     ax5.set_xlabel('Time (ms)')
     ax5.set_ylabel('Signal magnitude')
     ax5.grid(True, alpha=0.3)
     
     ax6 = plt.subplot(3, 3, 6)
-    ax6.plot(time_ms, np.abs(debug_signals['edge']))
+    ax6.plot(time_ms, np.abs(debug_signals['edge'][slice_idx]))
     ax6.set_title('Signal at ky edge')
     ax6.set_xlabel('Time (ms)')
     ax6.set_ylabel('Signal magnitude')
     ax6.grid(True, alpha=0.3)
     
     # Row 3: Different slices
-    for i, slice_idx in enumerate([0, k_space.shape[1]//2, k_space.shape[1]-1]):
+    '''for i, slice_idx in enumerate([0, k_space.shape[1]//2, k_space.shape[1]-1]):
         ax = plt.subplot(3, 3, 7+i)
         k_slice = k_space[:, slice_idx, :]
         image = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(k_slice)))
         ax.imshow(np.abs(image), cmap='gray')
         ax.set_title(f'Slice {slice_idx+1}')
         ax.set_xlabel('x')
-        ax.set_ylabel('y')
+        ax.set_ylabel('y')'''
     
     plt.tight_layout()
-    plt.savefig('/root/output/ReconstructedMRI/results.png', dpi=300)
+    plt.savefig(f'/root/output/ReconstructedMRI/result{slice_idx}.png', dpi=300)
     plt.show()
     
     # Print diagnostics
@@ -371,5 +376,3 @@ if __name__ == "__main__":
     # Run the complete simulation
     k_space, debug_signals = simulateMultiSlice(Nx, Ny, Nz, T1_reshaped, T2_reshaped, TE=30e-3, TR=500e-3)
     
-    # Display results
-    reconstruct_and_display(k_space, debug_signals)
