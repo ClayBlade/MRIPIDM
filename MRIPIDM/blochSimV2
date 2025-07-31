@@ -10,7 +10,7 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 2  
+Nz = 22  
 T1 = data['T1'][:Nz, :, :]
 T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
@@ -237,7 +237,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     debug_signals = {}
     
     # Simulate ALL slices
-    for slice_idx in range(Nz):
+    for slice_idx in range(20, Nz):
         print(f"Simulating slice {slice_idx+1}/{Nz}")
         
         # Create positions for this slice
@@ -355,7 +355,7 @@ def reconstruct_and_display(k_space, debug_signals):
         ax.set_ylabel('y')
     
     plt.tight_layout()
-    plt.savefig('/root/output/ReconstructedMRI/results_fixed.png', dpi=300)
+    plt.savefig('/root/output/ReconstructedMRI/results.png', dpi=300)
     plt.show()
     
     # Print diagnostics
