@@ -2,12 +2,13 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("/root/output/ParametricMaps/1.npz")
+data = np.load("/content/MRIPIDM/MRIPIDM/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = 6
@@ -361,7 +362,8 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
         ax.set_ylabel('y')'''
     
     plt.tight_layout()
-    plt.savefig(f'/root/output/ReconstructedMRI/result{slice_idx}.png', dpi=300)
+    os.mkdir("/content/MRIPIDM/MRIPIDM/output", exist_ok = True)
+    plt.savefig(f'/content/MRIPIDM/MRIPIDM/output/result{slice_idx}.png', dpi=300)
     plt.show()
     
     # Print diagnostics
