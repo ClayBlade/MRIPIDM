@@ -11,8 +11,8 @@ data = np.load("/root/output/ParametricMaps/2.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = 2  # To Nz-th slice
-T1 = data['T1'][:Nz, :, :]
-T2 = data['T2'][:Nz, :, :]
+T1 = data['T1']#[:(Nz+20), :, :]
+T2 = data['T2']#[:(Nz+20), :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 # Reshape T1/T2 to (Nx*Ny, Nz)
@@ -211,18 +211,19 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     debug_signals = {}
     
     for slice_idx in range(Nz):
-        print(f"Simulating slice {slice_idx+1}/{Nz}")
+        slice_idx_test = slice_idx + 20
+        print(f"Simulating slice {slice_idx_test+1}/{Nz + 20}")
         
         # Create spatial positions
         FOV = 0.2  # 20 cm FOV
         x = torch.linspace(-FOV/2, FOV/2, Nx, device=device, dtype=dtype)
         y = torch.linspace(-FOV/2, FOV/2, Ny, device=device, dtype=dtype)
-        z = torch.tensor([slice_idx * 0.005], device=device, dtype=dtype)  # 5mm slice thickness
+        z = torch.tensor([slice_idx_test * 0.005], device=device, dtype=dtype)  # 5mm slice thickness
         X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
         positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
         
         # Initialize spin system for this slice
-        spins = SpinSystem(positions, T1_data[:, slice_idx], T2_data[:, slice_idx])
+        spins = SpinSystem(positions, T1_data[:, slice_idx_test], T2_data[:, slice_idx_test])
         
         for phase_idx in range(Ny):
             # Apply phase encoding gradient
@@ -230,7 +231,7 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
             
             # Run spin echo sequence
             signal = simulate_spin_echo(spins, Nx, TE, G_phase)
-            k_space[phase_idx, slice_idx, :] = torch.tensor(signal, device=device)
+            k_space[phase_idx, slice_idx_test, :] = torch.tensor(signal, device=device)
             
             # Store some signals for debugging
             if phase_idx == Ny // 2:
