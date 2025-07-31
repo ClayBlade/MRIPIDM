@@ -168,7 +168,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, slice_select_gradient=0.01):
     spins.apply_gradient(G_phase, phase_duration)
     
     # Wait time to TE/2
-    wait_time = TE/2 - rf90dur/2 - rf180dur/2 - phase_duration
+    wait_time = TE/2 - rf90dur/2 - rf180dur/2 - phase_duration #From the middle of rf90 to middle of rf180 to TE
     if wait_time > 0:
         spins.apply_gradient(torch.zeros(3, device=device), wait_time)
     
@@ -188,7 +188,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, slice_select_gradient=0.01):
     spins.apply_gradient(-G_read, prephase_duration)
     
     # Wait to echo time
-    wait_time2 = TE/2 - rf180dur/2 - prephase_duration
+    wait_time2 = TE/2 - rf180dur/2 - prephase_duration - readout_duration/2 
     if wait_time2 > 0:
         spins.apply_gradient(torch.zeros(3, device=device), wait_time2)
     
@@ -200,7 +200,7 @@ def simulate_spin_echo(spins, Nx, TE, G_phase, slice_select_gradient=0.01):
 
 def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     # Phase encoding gradient amplitudes
-    kmax = 0.1#np.pi / (gamma.cpu().numpy() * 0.001 * 1e-3)  # Adjusted for proper k-space coverage
+    kmax = np.pi / (gamma.cpu().numpy() * 0.001 * 1e-3)  # Adjusted for proper k-space coverage
     G_phase_amp = torch.linspace(-kmax, kmax, Ny, device=device, dtype=dtype)
     k_space = torch.zeros((Ny, Nz, Nx), dtype=torch.complex64, device=device)
     
@@ -326,21 +326,21 @@ def plot_results(k_space, debug_signals, Nz):
         axes[2, 0].set_title("Reconstructed Image at quarter")
         axes[2, 0].set_xlabel("x")
         axes[2, 0].set_ylabel("y")
-        plt.colorbar(im3, ax=axes[0, 2])
+        plt.colorbar(im3, ax=axes[2, 0])
 
         recon_image = reconstruct_image(k_space[:, Nz//4, :])
         im3 = axes[2, 1].imshow(recon_image, cmap='gray', aspect='equal')
         axes[2, 1].set_title("Reconstructed Image at eighth")
         axes[2, 1].set_xlabel("x")
         axes[2, 1].set_ylabel("y")
-        plt.colorbar(im3, ax=axes[0, 2])
+        plt.colorbar(im3, ax=axes[2, 0])
 
-        recon_image = reconstruct_image(k_space[:, 2, :])
+        recon_image = reconstruct_image(k_space[:, 1, :])
         im3 = axes[2, 2].imshow(recon_image, cmap='gray', aspect='equal')
-        axes[2, 2].set_title("Reconstructed Image at 2")
+        axes[2, 2].set_title("Reconstructed Image at 1")
         axes[2, 2].set_xlabel("x")
         axes[2, 2].set_ylabel("y")
-        plt.colorbar(im3, ax=axes[0, 2])
+        plt.colorbar(im3, ax=axes[2, 0])
     
     except: 
         print("error in third row")
