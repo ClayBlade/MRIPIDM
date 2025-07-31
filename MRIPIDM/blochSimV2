@@ -234,7 +234,9 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     start_time = time.time()
     
     # Store example signals
-    debug_signals = {}
+    debug_signals = {
+        
+    }
     
     # Simulate ALL slices
     for slice_idx in range(20, Nz):
@@ -262,7 +264,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
             k_space[pe_idx, slice_idx, :] = signal
             
             # Save debug signals from middle slice
-            if slice_idx == Nz // 2:
+            if slice_idx == Nz - 1:
                 if pe_idx == Ny // 2:
                     debug_signals['center'] = signal
                 elif pe_idx == Ny // 4:
@@ -325,7 +327,7 @@ def reconstruct_and_display(k_space, debug_signals):
     
     ax4 = plt.subplot(3, 3, 4)
     ax4.plot(time_ms, np.abs(debug_signals['center']))
-    ax4.set_title('Signal at ky=0 (center)')
+    ax4.set_title('Signal at center phase')
     ax4.set_xlabel('Time (ms)')
     ax4.set_ylabel('Signal magnitude')
     ax4.grid(True, alpha=0.3)
