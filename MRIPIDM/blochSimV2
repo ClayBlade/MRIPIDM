@@ -266,13 +266,12 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
             k_space[pe_idx, slice_idx, :] = signal
             
             # Save debug signals from middle slice
-            if slice_idx == Nz - 1:
-                if pe_idx == Ny // 2:
-                    debug_signals['center'].append(signal)
-                elif pe_idx == Ny // 4:
-                    debug_signals['quarter'].append(signal)
-                elif pe_idx == 0:
-                    debug_signals['edge'].append(signal)
+            if pe_idx == Ny // 2:
+                debug_signals['center'].append(signal)
+            elif pe_idx == Ny // 4:
+                debug_signals['quarter'].append(signal)
+            elif pe_idx == 0:
+                debug_signals['edge'].append(signal)
             
             # TR period - let magnetization recover
             remaining_TR = TR - TE
