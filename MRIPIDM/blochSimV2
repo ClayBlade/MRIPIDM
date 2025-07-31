@@ -11,8 +11,8 @@ data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = 22  # To Nz-th slice
-T1 = data['T1'][:(Nz), :, :]
-T2 = data['T2'][:(Nz), :, :] #why does this fix runtime dimension mismatch error? Happen to be coincidental, unrelated values?
+T1 = data['T1'][:(Nz), :, :] * 1000
+T2 = data['T2'][:(Nz), :, :] * 1000 #why does this fix runtime dimension mismatch error? Happen to be coincidental, unrelated values?
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 # Reshape T1/T2 to (Nx*Ny, Nz)
