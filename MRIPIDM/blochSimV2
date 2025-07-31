@@ -7,7 +7,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("/root/output/ParametricMaps/1.npz")
+data = np.load("/root/output/ParametricMaps/2.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = 2  # To Nz-th slice
@@ -302,19 +302,19 @@ def plot_results(k_space, debug_signals, Nz):
     time_axis = np.linspace(0, 5, len(debug_signals['mid']))  # 5ms readout
     
     axes[1, 0].plot(time_axis, np.abs(debug_signals['mid']), 'b-', linewidth=2)
-    axes[1, 0].set_title("Signal at ky=0 (center)")
+    axes[1, 0].set_title("Signal at ky=Ny//2")
     axes[1, 0].set_xlabel("Time (ms)")
     axes[1, 0].set_ylabel("Signal magnitude")
     axes[1, 0].grid(True, alpha=0.3)
     
     axes[1, 1].plot(time_axis, np.abs(debug_signals['quarter']), 'g-', linewidth=2)
-    axes[1, 1].set_title("Signal at ky=Ny/4")
+    axes[1, 1].set_title("Signal at ky=Ny//4")
     axes[1, 1].set_xlabel("Time (ms)")
     axes[1, 1].set_ylabel("Signal magnitude")
     axes[1, 1].grid(True, alpha=0.3)
     
     axes[1, 2].plot(time_axis, np.abs(debug_signals['one']), 'r-', linewidth=2)
-    axes[1, 2].set_title("Signal at ky=1 (edge)")
+    axes[1, 2].set_title("Signal at ky=1")
     axes[1, 2].set_xlabel("Time (ms)")
     axes[1, 2].set_ylabel("Signal magnitude")
     axes[1, 2].grid(True, alpha=0.3)
