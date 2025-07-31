@@ -10,7 +10,7 @@ dtype = torch.float32
 data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 3
+Nz = 6
 T1 = data['T1'][:Nz, :, :]
 T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
@@ -241,7 +241,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     }
     
     # Simulate ALL slices
-    for slice_idx in range(Nz):
+    for slice_idx in range(3, Nz):
         print(f"Simulating slice {slice_idx+1}/{Nz}")
         
         # Create positions for this slice
@@ -369,7 +369,7 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
     print(f"k-space shape: {k_space.shape}")
     print(f"k-space magnitude range: [{np.abs(k_space).min():.3e}, {np.abs(k_space).max():.3e}]")
     print(f"Image magnitude range: [{image_mag.min():.3f}, {image_mag.max():.3f}]")
-    print(f"Peak signal position in readout: {np.argmax(np.abs(debug_signals['center']))} / {len(debug_signals['center'])}")
+    print(f"Peak signal position in readout: {np.argmax(np.abs(debug_signals['center']))} / {len(debug_signals['center'][slice_idx])}")
 
 if __name__ == "__main__":
     # Run the complete simulation
