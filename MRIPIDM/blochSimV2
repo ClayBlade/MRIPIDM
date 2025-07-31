@@ -7,12 +7,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("/root/output/ParametricMaps/2.npz")
+data = np.load("/root/output/ParametricMaps/1.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = 22  # To Nz-th slice
 T1 = data['T1'][:(Nz), :, :]
-T2 = data['T2'][:(Nz), :, :]
+T2 = data['T2'][:(Nz), :, :] #why does this fix runtime dimension mismatch error? Happen to be coincidental, unrelated values?
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
 # Reshape T1/T2 to (Nx*Ny, Nz)
@@ -210,8 +210,8 @@ def simulateMultiTR(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     # Store signals for debugging
     debug_signals = {}
     
-    for slice_idx in range(19, Nz):
-        print(f"Simulating slice {slice_idx+1}/{Nz + 20}")
+    for slice_idx in range(20, Nz):
+        print(f"Simulating slice {slice_idx+1}/{Nz}")
         
         # Create spatial positions
         FOV = 0.2  # 20 cm FOV
@@ -333,14 +333,14 @@ def plot_results(k_space, debug_signals, Nz):
         axes[2, 1].set_title("Reconstructed Image at eighth")
         axes[2, 1].set_xlabel("x")
         axes[2, 1].set_ylabel("y")
-        plt.colorbar(im3, ax=axes[2, 0])
+        plt.colorbar(im3, ax=axes[2, 1])
 
         recon_image = reconstruct_image(k_space[:, 1, :])
         im3 = axes[2, 2].imshow(recon_image, cmap='gray', aspect='equal')
-        axes[2, 2].set_title("Reconstructed Image at 1")
+        axes[2, 2].set_title("Reconstructed Image at Nz-1")
         axes[2, 2].set_xlabel("x")
         axes[2, 2].set_ylabel("y")
-        plt.colorbar(im3, ax=axes[2, 0])
+        plt.colorbar(im3, ax=axes[2, 2])
     
     except: 
         print("error in third row")
