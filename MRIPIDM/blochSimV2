@@ -8,10 +8,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32  
 
 # Constants
-data = np.load("/content/MRIPIDM/MRIPIDM/ParametricMaps/1.npz")
+data = np.load("/content/MRIPIDM/MRIPIDM/ParametricMaps/5.npz")
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
-Nz = 6
+Nz = int(data['zSize'])
 T1 = data['T1'][:Nz, :, :]
 T2 = data['T2'][:Nz, :, :]
 print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
@@ -223,7 +223,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     
     # Calculate phase encoding gradients
     delta_ky = 1 / FOV
-    ky_max = Ny * 2/ (FOV)
+    ky_max = Ny / (2 * FOV)
     ky_values = np.linspace(-ky_max, ky_max, Ny)
     G_phase_amplitudes = ky_values / (gamma.item() * phase_duration) # Goes back to stripes if G_phase = 0.05 from 0.013
     
