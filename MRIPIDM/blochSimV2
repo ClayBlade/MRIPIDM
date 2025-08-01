@@ -362,7 +362,6 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
         ax.set_ylabel('y')'''
     
     plt.tight_layout()
-    os.mkdir("/content/MRIPIDM/MRIPIDM/output", exist_ok = True)
     plt.savefig(f'/content/MRIPIDM/MRIPIDM/output/result{slice_idx}.png', dpi=300)
     plt.show()
     
