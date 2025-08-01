@@ -115,7 +115,8 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, time_bw_product=4):
     envelope = torch.sinc(time_bw_product * t / duration)
     
     # Hamming window
-    window = 0.54 + 0.46 * torch.cos(2 * np.pi * torch.arange(n_points, device=device) / (n_points - 1))
+    #window = 0.54 + 0.46 * torch.cos(2 * np.pi * torch.arange(n_points, device=device) / (n_points - 1))
+    window = torch.hamming_window(len(t), device=device)
     envelope *= window
     
     # Scale for desired flip angle
@@ -167,7 +168,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Calculate readout gradient for proper FOV
     BW = readout_samples / readout_duration  # Bandwidth
-    G_read_amp = 0.7#2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
+    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
     G_read = torch.tensor([G_read_amp, 0, 0], device=device, dtype=dtype)
     prephase_duration = readout_duration / 2    
     
