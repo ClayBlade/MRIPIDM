@@ -223,7 +223,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     
     # Calculate phase encoding gradients
     delta_ky = 1 / FOV
-    ky_max = Ny / (FOV)
+    ky_max = Ny * 2/ (FOV)
     ky_values = np.linspace(-ky_max, ky_max, Ny)
     G_phase_amplitudes = ky_values / (gamma.item() * phase_duration) # Goes back to stripes if G_phase = 0.05 from 0.013
     
