@@ -167,7 +167,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Calculate readout gradient for proper FOV
     BW = readout_samples / readout_duration  # Bandwidth
-    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
+    G_read_amp = 0.7#2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
     G_read = torch.tensor([G_read_amp, 0, 0], device=device, dtype=dtype)
     prephase_duration = readout_duration / 2    
     
