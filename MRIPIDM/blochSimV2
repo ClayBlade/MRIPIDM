@@ -223,7 +223,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     
     # Calculate phase encoding gradients
     delta_ky = 1 / FOV
-    ky_max = Ny / (2 * FOV)
+    ky_max = Ny / (FOV)
     ky_values = np.linspace(-ky_max, ky_max, Ny)
     G_phase_amplitudes = ky_values / (gamma.item() * phase_duration) # Goes back to stripes if G_phase = 0.05 from 0.013
     
@@ -246,7 +246,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
         # Create positions for this slice
         x = torch.linspace(-FOV/2, FOV/2, Nx, device=device, dtype=dtype)
         y = torch.linspace(-FOV/2, FOV/2, Ny, device=device, dtype=dtype)
-        z_pos = 0 #slice_idx * 5e-3  # 5mm slice spacing
+        z_pos = 0 #slice_idx * 5e-3  # 5mm slice spacing # possibly maybe solved the issue
         z = torch.tensor([z_pos], device=device, dtype=dtype)
         
         X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
