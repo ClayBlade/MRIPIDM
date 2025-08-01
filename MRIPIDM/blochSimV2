@@ -130,7 +130,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     """Fixed spin echo sequence with proper timing"""
     rf90dur = 1e-3
     rf180dur = 2e-3
-    slice_thickness = 5e-3  # 5mm
+    slice_thickness = 3e-3  # 5mm
     
     # Calculate slice select gradient
     time_bw = 4000  # Hz
@@ -167,7 +167,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Calculate readout gradient for proper FOV
     BW = readout_samples / readout_duration  # Bandwidth
-    G_read_amp = 0.9 #was already 0.42 anyway #2 * np.pi * BW / (gamma.item() * FOV)
+    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
     G_read = torch.tensor([G_read_amp, 0, 0], device=device, dtype=dtype)
     
     # Prephasing: move to -kmax
@@ -227,7 +227,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     delta_ky = 1 / FOV
     ky_max = Ny / (2 * FOV)
     ky_values = np.linspace(-ky_max, ky_max, Ny)
-    G_phase_amplitudes = ky_values / 7000 # was already +-0.013 # ky_values / (gamma.item() * phase_duration)
+    G_phase_amplitudes = ky_values / (gamma.item() * phase_duration) # Goes back to stripes if G_phase = 0.05 from 0.013
     
     k_space = np.zeros((Ny, Nz, Nx), dtype=np.complex64)
     
