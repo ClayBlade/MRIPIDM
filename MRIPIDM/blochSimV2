@@ -227,7 +227,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
     delta_ky = 1 / FOV
     ky_max = Ny / (2 * FOV)
     ky_values = np.linspace(-ky_max, ky_max, Ny)
-    G_phase_amplitudes = 0.05 # was already +-0.013 # ky_values / (gamma.item() * phase_duration)
+    G_phase_amplitudes = ky_values / 7000 # was already +-0.013 # ky_values / (gamma.item() * phase_duration)
     
     k_space = np.zeros((Ny, Nz, Nx), dtype=np.complex64)
     
