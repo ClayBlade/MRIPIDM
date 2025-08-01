@@ -115,8 +115,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, time_bw_product=4):
     envelope = torch.sinc(time_bw_product * t / duration)
     
     # Hamming window
-    #window = 0.54 + 0.46 * torch.cos(2 * np.pi * torch.arange(n_points, device=device) / (n_points - 1))
-    window = torch.hamming_window(len(t), device=device)
+    window = 0.54 + 0.46 * torch.cos(2 * np.pi * torch.arange(n_points, device=device) / (n_points - 1))
     envelope *= window
     
     # Scale for desired flip angle
@@ -247,7 +246,7 @@ def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
         # Create positions for this slice
         x = torch.linspace(-FOV/2, FOV/2, Nx, device=device, dtype=dtype)
         y = torch.linspace(-FOV/2, FOV/2, Ny, device=device, dtype=dtype)
-        z_pos = slice_idx * 5e-3  # 5mm slice spacing
+        z_pos = 0 #slice_idx * 5e-3  # 5mm slice spacing
         z = torch.tensor([z_pos], device=device, dtype=dtype)
         
         X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
