@@ -130,13 +130,13 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     """Fixed spin echo sequence with proper timing"""
     rf90dur = 1e-3
     rf180dur = 2e-3
-    slice_thickness = 7e-3  # 5mm
+    slice_thickness = 5e-3  # 5mm
     
     # Calculate slice select gradient
     time_bw = 4000  # Hz
     G_slice_amp = 2 * np.pi * time_bw / (gamma.item() * slice_thickness)
     
-    # 90-degree excitation
+    # 90-degree excitation + slice select gradient
     B1_90, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
     G_slice = torch.zeros((len(t_rf), 3), device=device, dtype=dtype)
     G_slice[:, 2] = G_slice_amp
@@ -169,20 +169,18 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     BW = readout_samples / readout_duration  # Bandwidth
     G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
     G_read = torch.tensor([G_read_amp, 0, 0], device=device, dtype=dtype)
-    
-    # Prephasing: move to -kmax
-    prephase_duration = readout_duration / 2
-    spins.apply_gradient(-G_read, prephase_duration)
+    prephase_duration = readout_duration / 2    
     
     # Time from 180° center to echo center (should be TE/2)
     # Echo should occur at readout center
     time_after_180 = TE/2 - rf180dur/2
     time_to_readout_start = time_after_180 - readout_duration/2 - prephase_duration
     
-    if time_to_readout_start > 0:
+    if time_to_readout_start > 0: #
         spins.apply_gradient(torch.zeros(3, device=device), time_to_readout_start)
     
     # Acquire signal
+    spins.apply_gradient(-G_read, prephase_duration) #prephase before readout, otherwise phase won't line up?
     signal = acquire_signal_proper(spins, G_read, readout_duration, readout_samples)
     
     return signal
