@@ -121,7 +121,7 @@ class Up(nn.Module):
         x = self.up(x)
         x = torch.cat([skip_x, x], dim=1)
         x = self.conv(x)
-        emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
+        emb = self.emb_layer(t)[:, :, None, None].repeat(16, 1, x.shape[-2], x.shape[-1])
         return x + emb
 
 
@@ -166,25 +166,39 @@ class UNet(nn.Module):
 
         print(f" \n pre inc shape: {x.shape}")
         x1 = self.inc(x)
+
         print(f" \n pre down1 shape: {x1.shape}")
         x2 = self.down1(x1, t)
+
         print(f" \n pre sa1 shape: {x2.shape}")
         x2 = self.sa1(x2)
+
         print(f" \n pre down2 shape: {x2.shape}")
         x3 = self.down2(x2, t)
+
         print(f" \n pre sa2 shape: {x3.shape}")
         x3 = self.sa2(x3)
+
         print(f" \n pre down3 shape: {x3.shape}")
         x4 = self.down3(x3, t)
+
         print(f" \n pre sa3 shape: {x4.shape}")
         x4 = self.sa3(x4)
 
+
+
+
         print(f" \n pre bot1 shape: {x4.shape}")
         x4 = self.bot1(x4)
+
         print(f" \n pre bot2 shape: {x4.shape}")
         x4 = self.bot2(x4)
+
         print(f" \n pre bot3 shape: {x4.shape}")
         x4 = self.bot3(x4)
+
+
+
 
         print(f" \n pre up1 shape: {x4.shape}")
         x = self.up1(x4, x3, t)
