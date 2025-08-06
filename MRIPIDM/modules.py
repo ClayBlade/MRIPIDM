@@ -126,11 +126,11 @@ class Up(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, c_in=16, c_out=16, time_dim=256, device="cuda"):
+    def __init__(self, c_in=1, c_out=1, time_dim=256, device="cuda"):
         super().__init__()
         self.device = device
         self.time_dim = time_dim
-        self.inc = DoubleConv(c_in, 16)
+        self.inc = DoubleConv(c_in, 64)
         self.down1 = Down(64, 128)
         self.sa1 = SelfAttention(128, 32)
         self.down2 = Down(128, 256)
@@ -148,7 +148,7 @@ class UNet(nn.Module):
         self.sa5 = SelfAttention(64, 32)
         self.up3 = Up(128, 64)
         self.sa6 = SelfAttention(64, 64)
-        self.outc = nn.Conv2d( 16 , c_out, kernel_size=1)
+        self.outc = nn.Conv2d( 64 , c_out, kernel_size=1)
 
     def pos_encoding(self, t, channels):
         inv_freq = 1.0 / (
