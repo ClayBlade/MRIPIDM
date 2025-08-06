@@ -139,6 +139,10 @@ def train(args):
             print(images.shape)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
+
+            print(f"\n x_t: {x_t.shape}")
+            print(f"t_shape: {t.shape}")
+
             predicted_noise = model(x_t, t)
             loss = mse(noise, predicted_noise)
 
