@@ -87,8 +87,8 @@ class Diffusion:
     def noise_images(self, x, t):
         '''Adds the noise in one step like in the formula'''
 
-        sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, None, None, None]
-        sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, None, None, None]
+        sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, 1, None, None]
+        sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, 1, None, None]
         Ɛ = torch.randn_like(x)
         return sqrt_alpha_hat * x + sqrt_one_minus_alpha_hat * Ɛ, Ɛ
 
