@@ -158,8 +158,8 @@ def launch():
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
     args.epochs = 2
-    args.batch_size = 12
-    args.image_size = 64
+    args.batch_size = 16
+    args.image_size = 16
     args.dataset = np.load("/content/MRIPIDM/MRIPIDM/test.npz")['M']
     args.device = "cuda"
     args.lr = 3e-4
