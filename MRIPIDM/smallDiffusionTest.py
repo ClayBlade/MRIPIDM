@@ -87,8 +87,8 @@ class Diffusion:
     def noise_images(self, x, t):
         '''Adds the noise in one step like in the formula'''
 
-        sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, 1, None, None]
-        sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, 1, None, None]
+        sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, None, None, None]
+        sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:,None, None, None]
         Ɛ = torch.randn_like(x)
         return sqrt_alpha_hat * x + sqrt_one_minus_alpha_hat * Ɛ, Ɛ
 
@@ -101,13 +101,13 @@ class Diffusion:
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, self.img_size, self.img_size)).to(self.device)
+            x = torch.randn((n, 1, self.img_size, self.img_size)).to(self.device)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
                 alpha = self.alpha[t][:, None, None, None]
                 alpha_hat = self.alpha_hat[t][:, None, None, None]
-                beta = self.beta[t][:, None, None] #reshaping
+                beta = self.beta[t][:, None, None, None] #reshaping
                 if i > 1:
                     noise = torch.randn_like(x)
                 else:
