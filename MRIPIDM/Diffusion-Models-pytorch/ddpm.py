@@ -1,57 +1,4 @@
 import os
-import numpy as np
-import torch
-import torch.nn as nn
-from matplotlib import pyplot as plt
-from tqdm import tqdm
-from torch import optim
-from utils import *
-from modules import UNet
-import logging
-import torchvision
-from PIL import Image
-from matplotlib import pyplot as plt
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-
-'''utils'''
-def plot_images(images):
-    plt.figure(figsize=(32, 32))
-    plt.imshow(torch.cat([
-        torch.cat([i for i in images.cpu()], dim=-1),
-    ], dim=-2).permute(1, 2, 0).cpu())
-    plt.show()
-
-
-def save_images(images, path, **kwargs):
-    grid = torchvision.utils.make_grid(images, **kwargs)
-    ndarr = grid.permute(1, 2, 0).to('cpu').numpy()
-    im = Image.fromarray(ndarr)
-    im.save(path)
-
-
-def get_data(args):
-    transforms = torchvision.transforms.Compose([
-        torchvision.transforms.Resize(80),  # args.image_size + 1/4 *args.image_size
-        torchvision.transforms.RandomResizedCrop(args.image_size, scale=(0.8, 1.0)),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
-    dataset = torchvision.datasets.ImageFolder(args.dataset_path, transform=transforms)
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
-    return dataloader
-
-
-def setup_logging(run_name):
-    os.makedirs("models", exist_ok=True)
-    os.makedirs("results", exist_ok=True)
-    os.makedirs(os.path.join("models", run_name), exist_ok=True)
-    os.makedirs(os.path.join("results", run_name), exist_ok=True)
-
-
-'''Model and training'''
-
-import os
 import torch
 import torch.nn as nn
 from matplotlib import pyplot as plt
@@ -101,27 +48,28 @@ class Diffusion:
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, self.img_size, self.img_size)).to(self.device)
+            x = torch.randn((n, 3, self.img_size, self.img_size)).to(self.device)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
                 alpha = self.alpha[t][:, None, None, None]
                 alpha_hat = self.alpha_hat[t][:, None, None, None]
-                beta = self.beta[t][:, None, None] #reshaping
+                beta = self.beta[t][:, None, None, None] #reshaping
                 if i > 1:
                     noise = torch.randn_like(x)
                 else:
                     noise = torch.zeros_like(x)
                 x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
         model.train()
-        x = (x.clamp(-1, 1) + 1) / 2    # normalize
+        x = (x.clamp(-1, 1) + 1) / 2
+        x = (x * 255).type(torch.uint8)
         return x
 
 
 def train(args):
     setup_logging(args.run_name)
     device = args.device
-    dataloader = args.dataset
+    dataloader = get_data(args)
     model = UNet().to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
@@ -132,8 +80,7 @@ def train(args):
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
-        for i, images in enumerate(pbar):
-            images = torch.from_numpy(images)
+        for i, (images, _) in enumerate(pbar):
             images = images.to(device)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
@@ -157,10 +104,10 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
-    args.epochs = 2
+    args.epochs = 500
     args.batch_size = 12
     args.image_size = 64
-    args.dataset = np.load("/content/MRIPIDM/MRIPIDM/test.npz")['M']
+    args.dataset_path = r"C:\Users\dome\datasets\landscape_img_folder"
     args.device = "cuda"
     args.lr = 3e-4
     train(args)
