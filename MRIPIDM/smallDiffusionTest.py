@@ -133,6 +133,7 @@ def train(args):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
         for i, images in enumerate(pbar):
+            images = torch.from_numpy(images)
             images = images.to(device)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
