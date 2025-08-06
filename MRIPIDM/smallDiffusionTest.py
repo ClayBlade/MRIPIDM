@@ -85,10 +85,10 @@ class Diffusion:
     #Why do you need noise scheduler if the noise gets added in one step
 
     def noise_images(self, x, t):
-        '''Adds the noise in one step like in the formula'''
+        '''Adds the noise to noise in timestep t in one step like in the formula'''
 
         sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, None, None, None]
-        sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:,None, None, None]
+        sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, None, None, None]
         Ɛ = torch.randn_like(x)
         return sqrt_alpha_hat * x + sqrt_one_minus_alpha_hat * Ɛ, Ɛ
 
@@ -129,12 +129,15 @@ def train(args):
     logger = SummaryWriter(os.path.join("runs", args.run_name))
     l = len(dataloader)
 
+
+
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
         for i, images in enumerate(pbar):
             images = torch.from_numpy(images)
             images = images.to(device)
+            print(images.shape)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
             predicted_noise = model(x_t, t)
@@ -160,7 +163,7 @@ def launch():
     args.epochs = 2
     args.batch_size = 16
     args.image_size = 16
-    args.dataset = np.load("/content/MRIPIDM/MRIPIDM/test.npz")['M']
+    args.dataset = np.load("/content/MRIPIDM/MRIPIDM/test.npz")['M'] #was originally dataloader
     args.device = "cuda"
     args.lr = 3e-4
     train(args)
