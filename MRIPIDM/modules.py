@@ -126,7 +126,7 @@ class Up(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, c_in=1, c_out=1, time_dim=256, device="cuda"):
+    def __init__(self, c_in=16, c_out=16, time_dim=256, device="cuda"):
         super().__init__()
         self.device = device
         self.time_dim = time_dim
