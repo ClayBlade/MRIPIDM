@@ -141,7 +141,7 @@ def train(args):
             x_t, noise = diffusion.noise_images(images, t)
 
             print(f"\n x_t: {x_t.shape}")
-            print(f"t_shape: {t.shape}")
+            print(f"t_shape: {t.shape} \n")
 
             predicted_noise = model(x_t, t)
             loss = mse(noise, predicted_noise)
