@@ -159,7 +159,7 @@ def launch():
     args.epochs = 2
     args.batch_size = 12
     args.image_size = 64
-    args.dataset = np.load("D:/Projects/MRIPIDMoutput/test.npz")['M']
+    args.dataset = np.load("/test.npz")['M']
     args.device = "cuda"
     args.lr = 3e-4
     train(args)
