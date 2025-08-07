@@ -165,7 +165,7 @@ class UNet(nn.Module):
         t = self.pos_encoding(t, self.time_dim)
 
         x1 = self.inc(x)
-        print(f"\n inc: {x1} \n")
+        print(f"\n inc: {x1.shape} \n")
         x2 = self.down1(x1, t)
         print(f"\n down1: {x2.shape} \n")
         x2 = self.sa1(x2)
