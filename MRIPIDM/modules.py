@@ -121,7 +121,7 @@ class Up(nn.Module):
         x = self.up(x)
         x = torch.cat([skip_x, x], dim=1)
         x = self.conv(x)
-        emb = self.emb_layer(t)[:, :, None, None].repeat(x.shape[0], 1, x.shape[-2], x.shape[-1])
+        emb = self.emb_layer(t)[:, :, None, None].repeat(16, 1, x.shape[-2], x.shape[-1])
         return x + emb
 
 
@@ -130,7 +130,7 @@ class UNet(nn.Module):
         super().__init__()
         self.device = device
         self.time_dim = time_dim
-        self.inc = DoubleConv(c_in, 64)
+        self.inc = DoubleConv(c_in, 16)
         self.down1 = Down(16, 128)
         self.sa1 = SelfAttention(128, 32)
         self.down2 = Down(128, 256)
@@ -147,8 +147,8 @@ class UNet(nn.Module):
         self.up2 = Up(256, 64)
         self.sa5 = SelfAttention(64, 32)
         self.up3 = Up(128, 64)
-        self.sa6 = SelfAttention(64, 64)
-        self.outc = nn.Conv2d( 64 , c_out, kernel_size=1)
+        self.sa6 = SelfAttention(64, 16)
+        self.outc = nn.Conv2d( 16 , c_out, kernel_size=1)
 
     def pos_encoding(self, t, channels):
         inv_freq = 1.0 / (
