@@ -121,7 +121,7 @@ class Up(nn.Module):
         x = self.up(x)
         x = torch.cat([skip_x, x], dim=1)
         x = self.conv(x)
-        emb = self.emb_layer(t)[:, :, None, None].repeat(16, 1, x.shape[-2], x.shape[-1])
+        emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
         return x + emb
 
 
