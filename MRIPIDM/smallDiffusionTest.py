@@ -181,7 +181,7 @@ def launch():
     args.run_name = "DDPM_Uncondtional"
     args.epochs = 2
     args.batch_size = 10
-    args.image_size = 64
+    args.image_size = 16
     args.device = "cuda"
     args.lr = 3e-4
     train(args)
@@ -189,15 +189,3 @@ def launch():
 
 if __name__ == '__main__':
     launch()
-    # device = "cuda"
-    # model = UNet().to(device)
-    # ckpt = torch.load("./working/orig/ckpt.pt")
-    # model.load_state_dict(ckpt)
-    # diffusion = Diffusion(img_size=64, device=device)
-    # x = diffusion.sample(model, 8)
-    # print(x.shape)
-    # plt.figure(figsize=(32, 32))
-    # plt.imshow(torch.cat([
-    #     torch.cat([i for i in x.cpu()], dim=-1),
-    # ], dim=-2).permute(1, 2, 0).cpu())
-    # plt.show()
