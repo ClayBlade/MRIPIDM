@@ -1,20 +1,26 @@
 import os
-import numpy as np
 import torch
 import torch.nn as nn
+import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from torch import optim
 from utils import *
 from modules import UNet
 import logging
+from torch.utils.tensorboard import SummaryWriter
+
+logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
+
+
+import os
+import torch
 import torchvision
 from PIL import Image
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 
-'''utils'''
+
 def plot_images(images):
     plt.figure(figsize=(32, 32))
     plt.imshow(torch.cat([
@@ -35,7 +41,7 @@ def get_data(args):
         torchvision.transforms.Resize(80),  # args.image_size + 1/4 *args.image_size
         torchvision.transforms.RandomResizedCrop(args.image_size, scale=(0.8, 1.0)),
         torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        torchvision.transforms.Normalize((0.5, ), (0.5, ))
     ])
     dataset = torchvision.datasets.ImageFolder(args.dataset_path, transform=transforms)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
@@ -49,24 +55,21 @@ def setup_logging(run_name):
     os.makedirs(os.path.join("results", run_name), exist_ok=True)
 
 
-'''Model and training'''
+class MatrixDataset(torch.utils.data.Dataset):
+    def __init__(self, data_dir):
+        self.files = sorted([os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith(".pt")])
 
-import os
-import torch
-import torch.nn as nn
-from matplotlib import pyplot as plt
-from tqdm import tqdm
-from torch import optim
-from utils import *
-from modules import UNet
-import logging
-from torch.utils.tensorboard import SummaryWriter
+    def __len__(self):
+        return len(self.files)
 
-logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
+    def __getitem__(self, idx):
+        matrix = torch.load(self.files[idx])  # or np.load and convert
+        matrix = matrix.unsqueeze(0)  # Ensure shape is (1, H, W)
+        return matrix, 0  # dummy label
 
 
 class Diffusion:
-    def __init__(self, noise_steps=1000, beta_start=1e-4, beta_end=0.02, img_size=16, device="cuda"):
+    def __init__(self, noise_steps=1000, beta_start=1e-4, beta_end=0.02, img_size=256, device="cuda"):
         self.noise_steps = noise_steps
         self.beta_start = beta_start
         self.beta_end = beta_end
@@ -76,73 +79,60 @@ class Diffusion:
         self.beta = self.prepare_noise_schedule().to(device)
         self.alpha = 1. - self.beta
         self.alpha_hat = torch.cumprod(self.alpha, dim=0)
-    #alpha and beta represent what?
 
     def prepare_noise_schedule(self):
-        '''linear noise schedule'''
-
         return torch.linspace(self.beta_start, self.beta_end, self.noise_steps)
-    #Why do you need noise scheduler if the noise gets added in one step
 
     def noise_images(self, x, t):
-        '''Adds the noise to noise in timestep t in one step like in the formula'''
-
         sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, None, None, None]
         sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, None, None, None]
         Ɛ = torch.randn_like(x)
         return sqrt_alpha_hat * x + sqrt_one_minus_alpha_hat * Ɛ, Ɛ
 
-
     def sample_timesteps(self, n):
         return torch.randint(low=1, high=self.noise_steps, size=(n,))
-    
 
     def sample(self, model, n):
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, 1, self.img_size, self.img_size)).to(self.device)
+            x = torch.randn((n, 3, self.img_size, self.img_size)).to(self.device)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
                 alpha = self.alpha[t][:, None, None, None]
                 alpha_hat = self.alpha_hat[t][:, None, None, None]
-                beta = self.beta[t][:, None, None, None] #reshaping
+                beta = self.beta[t][:, None, None, None]
                 if i > 1:
                     noise = torch.randn_like(x)
                 else:
                     noise = torch.zeros_like(x)
                 x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
         model.train()
+        x = (x.clamp(-1, 1) + 1) / 2
+        x = (x * 255).type(torch.uint8)
         return x
 
 
 def train(args):
     setup_logging(args.run_name)
     device = args.device
-    dataloader = args.dataset
-    model = UNet().to(device)
+    dataloader = np.load(args.dataset_path)["M"] #can probably change directly to path
+    model = UNet(c_in = 1, c_out = 1).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
     diffusion = Diffusion(img_size=args.image_size, device=device)
     logger = SummaryWriter(os.path.join("runs", args.run_name))
     l = len(dataloader)
 
-
-
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
-        for i, images in enumerate(pbar):
-            images = torch.from_numpy(images)
-            images = images.to(device)
-            print(images.shape)
+        for i, (images, _) in enumerate(args.batch_size, pbar):
+            print(f"images.shape: {images.shape}")
+            images = images.to(device) #reshape to [B, 1, H, W]
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
-
-            print(f"\n x_t: {x_t.shape}")
-            print(f"t_shape: {t.shape} \n")
-
             predicted_noise = model(x_t, t)
             loss = mse(noise, predicted_noise)
 
@@ -163,10 +153,10 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
-    args.epochs = 2
-    args.batch_size = 4
-    args.image_size = 16
-    args.dataset = np.load("/content/MRIPIDM/MRIPIDM/test.npz")['M'] #was originally dataloader
+    args.epochs = 500
+    args.batch_size = 10
+    args.image_size = 64
+    args.dataset_path = "/content/MRIPIDM/MRIPIDM/test.npz"
     args.device = "cuda"
     args.lr = 3e-4
     train(args)
