@@ -132,7 +132,7 @@ class UNet(nn.Module):
         self.time_dim = time_dim
         self.inc = DoubleConv(c_in, 64)
         self.down1 = Down(64, 128)
-        #self.sa1 = SelfAttention(128, 32)
+        self.sa1 = SelfAttention(128, 32)
         self.down2 = Down(128, 256)
         #self.sa2 = SelfAttention(256, 16)
         self.down3 = Down(256, 256)
@@ -168,7 +168,7 @@ class UNet(nn.Module):
         print(f"\n inc: {x1.shape} \n")
         x2 = self.down1(x1, t)
         print(f"\n down1: {x2.shape} \n")
-        #x2 = self.sa1(x2)
+        x2 = self.sa1(x2)
         x3 = self.down2(x2, t)
         #x3 = self.sa2(x3)
         x4 = self.down3(x3, t)
