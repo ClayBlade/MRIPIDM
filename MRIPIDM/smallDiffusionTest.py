@@ -21,6 +21,26 @@ from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 
 
+
+
+'''Data generation'''
+# List to store all individual matrices
+matrices = []
+
+for _ in range(500):  
+    matrix = torch.randn(16, 16)      
+    matrix = matrix.unsqueeze(0)       
+    matrices.append(matrix)
+
+# Stack into a single tensor of shape 
+batch_tensor = torch.stack(matrices)
+
+print(batch_tensor.shape)  # Output
+
+
+
+
+
 def plot_images(images):
     plt.figure(figsize=(32, 32))
     plt.imshow(torch.cat([
@@ -37,14 +57,27 @@ def save_images(images, path, **kwargs):
 
 
 def get_data(args):
+    # List to store all individual matrices
+    matrices = []
+
+    for _ in range(500):  
+        matrix = torch.randn(16, 16)      
+        matrix = matrix.unsqueeze(0)       
+        matrices.append(matrix)
+
+    # Stack into a single tensor of shape 
+    batch_tensor = torch.stack(matrices)
+
+    print(f"batch.shape: {batch_tensor.shape}")  # Output
+
+
     transforms = torchvision.transforms.Compose([
         torchvision.transforms.Resize(80),  # args.image_size + 1/4 *args.image_size
         torchvision.transforms.RandomResizedCrop(args.image_size, scale=(0.8, 1.0)),
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.5, ), (0.5, ))
     ])
-    dataset = torchvision.datasets.ImageFolder(args.dataset_path, transform=transforms)
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+    dataloader = DataLoader(matrices, batch_size=args.batch_size, shuffle=True)
     return dataloader
 
 
@@ -117,7 +150,7 @@ class Diffusion:
 def train(args):
     setup_logging(args.run_name)
     device = args.device
-    dataloader = np.load(args.dataset_path)["M"] #can probably change directly to path
+    dataloader = get_data(args)
     model = UNet(c_in = 1, c_out = 1).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
@@ -128,7 +161,7 @@ def train(args):
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
-        for i, (images, _) in enumerate(args.batch_size, pbar):
+        for i, (images, _) in enumerate(pbar):
             print(f"images.shape: {images.shape}")
             images = images.to(device) #reshape to [B, 1, H, W]
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
@@ -153,10 +186,9 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
-    args.epochs = 500
+    args.epochs = 2
     args.batch_size = 10
     args.image_size = 64
-    args.dataset_path = "/content/MRIPIDM/MRIPIDM/test.npz"
     args.device = "cuda"
     args.lr = 3e-4
     train(args)
