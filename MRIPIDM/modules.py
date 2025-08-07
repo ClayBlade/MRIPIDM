@@ -134,7 +134,7 @@ class UNet(nn.Module):
         self.down1 = Down(64, 128)
         self.sa1 = SelfAttention(128, 8)
         self.down2 = Down(128, 256)
-        #self.sa2 = SelfAttention(256, 16)
+        self.sa2 = SelfAttention(256, 16)
         self.down3 = Down(256, 256)
         #self.sa3 = SelfAttention(256, 8)
 #
