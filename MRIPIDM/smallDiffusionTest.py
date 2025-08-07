@@ -156,7 +156,6 @@ def train(args):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
         for images, _ in enumerate(pbar):
-            print(f"images.shape: {images.shape}")
             images = images.to(device) #reshape to [B, 1, H, W]
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
