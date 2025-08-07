@@ -71,12 +71,6 @@ def get_data(args):
     print(f"batch.shape: {batch_tensor.shape}")  # Output
 
 
-    transforms = torchvision.transforms.Compose([
-        torchvision.transforms.Resize(80),  # args.image_size + 1/4 *args.image_size
-        torchvision.transforms.RandomResizedCrop(args.image_size, scale=(0.8, 1.0)),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.5, ), (0.5, ))
-    ])
     dataloader = DataLoader(matrices, batch_size=args.batch_size, shuffle=True)
     return dataloader
 
@@ -161,7 +155,7 @@ def train(args):
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
-        for i, (images, _) in enumerate(pbar):
+        for images, _ in enumerate(pbar):
             print(f"images.shape: {images.shape}")
             images = images.to(device) #reshape to [B, 1, H, W]
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
