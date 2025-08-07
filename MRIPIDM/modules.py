@@ -166,6 +166,7 @@ class UNet(nn.Module):
 
         x1 = self.inc(x)
         x2 = self.down1(x1, t)
+        print(f"down1: {x2}")
         x2 = self.sa1(x2)
         x3 = self.down2(x2, t)
         x3 = self.sa2(x3)
