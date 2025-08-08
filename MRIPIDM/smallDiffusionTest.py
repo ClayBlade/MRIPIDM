@@ -56,7 +56,7 @@ def get_data(args):
         matrix = torch.randn(16, 16)
         for i in range(16):
             for j in range(16):  
-                matrix[i*16][j] = j
+                matrix[i][j] = j
         matrix = matrix.unsqueeze(0) #color channel      
         matrices.append(matrix)
 
