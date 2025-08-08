@@ -23,23 +23,6 @@ from torch.utils.data import DataLoader
 
 
 
-'''Data generation'''
-# List to store all individual matrices
-matrices = []
-
-for i in range(500):  
-    matrix = torch.zeros(16, 16) 
-    matrix[0][0] = i  
-    matrix = matrix.unsqueeze(0)       
-    matrices.append(matrix)
-
-# Stack into a single tensor of shape 
-batch_tensor = torch.stack(matrices)
-
-print(batch_tensor.shape)  # Output
-
-
-
 
 
 def plot_images(images):
@@ -62,7 +45,8 @@ def get_data(args):
     matrices = []
 
     for _ in range(500):  
-        matrix = torch.randn(16, 16)      
+        matrix = torch.randn(16, 16)  
+        matrix[:2][:] = 0    
         matrix = matrix.unsqueeze(0)       
         matrices.append(matrix)
 
@@ -183,7 +167,7 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
-    args.epochs = 300
+    args.epochs = 500
     args.batch_size = 10
     args.image_size = 16
     args.device = "cuda"
