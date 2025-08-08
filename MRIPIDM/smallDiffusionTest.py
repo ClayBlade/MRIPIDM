@@ -1,3 +1,11 @@
+ #Sanity: identity denoise test passes (loss < small threshold).
+ #Reproducible: same seed gives identical sample on tiny model.
+ #Canary dataset: compute and log per-epoch PDE residual L2 and boundary errors on 5 canonical cases.
+ #Guidnce sweep: run 3 guidance scales and log conditional accuracy / residual.
+ #Memory/time: single-sample latency and peak GPU mem profiled.
+
+
+
 import os
 import torch
 import torch.nn as nn
@@ -44,16 +52,19 @@ def get_data(args):
     # List to store all individual matrices
     matrices = []
 
-    for _ in range(500):  
+    for _ in range(500):
         matrix = torch.randn(16, 16)
-        matrix[:8, :8] = 0     
-        matrix = matrix.unsqueeze(0)       
+        for i in range(16):
+            for j in range(16):  
+                matrix[i*16][j] = j
+        matrix = matrix.unsqueeze(0) #color channel      
         matrices.append(matrix)
 
     # Stack into a single tensor of shape 
     batch_tensor = torch.stack(matrices)
 
     print(f"batch.shape: {batch_tensor.shape}")  # Output
+    print(f"values in batch: {batch_tensor[0][0][0][0]}, {batch_tensor[0][0][0][9]}")
 
 
     dataloader = DataLoader(matrices, batch_size=args.batch_size, shuffle=True)
@@ -65,19 +76,6 @@ def setup_logging(run_name):
     os.makedirs("results", exist_ok=True)
     os.makedirs(os.path.join("models", run_name), exist_ok=True)
     os.makedirs(os.path.join("results", run_name), exist_ok=True)
-
-
-class MatrixDataset(torch.utils.data.Dataset):
-    def __init__(self, data_dir):
-        self.files = sorted([os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith(".pt")])
-
-    def __len__(self):
-        return len(self.files)
-
-    def __getitem__(self, idx):
-        matrix = torch.load(self.files[idx])  # or np.load and convert
-        matrix = matrix.unsqueeze(0)  # Ensure shape is (1, H, W)
-        return matrix, 0  # dummy label
 
 
 class Diffusion:
@@ -155,6 +153,7 @@ def train(args):
 
             pbar.set_postfix(MSE=loss.item())
             logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
+
         if (epoch % 10 == 0):
             sampled_images = diffusion.sample(model, n=images.shape[0])
             save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
