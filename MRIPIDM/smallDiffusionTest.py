@@ -45,7 +45,8 @@ def get_data(args):
     matrices = []
 
     for _ in range(500):  
-        matrix = torch.zeros(16, 16)     
+        matrix = torch.randn(16, 16)
+        matrix[:8, :8] = 0     
         matrix = matrix.unsqueeze(0)       
         matrices.append(matrix)
 
