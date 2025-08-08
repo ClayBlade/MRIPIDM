@@ -143,11 +143,11 @@ class UNet(nn.Module):
         self.bot3 = DoubleConv(512, 256)
 #
         self.up1 = Up(512, 128)
-        self.sa4 = SelfAttention(128, 4)
+        self.sa4 = SelfAttention(128, 2)
         self.up2 = Up(256, 64)
-        self.sa5 = SelfAttention(64, 8)
+        self.sa5 = SelfAttention(64, 4)
         self.up3 = Up(128, 64)
-        self.sa6 = SelfAttention(64, 16)
+        self.sa6 = SelfAttention(64, 8)
         self.outc = nn.Conv2d(64, c_out, kernel_size=1)
 
     def pos_encoding(self, t, channels):
