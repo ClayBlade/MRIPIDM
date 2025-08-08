@@ -134,7 +134,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Calculate slice select gradient
     time_bw = 4000  # Hz
-    G_slice_amp = 2 * np.pi * time_bw / (gamma.item() * slice_thickness)
+    G_slice_amp = time_bw / (gamma.item() * slice_thickness)
     
     # 90-degree excitation + slice select gradient
     B1_90, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
@@ -167,7 +167,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Calculate readout gradient for proper FOV
     BW = readout_samples / readout_duration  # Bandwidth
-    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
+    G_read_amp = BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
     G_read = torch.tensor([G_read_amp, 0, 0], device=device, dtype=dtype)
     prephase_duration = readout_duration / 2    
     
@@ -181,14 +181,14 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Acquire signal
     spins.apply_gradient(-G_read, prephase_duration) #prephase before readout, otherwise phase won't line up?
-    signal = acquire_signal_proper(spins, G_read, readout_duration, readout_samples)
+    signal = acquire_signal(spins, G_read, readout_duration, readout_samples)
     
     return signal
 
-def acquire_signal_proper(spins, G_read, duration, n_samples):
+def acquire_signal(spins, G_read, duration, n_samples):
     """Proper signal acquisition with echo at center"""
     dt = duration / n_samples
-    t_read = np.linspace(0, duration, n_samples)
+    t_read = np.linspace(-duration/2, duration/2, n_samples)
     signal = np.zeros(n_samples, dtype=np.complex64)
     
     # Initial magnetization state
@@ -349,15 +349,6 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
     ax6.set_ylabel('Signal magnitude')
     ax6.grid(True, alpha=0.3)
     
-    # Row 3: Different slices
-    '''for i, slice_idx in enumerate([0, k_space.shape[1]//2, k_space.shape[1]-1]):
-        ax = plt.subplot(3, 3, 7+i)
-        k_slice = k_space[:, slice_idx, :]
-        image = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(k_slice)))
-        ax.imshow(np.abs(image), cmap='gray')
-        ax.set_title(f'Slice {slice_idx+1}')
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')'''
     
     plt.tight_layout()
     plt.savefig(f'/content/MRIPIDM/MRIPIDM/output/result{slice_idx}.png', dpi=300)
