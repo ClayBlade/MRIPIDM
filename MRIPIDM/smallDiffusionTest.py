@@ -167,7 +167,7 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
-    args.epochs = 500
+    args.epochs = 50
     args.batch_size = 10
     args.image_size = 16
     args.device = "cuda"
