@@ -109,7 +109,7 @@ class SpinSystem:
 def design_sinc_rf(flip_angle, duration, n_lobes=4, time_bw_product=4):
     """Design a sinc RF pulse with proper windowing"""
     n_points = 256
-    t = torch.linspace(-duration/2, duration/2, n_points, device=device, dtype=dtype)
+    t = torch.linspace(0, duration/2, n_points, device=device, dtype=dtype)
     
     # Sinc envelope
     envelope = torch.sinc(time_bw_product * t / duration)
@@ -195,7 +195,7 @@ def acquire_signal(spins, G_read, duration, n_samples):
     # times at sample centers
     t = (np.arange(n_samples) + 0.5) * dt  # sample-centered
     # center the time axis so t_center = duration/2 -> subtract duration/2
-    t_centered = t 
+    t_centered = t - (duration / 2.0)
 
     x_positions = spins.positions[:, 0].cpu().numpy()  # shape (Npos,)
     Mxy = spins.M[:, 0].cpu().numpy() + 1j * spins.M[:, 1].cpu().numpy()  # shape (Npos,)
