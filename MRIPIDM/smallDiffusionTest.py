@@ -27,8 +27,9 @@ from torch.utils.data import DataLoader
 # List to store all individual matrices
 matrices = []
 
-for _ in range(500):  
-    matrix = torch.randn(16, 16)      
+for i in range(500):  
+    matrix = torch.zeros(16, 16) 
+    matrix[0][0] = i  
     matrix = matrix.unsqueeze(0)       
     matrices.append(matrix)
 
@@ -174,6 +175,8 @@ def train(args):
         sampled_images = diffusion.sample(model, n=images.shape[0])
         save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
         torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
+
+    print(f"loss: {loss:.6f}")
 
 
 def launch():
