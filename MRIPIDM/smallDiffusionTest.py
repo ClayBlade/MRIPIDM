@@ -176,7 +176,6 @@ def train(args):
         save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
         torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
 
-    print(f"loss: {loss:.6f}")
 
 
 def launch():
@@ -184,7 +183,7 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
-    args.epochs = 2
+    args.epochs = 50
     args.batch_size = 10
     args.image_size = 16
     args.device = "cuda"
