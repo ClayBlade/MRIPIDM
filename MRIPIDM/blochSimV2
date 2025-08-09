@@ -115,7 +115,7 @@ def design_sinc_rf(flip_angle, duration, n_lobes=4, time_bw_product=4):
     envelope = torch.sinc(time_bw_product * t / duration)
     
     # Hamming window
-    window = 0.54 + 0.46 * torch.cos(2 * np.pi * torch.arange(n_points, device=device) / (n_points - 1))
+    window = 0.54 + 0.46 * torch.cos(torch.arange(n_points, device=device) / (n_points - 1))
     envelope *= window
     
     # Scale for desired flip angle
@@ -134,7 +134,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Calculate slice select gradient
     time_bw = 4000  # Hz
-    G_slice_amp = 2 * np.pi * time_bw / (gamma.item() * slice_thickness)
+    G_slice_amp = time_bw / (gamma.item() * slice_thickness)
     
     # 90-degree excitation + slice select gradient
     B1_90, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
@@ -167,7 +167,7 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     
     # Calculate readout gradient for proper FOV
     BW = readout_samples / readout_duration  # Bandwidth
-    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
+    G_read_amp = BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
     G_read = torch.tensor([G_read_amp, 0, 0], device=device, dtype=dtype)
     prephase_duration = readout_duration / 2    
     
@@ -186,34 +186,39 @@ def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
     return signal
 
 def acquire_signal_proper(spins, G_read, duration, n_samples):
-    """Proper signal acquisition with echo at center"""
+    """
+    Vectorized acquisition. We center the time axis so the echo is at t = duration/2
+    Phase (radians) = gamma * integral(G dt) * x. For constant G_read, integral(G dt) = G_read * (t - t0)
+    We choose t0 so center of readout gives zero phase (echo centering).
+    """
     dt = duration / n_samples
-    t_read = np.linspace(0, duration, n_samples)
-    signal = np.zeros(n_samples, dtype=np.complex64)
-    
-    # Initial magnetization state
-    M_initial = spins.M.clone()
-    
-    for i in range(n_samples):
-        # Current time point
-        t = t_read[i]
-        
-        # Phase from readout gradient (from -kmax to +kmax)
-        k_position = -0.5 + (i / n_samples)  # Normalized k-space position
-        phase = gamma.item() * G_read[0].item() * spins.positions[:, 0].cpu().numpy() * t
-        
-        # Get transverse magnetization
-        Mxy = M_initial[:, 0].cpu().numpy() + 1j * M_initial[:, 1].cpu().numpy()
-        
-        # Apply phase evolution
-        Mxy_phased = Mxy * np.exp(-1j * phase)
-        
-        # T2 decay during readout
-        decay = np.exp(-t / spins.T2.cpu().numpy())
-        
-        # Sum signal
-        signal[i] = np.sum(Mxy_phased * decay)
-        
+    # times at sample centers
+    t = (np.arange(n_samples) + 0.5) * dt  # sample-centered
+    # center the time axis so t_center = duration/2 -> subtract duration/2
+    t_centered = t - (duration / 2.0)
+
+    x_positions = spins.positions[:, 0].cpu().numpy()  # shape (Npos,)
+    Mxy = spins.M[:, 0].cpu().numpy() + 1j * spins.M[:, 1].cpu().numpy()  # shape (Npos,)
+    T2_vals = spins.T2.cpu().numpy()  # shape (Npos,)
+
+    # gamma scalar (rad/s/T)
+    gamma_val = gamma.item()
+    Gx = G_read[0].item()  # scalar
+
+    # precompute factor: gamma * Gx * x -> array shape (Npos,)
+    spatial_factor = (gamma_val * Gx * x_positions).reshape(-1, 1)  # (Npos,1)
+
+    # phases: shape (Npos, n_samples) = spatial_factor * t_centered
+    phases = spatial_factor * t_centered.reshape(1, -1)  # broadcast
+
+    # decays: shape (Npos, n_samples)
+    decays = np.exp(-np.outer(1.0 / T2_vals, t))  # decay using t from 0..duration
+
+    # signal(t) = sum_over_positions( Mxy * decays * exp(-1j * phases) )
+    Mxy_col = Mxy.reshape(-1, 1)
+    contribs = Mxy_col * decays * np.exp(-1j * phases)
+    signal = contribs.sum(axis=0).astype(np.complex64)
+
     return signal
 
 def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
@@ -349,15 +354,6 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
     ax6.set_ylabel('Signal magnitude')
     ax6.grid(True, alpha=0.3)
     
-    # Row 3: Different slices
-    '''for i, slice_idx in enumerate([0, k_space.shape[1]//2, k_space.shape[1]-1]):
-        ax = plt.subplot(3, 3, 7+i)
-        k_slice = k_space[:, slice_idx, :]
-        image = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(k_slice)))
-        ax.imshow(np.abs(image), cmap='gray')
-        ax.set_title(f'Slice {slice_idx+1}')
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')'''
     
     plt.tight_layout()
     plt.savefig(f'/content/MRIPIDM/MRIPIDM/output/result{slice_idx}.png', dpi=300)
