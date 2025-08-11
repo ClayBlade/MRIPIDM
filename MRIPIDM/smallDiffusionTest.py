@@ -29,6 +29,7 @@ from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 
 
+device = torch.device("cuda" if torch.cuda.is_available() else 'cpu') 
 
 
 
@@ -50,24 +51,16 @@ def save_images(images, path, **kwargs):
 
 def get_data(args):
     # List to store all individual matrices
-    matrices = []
+    
+    path = args.path
+    data = torch.tensor(np.load(path), device = device, dtype = args.dtype) #shape of (Ny, Nspins, 3)
 
-    for _ in range(500):
-        matrix = torch.randn(16, 16)
-        for i in range(16):
-            for j in range(16):  
-                matrix[i][j] = j
-        matrix = matrix.unsqueeze(0) #color channel      
-        matrices.append(matrix)
+    data = data.unsqueeze(0) 
+    data = data.unsqueeze(2)    #BatchSize left 1; to be scaled up to number of volumes
+    
+    #print(f"data.shape: {data.shape}") #data.shape: torch.Size([1, 171, 1, 24111, 3])
 
-    # Stack into a single tensor of shape 
-    batch_tensor = torch.stack(matrices)
-
-    print(f"batch.shape: {batch_tensor.shape}")  # Output
-    print(f"values in batch: {batch_tensor[0][0][0][0]}, {batch_tensor[0][0][0][9]}")
-
-
-    dataloader = DataLoader(matrices, batch_size=args.batch_size, shuffle=True)
+    dataloader = DataLoader(data, batch_size=args.batch_size, shuffle=True)
     return dataloader
 
 
@@ -135,6 +128,8 @@ def train(args):
     logger = SummaryWriter(os.path.join("runs", args.run_name))
     l = len(dataloader)
 
+    mse_History = []
+
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
@@ -166,13 +161,20 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
+    args.path = r"D:/Projects/MRIPIDMoutput/ReconstructedMRI/purgatory/Volume5MagnetizationsBeforeReadout/MRIPIDM/MRIPIDM/output/volume5MagnetizationSlice0.npy"
     args.epochs = 100
-    args.batch_size = 10
+    args.batch_size = 30 #number of volumes
     args.image_size = 16
     args.device = "cuda"
     args.lr = 3e-4
+    args.dtype = torch.float16
     train(args)
 
 
 if __name__ == '__main__':
     launch()
+
+
+#The Things They Still have to do:
+#       Implement more diagnostics: FID, IS scores; loss-time plots; quality vs diversity plots
+#       In 16x16 matrix, converge for simple bloch vectors
