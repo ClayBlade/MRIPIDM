@@ -52,15 +52,13 @@ def save_images(images, path, **kwargs):
 def get_data(args):
     # List to store all individual matrices
     
-    path = args.path
-    data = torch.tensor(np.load(path), device = device, dtype = args.dtype) #shape of (Ny, Nspins, 3)
 
-    data = data.unsqueeze(0) 
-    data = data.unsqueeze(2)    #BatchSize left 1; to be scaled up to number of volumes
+    data = data.unsqueeze(1)   
     
-    #print(f"data.shape: {data.shape}") #data.shape: torch.Size([1, 171, 1, 24111, 3])
+    print(f"data.shape: {data.shape}") # should be (Ny, 1, Nspins, 3) 
 
     dataloader = DataLoader(data, batch_size=args.batch_size, shuffle=True)
+
     return dataloader
 
 
@@ -99,7 +97,7 @@ class Diffusion:
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, 1, self.img_size, self.img_size)).to(self.device)
+            x = torch.randn((n, 1, self.img_size[0], self.img_size[1])).to(self.device) #since self.img_size is new collection, (1, 2) now (0, 1)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
@@ -162,9 +160,14 @@ def launch():
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
     args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/volume5MagnetizationSlice0.npy"
-    args.epochs = 100
-    args.batch_size = 30 #number of volumes
-    args.image_size = 16
+    args.epochs = 1
+    args.batch_size = 32
+
+    data = torch.tensor(np.load(args.path), device = device, dtype = args.dtype) #shape of (Ny, Nspins, 3)
+    
+    args.image_size = data[1, 2]
+    print(f"args.image_size: {args.image_size}") #should be (Nspins, 3)
+
     args.device = "cuda"
     args.lr = 3e-4
     args.dtype = torch.float16
