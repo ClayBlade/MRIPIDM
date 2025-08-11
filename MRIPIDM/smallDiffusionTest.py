@@ -161,7 +161,7 @@ def launch():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     args.run_name = "DDPM_Uncondtional"
-    args.path = r"D:/Projects/MRIPIDMoutput/ReconstructedMRI/purgatory/Volume5MagnetizationsBeforeReadout/MRIPIDM/MRIPIDM/output/volume5MagnetizationSlice0.npy"
+    args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/volume5MagnetizationSlice0.npy"
     args.epochs = 100
     args.batch_size = 30 #number of volumes
     args.image_size = 16
