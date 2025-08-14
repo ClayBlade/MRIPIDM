@@ -161,34 +161,40 @@ class UNet(nn.Module):
         return pos_enc
 
     def forward(self, x, t):
-        t = t.unsqueeze(-1).type(torch.float)
+        t = t.unsqueeze(-1).type(torch.float) # (1, 1)
         t = self.pos_encoding(t, self.time_dim)
 
         x1 = self.inc(x)
-        #print(f"\n inc: {x1.shape} \n")
+        print(f"\n inc: {x1.shape} \n")
         x2 = self.down1(x1, t)
-        #print(f"\n down1: {x2.shape} \n")
+        print(f"\n down1: {x2.shape} \n")
         x2 = self.sa1(x2)
-        #print(f"\n sa1: {x2.shape} \n")
+        print(f"\n sa1: {x2.shape} \n")
         x3 = self.down2(x2, t)
-        #print(f"\n down2: {x2.shape} \n")
+        print(f"\n down2: {x2.shape} \n")
         x3 = self.sa2(x3)
-        #print(f"\n sa2: {x2.shape} \n")
+        print(f"\n sa2: {x2.shape} \n")
         x4 = self.down3(x3, t)
-        #print(f"\n down3: {x2.shape} \n")
+        print(f"\n down3: {x2.shape} \n")
         x4 = self.sa3(x4)
-        #print(f"\n sa3: {x2.shape} \n")
+        print(f"\n sa3: {x2.shape} \n")
 
         x4 = self.bot1(x4)
         x4 = self.bot2(x4)
         x4 = self.bot3(x4)
 
         x = self.up1(x4, x3, t)
+        print(f"\n up1: {x.shape} \n")
         x = self.sa4(x)
+        print(f"\n sa4: {x.shape} \n")
         x = self.up2(x, x2, t)
+        print(f"\n up2: {x.shape} \n")
         x = self.sa5(x)
+        print(f"\n sa5: {x.shape} \n")
         x = self.up3(x, x1, t)
+        print(f"\n up3: {x.shape} \n")
         x = self.sa6(x)
+        print(f"\n sa6: {x.shape} \n")
 
         output = self.outc(x1)
         return output
