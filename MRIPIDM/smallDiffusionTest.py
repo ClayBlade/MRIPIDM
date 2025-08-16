@@ -95,8 +95,8 @@ class Diffusion:
                     noise = torch.zeros_like(x)
                 x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
         model.train()
-        x = (x.clamp(-1, 1) + 1) / 2
-        x = (x * 255).type(torch.uint8) #grayscale still multiplies by 255
+        #x = (x.clamp(-1, 1) + 1) / 2
+        #x = (x * 255).type(torch.uint8) # Not producing image tho
         return x
 
 
@@ -111,8 +111,6 @@ def train(args, data):
     logger = SummaryWriter(os.path.join("runs", args.run_name))
     l = len(dataloader)
 
-    mse_History = []
-
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
@@ -125,17 +123,23 @@ def train(args, data):
             predicted_noise = model(x_t, t) #predicted_noise.shape: torch.Size([1, 1, 171, 141, 3])
             #print(f"predicted_noise.shape: {predicted_noise.shape}")
             loss = mse(noise, predicted_noise)
+            PSNR = 10 * torch.log10(1 / loss.item()) #Max is 1 bc max value of M0
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             pbar.set_postfix(MSE=loss.item())
-            logger.add_scalar("MSE", loss.item(), global_step=epoch * l)
+            logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
+
+
+            pbar.set_postfix(PSNR=PSNR.item())
+            logger.add_scalar("PSNR", PSNR.item(), global_step=epoch * l +i)
+
 
         if (epoch % 10 == 0):
             #print(f"images.shape: {images.shape}")
-            sampled_images = diffusion.sample(model, n=images.shape[0])
+            #sampled_images = diffusion.sample(model, n=images.shape[0])
             
             #Replace with some other metric
             #save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
