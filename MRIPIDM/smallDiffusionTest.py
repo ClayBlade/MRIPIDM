@@ -1,3 +1,5 @@
+#run Model
+
  #Sanity: identity denoise test passes (loss < small threshold).
  #Reproducible: same seed gives identical sample on tiny model.
  #Canary dataset: compute and log per-epoch PDE residual L2 and boundary errors on 5 canonical cases.
@@ -13,8 +15,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from torch import optim
-from utils import *
-from modules import UNet
 import logging
 from torch.utils.tensorboard import SummaryWriter
 
@@ -29,33 +29,20 @@ from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else 'cpu') 
+device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
 
 
 
 
-def plot_images(images):
-    plt.figure(figsize=(32, 32))
-    plt.imshow(torch.cat([
-        torch.cat([i for i in images.cpu()], dim=-1),
-    ], dim=-2).permute(1, 2, 0).cpu())
-    plt.show()
 
 
-def save_images(images, path, **kwargs):
-    grid = torchvision.utils.make_grid(images, **kwargs)
-    ndarr = grid.permute(1, 2, 0).to('cpu').numpy()
-    im = Image.fromarray(ndarr)
-    im.save(path)
 
-
-def get_data(args):
+def get_data(args, data):
     # List to store all individual matrices
-    
 
-    data = data.unsqueeze(1)   
-    
-    print(f"data.shape: {data.shape}") # should be (Ny, 1, Nspins, 3) 
+    data = data.unsqueeze(1)
+
+    print(f"data.shape: {data.shape}") #data.shape: torch.Size([171, 1, 171, 141, 3])
 
     dataloader = DataLoader(data, batch_size=args.batch_size, shuffle=True)
 
@@ -97,7 +84,7 @@ class Diffusion:
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, 1, self.img_size[0], self.img_size[1])).to(self.device) #since self.img_size is new collection, (1, 2) now (0, 1)
+            x = torch.randn((n, 1, self.img_size[0], self.img_size[1], self.img_size[2])).to(self.device) #since self.img_size is new collection, (1, 2) now (0, 1)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
@@ -115,10 +102,10 @@ class Diffusion:
         return x
 
 
-def train(args):
+def train(args, data):
     setup_logging(args.run_name)
     device = args.device
-    dataloader = get_data(args)
+    dataloader = get_data(args, data)
     model = UNet(c_in = 1, c_out = 1).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
@@ -132,12 +119,13 @@ def train(args):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
         for i, images in enumerate(pbar):
-            images = images.to(device) #reshape to [B, 1, H, W]
+            images = images.to(device) # (1, 171, 141, 3)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
-            print(f" \n t.shape: {t.shape} ")
-            print(f"x_t shape: {x_t.shape} \n")
-            predicted_noise = model(x_t, t)
+            #print(f" \n t.shape: {t.shape} ")   # t.shape: torch.Size([1])
+            #print(f"x_t shape: {x_t.shape} \n") # x_t shape: torch.Size([1, 1, 171, 141, 3])
+            predicted_noise = model(x_t, t) #predicted_noise.shape: torch.Size([1, 1, 171, 141, 3])
+            #print(f"predicted_noise.shape: {predicted_noise.shape}")
             loss = mse(noise, predicted_noise)
 
             optimizer.zero_grad()
@@ -145,11 +133,14 @@ def train(args):
             optimizer.step()
 
             pbar.set_postfix(MSE=loss.item())
-            logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
+
 
         if (epoch % 10 == 0):
+            #print(f"images.shape: {images.shape}")
             sampled_images = diffusion.sample(model, n=images.shape[0])
-            save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
+            logger.add_scalar("MSE", loss.item(), global_step=epoch * l)
+            #Replace with some other metric
+            #save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
             torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
 
 
@@ -157,21 +148,21 @@ def train(args):
 def launch():
     import argparse
     parser = argparse.ArgumentParser()
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     args.run_name = "DDPM_Uncondtional"
-    args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/volume5MagnetizationSlice0.npy"
-    args.epochs = 1
-    args.batch_size = 32
-
-    data = torch.tensor(np.load(args.path), device = device, dtype = args.dtype) #shape of (Ny, Nspins, 3)
-    
-    args.image_size = data[1, 2]
-    print(f"args.image_size: {args.image_size}") #should be (Nspins, 3)
-
+    args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy"
+    args.epochs = 10
+    args.batch_size = 4
+    data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
+    #print(f"data.shape: {data.shape}")
+    depth = data.shape[3]
+    height = data.shape[1]
+    width = data.shape[2]
+    args.image_size = (depth, height, width)
     args.device = "cuda"
     args.lr = 3e-4
     args.dtype = torch.float16
-    train(args)
+    train(args, data)
 
 
 if __name__ == '__main__':
