@@ -108,7 +108,7 @@ class UNet(nn.Module):
     self.time_dim = time_dim
 
     self.inc = DoubleConv(c_in, 64)    
-    self.down1 = Down(64, 128, residual=True)
+    self.down1 = Down(64, 128)
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
 
 
