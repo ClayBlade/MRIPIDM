@@ -107,9 +107,10 @@ class UNet(nn.Module):
     self.device = device
     self.time_dim = time_dim
 
-    self.inc = DoubleConv(c_in, 64)
-    self.outc = nn.Conv3d(64, c_out, kernel_size=1)
+    self.inc = DoubleConv(c_in, 64)    
     self.down1 = Down(64, 128, residual=True)
+    self.outc = nn.Conv3d(64, c_out, kernel_size=1)
+
 
 
   def pos_encoding_3d(self, height, width, depth, channels, device):
