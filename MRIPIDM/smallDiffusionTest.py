@@ -15,6 +15,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from torch import optim
+from modules import *
 import logging
 from torch.utils.tensorboard import SummaryWriter
 
@@ -150,7 +151,8 @@ def launch():
     parser = argparse.ArgumentParser()
     args, unknown = parser.parse_known_args()
     args.run_name = "DDPM_Uncondtional"
-    args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy"
+    #for colab# args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy" 
+    args.path = "/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy" 
     args.epochs = 10
     args.batch_size = 4
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
