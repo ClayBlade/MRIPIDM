@@ -55,6 +55,27 @@ class SelfAttention(nn.Module):
         attention_value = self.ff_self(attention_value) + attention_value
         return attention_value.swapaxes(2, 1).view(-1, self.channels, self.size, self.size)
 
+class Down(nn.Module):
+    def __init__(self, in_channels, out_channels, emb_dim=256):
+        super().__init__()
+        self.maxpool_conv = nn.Sequential(
+            nn.MaxPool3d(2),
+            DoubleConv(in_channels, in_channels, residual=True),
+            DoubleConv(in_channels, out_channels),
+        )
+
+        self.emb_layer = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(
+                emb_dim,
+                out_channels
+            ),
+        )
+
+    def forward(self, x, t):
+        x = self.maxpool_conv(x)
+        emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
+        return x + emb
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels, mid_channels=None, residual=False):
@@ -88,6 +109,7 @@ class UNet(nn.Module):
 
     self.inc = DoubleConv(c_in, 64)
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
+    self.down1 = Down(64, 128, residual=True)
 
 
   def pos_encoding_3d(self, height, width, depth, channels, device):
