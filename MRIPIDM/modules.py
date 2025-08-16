@@ -112,8 +112,7 @@ class UNet(nn.Module):
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
 
 
-
-  def pos_encoding_3d(self, height, width, depth, channels, device):
+  def pos_encoding_3d(self, height, width, depth, device, channels = 256):
     assert channels % 6 == 0, "Channels must be divisible by 6 for 3D sin/cos pairs"
     c_per_axis = channels // 3  # split channels evenly among x, y, z
     def get_pos_vec(length, c_per_axis):
@@ -133,13 +132,14 @@ class UNet(nn.Module):
     ], dim=-1)
     return pe.permute(3, 0, 1, 2)  # (C,D,H,W) for CNNs
 
+
   def forward(self, x, t):
     #print(f"x.shape[2]: {x.shape[2]}") #171
     #print(f"x.shape[3]: {x.shape[3]}") #141
     #print(f"x.shape[4]: {x.shape[4]}") #3
     #print(f"x.shape[1]: {x.shape[1]}") #1
     #print(f"device: {self.device}")
-    t = self.pos_encoding_3d(x.shape[2], x.shape[3], x.shape[4], 6, self.device)
+    t = self.pos_encoding_3d(x.shape[2], x.shape[3], x.shape[4], self.device)
     x1 = self.inc(x)
     x2 = self.down1(x1, t)
 

@@ -39,7 +39,7 @@ def get_data(args, data):
     # List to store all individual matrices
 
     data = data.unsqueeze(1)
-    data.shape[1] = 6
+
 
     print(f"data.shape: {data.shape}") #data.shape: torch.Size([171, 1, 171, 141, 3])
 
