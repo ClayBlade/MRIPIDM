@@ -154,7 +154,7 @@ def launch():
     #for colab# args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy" 
     args.path = "/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy" 
     args.epochs = 10
-    args.batch_size = 4
+    args.batch_size = 1
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
     #print(f"data.shape: {data.shape}")
     depth = data.shape[3]
