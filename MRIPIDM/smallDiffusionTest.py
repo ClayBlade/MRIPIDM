@@ -123,7 +123,7 @@ def train(args, data):
             predicted_noise = model(x_t, t) #predicted_noise.shape: torch.Size([1, 1, 171, 141, 3])
             #print(f"predicted_noise.shape: {predicted_noise.shape}")
             loss = mse(noise, predicted_noise)
-            PSNR = 10 * torch.log10(1 / loss.item()) #Max is 1 bc max value of M0
+            PSNR = 10 * torch.log10(torch.tensor(1 / loss.item())) #Max is 1 bc max value of M0
 
             optimizer.zero_grad()
             loss.backward()
