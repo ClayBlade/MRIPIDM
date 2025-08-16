@@ -116,9 +116,12 @@ class UNet(nn.Module):
     #print(f"x.shape[4]: {x.shape[4]}") #3
     #print(f"x.shape[1]: {x.shape[1]}") #1
     #print(f"device: {self.device}")
-    #t = self.pos_encoding_3d(x.shape[2], x.shape[3], x.shape[4], x.shape[1], self.device)
+    t = self.pos_encoding_3d(x.shape[2], x.shape[3], x.shape[4], x.shape[1], self.device)
     x1 = self.inc(x)
-    output = self.outc(x1)
+    x2 = self.down1(x1, t)
+
+
+    output = self.outc(x2)
     return output
 
 

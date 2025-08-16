@@ -129,19 +129,14 @@ def train(args, data):
             loss.backward()
             optimizer.step()
 
-            pbar.set_postfix(MSE=loss.item())
+            
             logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
-
-
-            pbar.set_postfix(PSNR=PSNR.item())
             logger.add_scalar("PSNR", PSNR.item(), global_step=epoch * l +i)
-
+            pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
 
         if (epoch % 10 == 0):
             #print(f"images.shape: {images.shape}")
             #sampled_images = diffusion.sample(model, n=images.shape[0])
-            
-            #Replace with some other metric
             #save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
             torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
 
