@@ -22,16 +22,15 @@ from torch.utils.tensorboard import SummaryWriter
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 
 
-import os
 import torch
 import torchvision
 from PIL import Image
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
-
+import shutil
+shutil.rmtree('runs')
 
 device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-os.removedirs("runs")
 
 
 

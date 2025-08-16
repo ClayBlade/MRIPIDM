@@ -60,13 +60,13 @@ nvcc -I/opt/intel/oneapi/ipp/2022.2/include/ipp DoScanAtGPU.cu helperFuncs.cpp -
 
 Alt: location dependent
 
-sudo apt update
-sudo apt upgrade -y
+sudo apt update && sudo apt upgrade -y
 sudo apt install python3 python3-pip python3-venv -y
 python3 -m venv venv
 
-source venv/bin/activate 
+source venv/bin/activate
 
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install numpy matplotlib scipy
+pip install torch --index-url https://download.pytorch.org/whl/cu124
+pip install torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+pip install numpy matplotlib scipy tqdm tensorboard shutil
 
