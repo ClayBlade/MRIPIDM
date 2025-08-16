@@ -31,9 +31,7 @@ from torch.utils.data import DataLoader
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-
-
-
+os.removedirs("runs", ignore_errors=True)
 
 
 
@@ -134,12 +132,12 @@ def train(args, data):
             optimizer.step()
 
             pbar.set_postfix(MSE=loss.item())
-
+            logger.add_scalar("MSE", loss.item(), global_step=epoch * l)
 
         if (epoch % 10 == 0):
             #print(f"images.shape: {images.shape}")
             sampled_images = diffusion.sample(model, n=images.shape[0])
-            logger.add_scalar("MSE", loss.item(), global_step=epoch * l)
+            
             #Replace with some other metric
             #save_images(sampled_images, os.path.join("results", args.run_name, f"{epoch}.jpg"))
             torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
