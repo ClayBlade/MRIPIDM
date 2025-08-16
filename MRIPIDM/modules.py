@@ -56,7 +56,7 @@ class SelfAttention(nn.Module):
         return attention_value.swapaxes(2, 1).view(-1, self.channels, self.size, self.size)
 
 class Down(nn.Module):
-    def __init__(self, in_channels, out_channels, emb_dim=256):
+    def __init__(self, in_channels, out_channels, emb_dim=141):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool3d(2),
@@ -112,7 +112,7 @@ class UNet(nn.Module):
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
 
 
-  def pos_encoding_3d(self, height, width, depth, device, channels = 256):
+  def pos_encoding_3d(self, height, width, depth, device, channels = 6):
     assert channels % 6 == 0, "Channels must be divisible by 6 for 3D sin/cos pairs"
     c_per_axis = channels // 3  # split channels evenly among x, y, z
     def get_pos_vec(length, c_per_axis):
