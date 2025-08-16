@@ -31,7 +31,7 @@ from torch.utils.data import DataLoader
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-os.removedirs("runs", ignore_errors=True)
+os.removedirs("runs")
 
 
 
