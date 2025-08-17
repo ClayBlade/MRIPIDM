@@ -75,7 +75,7 @@ class Down(nn.Module):
     def forward(self, x, t):
         x = self.maxpool_conv(x)
         emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
-
+        print(f"x.shape before getting added: {x.shape}")
         print(f"emb: {emb.shape}")
         return x + emb
 
