@@ -152,7 +152,7 @@ class UNet(nn.Module):
     #print(f"x.shape[4]: {x.shape[4]}") #3
     #print(f"x.shape[1]: {x.shape[1]}") #1
     #print(f"device: {self.device}")
-    t = t.unsqueeze(-1).unsqueeze(-1).type(torch.float)
+    t = t.unsqueeze(-1).type(torch.float) #maybe another squeeze for 3D?
     t = self.pos_encoding(t, self.time_dim)
     x1 = self.inc(x)
     x2 = self.down1(x1, t)
