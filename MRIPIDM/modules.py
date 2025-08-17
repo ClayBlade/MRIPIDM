@@ -135,6 +135,7 @@ class Up(nn.Module):
         x = pad_to_match(x, skip_x) 
         print(f"x.shape after padding: {x.shape}") #x.shape after padding: torch.Size([1, 128, 171, 141, 3])
         x = torch.cat([skip_x, x], dim=1)
+        print(f"x.shape after concatenation: {x.shape}")
         x = self.conv(x)
         emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
         return x + emb

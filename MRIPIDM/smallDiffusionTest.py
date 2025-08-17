@@ -38,10 +38,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
 def get_data(args, data):
     # List to store all individual matrices
 
-    data = data.unsqueeze(1)
+    data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2]) #data.shape: torch.Size([171, 3, 171, 141])
 
-
-    print(f"data.shape: {data.shape}") #data.shape: torch.Size([171, 1, 171, 141, 3])
+    print(f"data.shape: {data.shape}") #data.shape: torch.Size([171, 3, 171, 141])
 
     dataloader = DataLoader(data, batch_size=args.batch_size, shuffle=True)
 
@@ -83,7 +82,7 @@ class Diffusion:
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, 1, self.img_size[0], self.img_size[1], self.img_size[2])).to(self.device) #since self.img_size is new collection, (1, 2) now (0, 1)
+            x = torch.randn((n, 3, self.img_size[0], self.img_size[1])).to(self.device) #since self.img_size is new collection, (1, 2) now (0, 1)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
@@ -116,7 +115,7 @@ def train(args, data):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
         for i, images in enumerate(pbar):
-            images = images.to(device) # (1, 171, 141, 3)
+            images = images.to(device) # (1, 3, 171, 141)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
             #print(f" \n t.shape: {t.shape} ")   # t.shape: torch.Size([1])
@@ -154,10 +153,9 @@ def launch():
     args.batch_size = 1
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
     #print(f"data.shape: {data.shape}")
-    depth = data.shape[3]
     height = data.shape[1]
     width = data.shape[2]
-    args.image_size = (depth, height, width)
+    args.image_size = (height, width)
     args.device = "cuda"
     args.lr = 3e-4
     args.dtype = torch.float16
