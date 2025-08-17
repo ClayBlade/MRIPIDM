@@ -4,6 +4,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+def pad_to_match(x, target):
+    # target is (N, C, D, H, W)
+    diffD = target.size(2) - x.size(2)
+    diffH = target.size(3) - x.size(3)
+    diffW = target.size(4) - x.size(4)
+
+    # pad only positive diffs
+    pad = (0, max(0, diffW),
+           0, max(0, diffH),
+           0, max(0, diffD))
+    return F.pad(x, pad)
 
 class EMA:
     def __init__(self, beta):
@@ -77,6 +88,7 @@ class Down(nn.Module):
         emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
         print(f"x.shape before getting added: {x.shape}")
         print(f"emb: {emb.shape}")
+
         return x + emb
 
 class DoubleConv(nn.Module):
@@ -121,6 +133,8 @@ class Up(nn.Module):
         x = self.up(x)
         print(f"skip_x.shape: {skip_x.shape}")
         print(f"x.shape: {x.shape}")
+        x = pad_to_match(x, skip_x) #should be (N, C, D, H, W) wwhere D, H, W are even
+        print(f"x.shape after padding: {x.shape}")
         x = torch.cat([skip_x, x], dim=1)
         x = self.conv(x)
         emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
