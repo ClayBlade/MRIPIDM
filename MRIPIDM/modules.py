@@ -98,9 +98,31 @@ class DoubleConv(nn.Module):
             return F.gelu(x + self.double_conv(x))
         else:
             return self.double_conv(x)
+        
+class Up(nn.Module):
+    def __init__(self, in_channels, out_channels, emb_dim=256):
+        super().__init__()
 
+        self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
+        self.conv = nn.Sequential(
+            DoubleConv(in_channels, in_channels, residual=True),
+            DoubleConv(in_channels, out_channels, in_channels // 2),
+        )
 
+        self.emb_layer = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(
+                emb_dim,
+                out_channels
+            ),
+        )
 
+    def forward(self, x, skip_x, t):
+        x = self.up(x)
+        x = torch.cat([skip_x, x], dim=1)
+        x = self.conv(x)
+        emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
+        return x + emb
 
 class UNet(nn.Module):
   def __init__(self, c_in=1, c_out=1, time_dim=256, device="cuda"):
@@ -111,6 +133,8 @@ class UNet(nn.Module):
 
     self.inc = DoubleConv(c_in, 64)    
     self.down1 = Down(64, 128)
+
+    self.up3 = Up(128, 64)
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
 
 
