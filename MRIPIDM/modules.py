@@ -74,7 +74,9 @@ class Down(nn.Module):
 
     def forward(self, x, t):
         x = self.maxpool_conv(x)
-        emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
+        emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
+
+        print(f"emb: {emb.shape}")
         return x + emb
 
 class DoubleConv(nn.Module):
@@ -154,6 +156,8 @@ class UNet(nn.Module):
     #print(f"device: {self.device}")
     t = t.unsqueeze(-1).type(torch.float) #maybe another squeeze for 3D?
     t = self.pos_encoding(t, self.time_dim)
+    print(f"t.shape: {t.shape}")
+
     x1 = self.inc(x)
     x2 = self.down1(x1, t)
 
