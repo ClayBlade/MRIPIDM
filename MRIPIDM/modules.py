@@ -185,8 +185,9 @@ class UNet(nn.Module):
     x1 = self.inc(x)
     x2 = self.down1(x1, t)
 
-
-    output = self.outc(x2)
+    x = self.up3(x2, x1, t)
+    output = self.outc(x)
+    
     return output
 
 
