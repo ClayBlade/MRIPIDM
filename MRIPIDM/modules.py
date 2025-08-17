@@ -56,7 +56,7 @@ class SelfAttention(nn.Module):
         return attention_value.swapaxes(2, 1).view(-1, self.channels, self.size, self.size)
 
 class Down(nn.Module):
-    def __init__(self, in_channels, out_channels, emb_dim=141):
+    def __init__(self, in_channels, out_channels, emb_dim=256):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool3d(2),
@@ -112,15 +112,18 @@ class UNet(nn.Module):
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
 
 
-  def pos_encoding_3d(self, height, width, depth, device, channels = 6):
+
+  def pos_encoding_3d(self, height, width, depth, channels, device):
     assert channels % 6 == 0, "Channels must be divisible by 6 for 3D sin/cos pairs"
     c_per_axis = channels // 3  # split channels evenly among x, y, z
+    
     def get_pos_vec(length, c_per_axis):
       inv_freq = 1.0 / (10000 ** (torch.arange(0, c_per_axis, 2, device=device).float() / c_per_axis))
       pos = torch.arange(length, device=device).float().unsqueeze(1)
       pos_enc_a = torch.sin(pos * inv_freq)
       pos_enc_b = torch.cos(pos * inv_freq)
       return torch.cat([pos_enc_a, pos_enc_b], dim=1)
+    
     pe_z = get_pos_vec(depth, c_per_axis)[:, None, None, :]  # shape: (D,1,1,C_axis)
     pe_y = get_pos_vec(height, c_per_axis)[None, :, None, :] # shape: (1,H,1,C_axis)
     pe_x = get_pos_vec(width, c_per_axis)[None, None, :, :]  # shape: (1,1,W,C_axis)
@@ -132,6 +135,16 @@ class UNet(nn.Module):
     ], dim=-1)
     return pe.permute(3, 0, 1, 2)  # (C,D,H,W) for CNNs
 
+  def pos_encoding(self, t, channels):
+    inv_freq = 1.0 / (
+        10000
+        ** (torch.arange(0, channels, 2, device=self.device).float() / channels)
+    )
+    pos_enc_a = torch.sin(t.repeat(1, channels // 2) * inv_freq)
+    pos_enc_b = torch.cos(t.repeat(1, channels // 2) * inv_freq)
+    pos_enc = torch.cat([pos_enc_a, pos_enc_b], dim=-1)
+    return pos_enc
+
 
   def forward(self, x, t):
     #print(f"x.shape[2]: {x.shape[2]}") #171
@@ -139,7 +152,8 @@ class UNet(nn.Module):
     #print(f"x.shape[4]: {x.shape[4]}") #3
     #print(f"x.shape[1]: {x.shape[1]}") #1
     #print(f"device: {self.device}")
-    t = self.pos_encoding_3d(x.shape[2], x.shape[3], x.shape[4], self.device)
+    t = t.unsqueeze(-1).unsqueeze(-1).type(torch.float)
+    t = self.pos_encoding(t, self.time_dim)
     x1 = self.inc(x)
     x2 = self.down1(x1, t)
 
