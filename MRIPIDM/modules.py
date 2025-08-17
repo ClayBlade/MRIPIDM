@@ -107,6 +107,8 @@ class DoubleConv(nn.Module):
 
     def forward(self, x):
         if self.residual:
+            print(f"x.shape in DoubleConv from Up: {x.shape}") 
+            print(f"double_conv.shape: {self.double_conv(x).shape}")
             return F.gelu(x + self.double_conv(x))
         else:
             return self.double_conv(x)
@@ -123,18 +125,15 @@ class Up(nn.Module):
 
         self.emb_layer = nn.Sequential(
             nn.SiLU(),
-            nn.Linear(
-                emb_dim,
-                out_channels
-            ),
+            nn.Linear(emb_dim, out_channels),
         )
 
     def forward(self, x, skip_x, t):
         x = self.up(x)
-        print(f"skip_x.shape: {skip_x.shape}")
-        print(f"x.shape: {x.shape}")
-        x = pad_to_match(x, skip_x) #should be (N, C, D, H, W) wwhere D, H, W are even
-        print(f"x.shape after padding: {x.shape}")
+        print(f"skip_x.shape: {skip_x.shape}") #skip_x.shape: torch.Size([1, 64, 171, 141, 3])  
+        print(f"x.shape: {x.shape}") #x.shape: torch.Size([1, 128, 170, 140, 2])  
+        x = pad_to_match(x, skip_x) 
+        print(f"x.shape after padding: {x.shape}") #x.shape after padding: torch.Size([1, 128, 171, 141, 3])
         x = torch.cat([skip_x, x], dim=1)
         x = self.conv(x)
         emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
