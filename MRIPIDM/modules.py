@@ -183,12 +183,12 @@ class UNet(nn.Module):
     t = t.unsqueeze(-1).type(torch.float) #maybe another squeeze for 3D?
     t = self.pos_encoding(t, self.time_dim)
     print(f"t.shape: {t.shape}")
-    print(f"input x.shape: {x.shape}")
+    print(f"input x.shape: {x.shape}") #input x.shape: torch.Size([1, 3, 172, 144])     
 
     x1 = self.inc(x)
-    print(f"\n inc: {x1.shape} \n") # torch.Size([1, 64, 86, 71])
+    print(f"\n inc: {x1.shape} \n") # torch.Size([1, 64, 86, 72])
     x2 = self.down1(x1, t)
-    print(f"\n down1: {x2.shape} \n") # torch.Size([1, 128, 86, 71])
+    print(f"\n down1: {x2.shape} \n") # torch.Size([1, 128, 86, 72])
     x2 = self.sa1(x2)
     print(f"\n sa1: {x2.shape} \n")
     x3 = self.down2(x2, t)

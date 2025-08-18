@@ -45,7 +45,6 @@ def get_data(args, data):
     # List to store all individual matrices
 
     data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2]) #data.shape: torch.Size([171, 3, 171, 141])
-    data = pad_to_even(data) 
     print(f"data.shape: {data.shape}") #data.shape: torch.Size([171, 3, 171, 141])
 
     dataloader = DataLoader(data, batch_size=args.batch_size, shuffle=True)
@@ -157,7 +156,8 @@ def launch():
     args.epochs = 10
     args.batch_size = 1
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
-    #print(f"data.shape: {data.shape}")
+    data = pad_to_even(data)  
+    print(f"data.shape after padding: {data.shape}")
     height = data.shape[1]
     width = data.shape[2]
     args.image_size = (height, width)
