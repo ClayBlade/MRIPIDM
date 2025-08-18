@@ -37,7 +37,7 @@ def pad_to_even(x):
     # Pad each spatial dimension if it's odd
     _, _, H, W = x.shape
     pad_h = (0, 1) if H % 2 != 0 else (0, 0)
-    pad_w = (0, 2) if W % 2 != 0 else (0, 0)
+    pad_w = (0, 3) if W % 2 != 0 else (0, 0)
     # F.pad pads last dim first: (W, H, D)
     return F.pad(x, pad_w + pad_h, mode='constant', value=0)
 
