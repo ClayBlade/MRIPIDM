@@ -95,8 +95,6 @@ class Diffusion:
                     noise = torch.zeros_like(x)
                 x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
         model.train()
-        #x = (x.clamp(-1, 1) + 1) / 2
-        #x = (x * 255).type(torch.uint8) # Not producing image tho
         return x
 
 
@@ -104,7 +102,7 @@ def train(args, data):
     setup_logging(args.run_name)
     device = args.device
     dataloader = get_data(args, data)
-    model = UNet(c_in = 1, c_out = 1).to(device)
+    model = UNet().to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
     diffusion = Diffusion(img_size=args.image_size, device=device)
@@ -119,7 +117,7 @@ def train(args, data):
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
             #print(f" \n t.shape: {t.shape} ")   # t.shape: torch.Size([1])
-            print(f"x_t shape: {x_t.shape} \n") # x_t shape: torch.Size([1, 1, 171, 141, 3])
+            #print(f"x_t shape: {x_t.shape} \n") # x_t shape: torch.Size([1, 3, 171, 141])
             predicted_noise = model(x_t, t) 
             #print(f"predicted_noise.shape: {predicted_noise.shape}") #predicted_noise.shape: torch.Size([1, 1, 171, 141, 3])
             loss = mse(noise, predicted_noise)
