@@ -38,7 +38,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
 def get_data(args, data):
     # List to store all individual matrices
 
-    data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2]) #data.shape: torch.Size([171, 3, 171, 141])
+    data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2]) #data.shape: torch.Size([171, 3, 171, 141])
 
     print(f"data.shape: {data.shape}") #data.shape: torch.Size([171, 3, 171, 141])
 
