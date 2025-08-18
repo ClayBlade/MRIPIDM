@@ -5,6 +5,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+
+def pad_to_even(x):
+    # Pad each spatial dimension if it's odd
+    _, _, H, W = x.shape
+    pad_h = (0, 1) if H % 2 != 0 else (0, 0)
+    pad_w = (0, 1) if W % 2 != 0 else (0, 0)
+    # F.pad pads last dim first: (W, H, D)
+    return F.pad(x, pad_w + pad_h, mode='constant', value=0)
+
+
+
+print(x_padded.shape)  # torch.Size([1, 64, 172, 142, 4])
+
+
 class EMA:
     def __init__(self, beta):
         super().__init__()
@@ -156,6 +170,7 @@ class UNet(nn.Module):
     #print(f"x.shape[4]: {x.shape[4]}") #3
     #print(f"x.shape[1]: {x.shape[1]}") #1
     #print(f"device: {self.device}")
+    x = pad_to_even(x)
     t = t.unsqueeze(-1).type(torch.float) #maybe another squeeze for 3D?
     t = self.pos_encoding(t, self.time_dim)
     print(f"t.shape: {t.shape}")
