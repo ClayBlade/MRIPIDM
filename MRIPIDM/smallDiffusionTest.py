@@ -119,9 +119,9 @@ def train(args, data):
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
             #print(f" \n t.shape: {t.shape} ")   # t.shape: torch.Size([1])
-            #print(f"x_t shape: {x_t.shape} \n") # x_t shape: torch.Size([1, 1, 171, 141, 3])
-            predicted_noise = model(x_t, t) #predicted_noise.shape: torch.Size([1, 1, 171, 141, 3])
-            #print(f"predicted_noise.shape: {predicted_noise.shape}")
+            print(f"x_t shape: {x_t.shape} \n") # x_t shape: torch.Size([1, 1, 171, 141, 3])
+            predicted_noise = model(x_t, t) 
+            #print(f"predicted_noise.shape: {predicted_noise.shape}") #predicted_noise.shape: torch.Size([1, 1, 171, 141, 3])
             loss = mse(noise, predicted_noise)
             PSNR = 10 * torch.log10(torch.tensor(1 / loss.item())) #Max is 1 bc max value of M0
 
