@@ -155,9 +155,9 @@ def launch():
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
     data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
     data = pad_to_even(data)  
-    print(f"data.shape after padding: {data.shape}")
-    height = data.shape[1]
-    width = data.shape[2]
+    print(f"data.shape after padding: {data.shape}") #data.shape after padding: torch.Size([171, 3, 172, 144])
+    height = data.shape[2]
+    width = data.shape[3]
     args.image_size = (height, width)
     args.device = "cuda"
     args.lr = 3e-4
