@@ -145,13 +145,27 @@ class UNet(nn.Module):
     self.device = device
     self.time_dim = time_dim
 
-    self.inc = DoubleConv(c_in, 64)    
+    self.device = device
+    self.time_dim = time_dim
+    self.inc = DoubleConv(c_in, 64)
     self.down1 = Down(64, 128)
-    self.sa1 = SelfAttention(128, (H, W))
-
-    self.sa5 = SelfAttention(128, (H, W))
+    self.sa1 = SelfAttention(128, (H/2, W/2))
+    self.down2 = Down(128, 256)
+    self.sa2 = SelfAttention(256, (H/4, W/4))
+    self.down3 = Down(256, 256)
+    self.sa3 = SelfAttention(256, (H/8, W/8))  # Adjusted for 3D input
+#
+    self.bot1 = DoubleConv(256, 512)
+    self.bot2 = DoubleConv(512, 512)
+    self.bot3 = DoubleConv(512, 256)
+#
+    self.up1 = Up(512, 128)
+    self.sa4 = SelfAttention(128, (H/4, W/4))
+    self.up2 = Up(256, 64)
+    self.sa5 = SelfAttention(64, (H/2, W/2))
     self.up3 = Up(128, 64)
-    self.outc = nn.Conv3d(64, c_out, kernel_size=1)
+    self.sa6 = SelfAttention(64, (H, W))
+    self.outc = nn.Conv2d(64, c_out, kernel_size=1)
 
 
 
