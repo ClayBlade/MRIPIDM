@@ -35,17 +35,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
 
 def pad_to_even(x):
     # Pad each spatial dimension if it's odd
-    _,  H, W, _ = x.shape
+    _, _, H, W = x.shape
     pad_h = (0, 1) if H % 2 != 0 else (0, 0)
-    pad_w = (0, 3) if W % 2 != 0 else (0, 0)
+    pad_w = (0, 2) if W % 2 != 0 else (0, 0)
     # F.pad pads last dim first: (W, H, D)
     return F.pad(x, pad_w + pad_h, mode='constant', value=0)
 
 def get_data(args, data):
     # List to store all individual matrices
-
-    data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2]) #data.shape: torch.Size([171, 3, 171, 141])
-    print(f"data.shape: {data.shape}") #data.shape: torch.Size([171, 3, 171, 141])
 
     dataloader = DataLoader(data, batch_size=args.batch_size, shuffle=True)
 
@@ -156,6 +153,7 @@ def launch():
     args.epochs = 10
     args.batch_size = 1
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
+    data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
     data = pad_to_even(data)  
     print(f"data.shape after padding: {data.shape}")
     height = data.shape[1]
