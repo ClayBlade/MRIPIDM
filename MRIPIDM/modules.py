@@ -132,7 +132,7 @@ class Up(nn.Module):
     def forward(self, x, skip_x, t):
         x = self.up(x)
         x = torch.cat([skip_x, x], dim=1)
-        x = nn.Conv2d(in_channels=x.shape[1], out_channels=self.out_channels, kernel_size=1)(x) # 1x1 conv to match channels
+        x = nn.Conv2d(in_channels=x.shape[1], out_channels=self.out_channels, kernel_size=1, device = "cuda")(x) # 1x1 conv to match channels
         print(f"x.shape after 1x1 conv: {x.shape}")
         x = self.conv(x)
         emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
