@@ -16,9 +16,6 @@ def pad_to_even(x):
 
 
 
-print(x_padded.shape)  # torch.Size([1, 64, 172, 142, 4])
-
-
 class EMA:
     def __init__(self, beta):
         super().__init__()
