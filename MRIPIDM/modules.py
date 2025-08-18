@@ -154,11 +154,11 @@ class UNet(nn.Module):
     self.sa2 = SelfAttention(256, (H/4, W/4))
     self.down3 = Down(256, 256)
     self.sa3 = SelfAttention(256, (H/8, W/8))  # Adjusted for 3D input
-#
+
     self.bot1 = DoubleConv(256, 512)
     self.bot2 = DoubleConv(512, 512)
     self.bot3 = DoubleConv(512, 256)
-#
+
     self.up1 = Up(512, 128)
     self.sa4 = SelfAttention(128, (H/4, W/4))
     self.up2 = Up(256, 64)
@@ -166,7 +166,6 @@ class UNet(nn.Module):
     self.up3 = Up(128, 64)
     self.sa6 = SelfAttention(64, (H, W))
     self.outc = nn.Conv2d(64, c_out, kernel_size=1)
-
 
 
   def pos_encoding(self, t, channels):
@@ -193,14 +192,36 @@ class UNet(nn.Module):
     print(f"input x.shape: {x.shape}")
 
     x1 = self.inc(x)
-    print(f"In channel, x1.shape: {x1.shape}")
+    print(f"\n inc: {x1.shape} \n")
     x2 = self.down1(x1, t)
-    print(f"Down channel, x2.shape: {x2.shape}")
+    print(f"\n down1: {x2.shape} \n")
+    x2 = self.sa1(x2)
+    print(f"\n sa1: {x2.shape} \n")
+    x3 = self.down2(x2, t)
+    print(f"\n down2: {x2.shape} \n")
+    x3 = self.sa2(x3)
+    print(f"\n sa2: {x2.shape} \n")
+    x4 = self.down3(x3, t)
+    print(f"\n down3: {x2.shape} \n")
+    x4 = self.sa3(x4)
+    print(f"\n sa3: {x2.shape} \n")
 
-    x = self.up3(x2, x1, t)
-    print(f"Up channel, x.shape: {x.shape}")
-    output = self.outc(x)
-    print(f"Output shape: {output.shape}")
+    x4 = self.bot1(x4)
+    x4 = self.bot2(x4)
+    x4 = self.bot3(x4)
+    
+    x = self.up1(x4, x3, t)
+    print(f"\n up1: {x.shape} \n")
+    x = self.sa4(x)
+    print(f"\n sa4: {x.shape} \n")
+    x = self.up2(x, x2, t)
+    print(f"\n up2: {x.shape} \n")
+    x = self.sa5(x)
+    print(f"\n sa5: {x.shape} \n")
+    x = self.up3(x, x1, t)
+    print(f"\n up3: {x.shape} \n")
+    x = self.sa6(x)
+    print(f"\n sa6: {x.shape} \n")
 
     return output
 
