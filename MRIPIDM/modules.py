@@ -143,11 +143,11 @@ class UNet(nn.Module):
     self.time_dim = time_dim
     self.inc = DoubleConv(c_in, 64)
     self.down1 = Down(64, 128)
-    self.sa1 = SelfAttention(128, (H/2, W/2))
+    self.sa1 = SelfAttention(128, (H//2, W//2))
     self.down2 = Down(128, 256)
-    self.sa2 = SelfAttention(256, (H/4, W/4))
+    self.sa2 = SelfAttention(256, (H//4, W//4))
     self.down3 = Down(256, 256)
-    self.sa3 = SelfAttention(256, (H/8, W/8))  # Adjusted for 3D input
+    self.sa3 = SelfAttention(256, (H//8, W//8))  # Adjusted for 3D input
 
     self.bot1 = DoubleConv(256, 512)
     self.bot2 = DoubleConv(512, 512)
@@ -186,9 +186,9 @@ class UNet(nn.Module):
     print(f"input x.shape: {x.shape}")
 
     x1 = self.inc(x)
-    print(f"\n inc: {x1.shape} \n")
+    print(f"\n inc: {x1.shape} \n") # torch.Size([1, 64, 86, 71])
     x2 = self.down1(x1, t)
-    print(f"\n down1: {x2.shape} \n")
+    print(f"\n down1: {x2.shape} \n") # torch.Size([1, 128, 86, 71])
     x2 = self.sa1(x2)
     print(f"\n sa1: {x2.shape} \n")
     x3 = self.down2(x2, t)
@@ -217,6 +217,7 @@ class UNet(nn.Module):
     x = self.sa6(x)
     print(f"\n sa6: {x.shape} \n")
 
+    output = self.outc(x1)
     return output
 
 
