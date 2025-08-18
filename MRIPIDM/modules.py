@@ -4,17 +4,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-def pad_to_match(x, target):
-    # target is (N, C, D, H, W)
-    diffD = target.size(2) - x.size(2)
-    diffH = target.size(3) - x.size(3)
-    diffW = target.size(4) - x.size(4)
-
-    # pad only positive diffs
-    pad = (0, max(0, diffW),
-           0, max(0, diffH),
-           0, max(0, diffD))
-    return F.pad(x, pad)
 
 class EMA:
     def __init__(self, beta):
@@ -70,7 +59,7 @@ class Down(nn.Module):
     def __init__(self, in_channels, out_channels, emb_dim=256):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
-            nn.MaxPool3d(2),
+            nn.MaxPool2d(2),
             DoubleConv(in_channels, in_channels, residual=True),
             DoubleConv(in_channels, out_channels),
         )
@@ -85,10 +74,7 @@ class Down(nn.Module):
 
     def forward(self, x, t):
         x = self.maxpool_conv(x)
-        emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
-        print(f"x.shape before getting added: {x.shape}")
-        print(f"emb: {emb.shape}")
-
+        emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
         return x + emb
 
 class DoubleConv(nn.Module):
@@ -117,7 +103,7 @@ class Up(nn.Module):
     def __init__(self, in_channels, out_channels, emb_dim=256):
         super().__init__()
 
-        self.up = nn.Upsample(scale_factor=2, mode="trilinear", align_corners=True)
+        self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
         self.conv = nn.Sequential(
             DoubleConv(in_channels, in_channels, residual=True),
             DoubleConv(in_channels, out_channels, in_channels // 2),
@@ -125,19 +111,17 @@ class Up(nn.Module):
 
         self.emb_layer = nn.Sequential(
             nn.SiLU(),
-            nn.Linear(emb_dim, out_channels),
+            nn.Linear(
+                emb_dim,
+                out_channels
+            ),
         )
 
     def forward(self, x, skip_x, t):
         x = self.up(x)
-        print(f"skip_x.shape: {skip_x.shape}") #skip_x.shape: torch.Size([1, 64, 171, 141, 3])  
-        print(f"x.shape: {x.shape}") #x.shape: torch.Size([1, 128, 170, 140, 2])  
-        x = pad_to_match(x, skip_x) 
-        print(f"x.shape after padding: {x.shape}") #x.shape after padding: torch.Size([1, 128, 171, 141, 3])
         x = torch.cat([skip_x, x], dim=1)
-        print(f"x.shape after concatenation: {x.shape}")
         x = self.conv(x)
-        emb = self.emb_layer(t)[:, :, None, None, None].repeat(1, 1, x.shape[-3], x.shape[-2], x.shape[-1])
+        emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
         return x + emb
 
 class UNet(nn.Module):
@@ -148,34 +132,12 @@ class UNet(nn.Module):
     self.time_dim = time_dim
 
     self.inc = DoubleConv(c_in, 64)    
-    self.down1 = Down(64, 192)
+    self.down1 = Down(64, 128)
 
-    self.up3 = Up(192, 64)
+    self.up3 = Up(128, 64)
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
 
 
-
-  def pos_encoding_3d(self, height, width, depth, channels, device):
-    assert channels % 6 == 0, "Channels must be divisible by 6 for 3D sin/cos pairs"
-    c_per_axis = channels // 3  # split channels evenly among x, y, z
-    
-    def get_pos_vec(length, c_per_axis):
-      inv_freq = 1.0 / (10000 ** (torch.arange(0, c_per_axis, 2, device=device).float() / c_per_axis))
-      pos = torch.arange(length, device=device).float().unsqueeze(1)
-      pos_enc_a = torch.sin(pos * inv_freq)
-      pos_enc_b = torch.cos(pos * inv_freq)
-      return torch.cat([pos_enc_a, pos_enc_b], dim=1)
-    
-    pe_z = get_pos_vec(depth, c_per_axis)[:, None, None, :]  # shape: (D,1,1,C_axis)
-    pe_y = get_pos_vec(height, c_per_axis)[None, :, None, :] # shape: (1,H,1,C_axis)
-    pe_x = get_pos_vec(width, c_per_axis)[None, None, :, :]  # shape: (1,1,W,C_axis)
-    # Broadcast to full volume and concatenate
-    pe = torch.cat([
-        pe_z.expand(depth, height, width, c_per_axis),
-        pe_y.expand(depth, height, width, c_per_axis),
-        pe_x.expand(depth, height, width, c_per_axis),
-    ], dim=-1)
-    return pe.permute(3, 0, 1, 2)  # (C,D,H,W) for CNNs
 
   def pos_encoding(self, t, channels):
     inv_freq = 1.0 / (
