@@ -48,7 +48,8 @@ class SelfAttention(nn.Module):
     def __init__(self, channels, size):
         super(SelfAttention, self).__init__()
         self.channels = channels
-        self.size = size
+        self.H = size[0]
+        self.W = size[1]
         self.mha = nn.MultiheadAttention(channels, 4, batch_first=True)
         self.ln = nn.LayerNorm([channels])
         self.ff_self = nn.Sequential(
@@ -59,12 +60,12 @@ class SelfAttention(nn.Module):
         )
 
     def forward(self, x):
-        x = x.view(-1, self.channels, self.size * self.size).swapaxes(1, 2)
+        x = x.view(-1, self.channels, self.H, self.W).swapaxes(1, 2)
         x_ln = self.ln(x)
         attention_value, _ = self.mha(x_ln, x_ln, x_ln)
         attention_value = attention_value + x
         attention_value = self.ff_self(attention_value) + attention_value
-        return attention_value.swapaxes(2, 1).view(-1, self.channels, self.size, self.size)
+        return attention_value.swapaxes(2, 1).view(-1, self.channels, self.H, self.W)
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels, emb_dim=256):
@@ -132,21 +133,23 @@ class Up(nn.Module):
     def forward(self, x, skip_x, t):
         x = self.up(x)
         x = torch.cat([skip_x, x], dim=1)
-        x = nn.Conv2d(in_channels=x.shape[1], out_channels=self.out_channels, kernel_size=1, device = "cuda")(x) # 1x1 conv to match channels
+        #x = nn.Conv2d(in_channels=x.shape[1], out_channels=self.out_channels, kernel_size=1, device = "cuda")(x) # 1x1 conv to match channels
         print(f"x.shape after 1x1 conv: {x.shape}")
         x = self.conv(x)
         emb = self.emb_layer(t)[:, :, None, None].repeat(1, 1, x.shape[-2], x.shape[-1])
         return x + emb
 
 class UNet(nn.Module):
-  def __init__(self, c_in=3, c_out=3, time_dim=256, device="cuda"):
+  def __init__(self, H, W, c_in=3, c_out=3, time_dim=256, device="cuda"):
     super().__init__()
     self.device = device
     self.time_dim = time_dim
 
     self.inc = DoubleConv(c_in, 64)    
     self.down1 = Down(64, 128)
+    self.sa1 = SelfAttention(128, (H, W))
 
+    self.sa5 = SelfAttention(128, (H, W))
     self.up3 = Up(128, 64)
     self.outc = nn.Conv3d(64, c_out, kernel_size=1)
 
