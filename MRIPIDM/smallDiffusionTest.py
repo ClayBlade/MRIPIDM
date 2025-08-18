@@ -102,7 +102,7 @@ def train(args, data):
     setup_logging(args.run_name)
     device = args.device
     dataloader = get_data(args, data)
-    model = UNet().to(device)
+    model = UNet(data.shape[1], data.shape[2]).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
     diffusion = Diffusion(img_size=args.image_size, device=device)
