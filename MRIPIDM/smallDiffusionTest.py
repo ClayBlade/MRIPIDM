@@ -11,7 +11,7 @@ data = pad_to_even(data)
 
 model = UNet(data.shape[1], data.shape[2]).to(device)
 
-model.load_state_dict(torch.load("root\MRIPIDM\MRIPIDM\models\models\DDPM_Uncondtional\ckpt.pt", map_location=torch.device("cpu")))
+model.load_state_dict(torch.load(r"root/MRIPIDM/MRIPIDM/models/models/DDPM_Uncondtional/ckpt.pt", map_location=torch.device("cpu")))
 
 model.eval()
 
