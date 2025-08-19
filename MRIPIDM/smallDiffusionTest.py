@@ -31,6 +31,7 @@ for i, Mhat in enumerate(sampled_images):
   smallest_difference = 1
   for j, M in enumerate(data):
     difference = mse(M.detach().cpu(), Mhat.detach().cpu())
+    print(f"difference: {difference}")
     if (difference < smallest_difference):
         smallest_difference = difference
   print(f"image_{i} smallest_difference: {smallest_difference}")
