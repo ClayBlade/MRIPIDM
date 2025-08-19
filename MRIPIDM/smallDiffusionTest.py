@@ -3,7 +3,7 @@
 from modules import *
 import torch
 
-path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy"
+path = r"/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy"
 
 data = torch.tensor(np.load(path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
 data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
