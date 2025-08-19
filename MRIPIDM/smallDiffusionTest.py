@@ -3,6 +3,8 @@
 from modules import *
 import torch
 
+NUM_SAMPLES = 1
+
 path = r"/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy"
 
 data = torch.tensor(np.load(path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
@@ -21,14 +23,14 @@ image_size = (height, width)
 
 diffusion = Diffusion(img_size=image_size, device=device)
 
-sampled_images = diffusion.sample(model, n=5)
+sampled_images = diffusion.sample(model, n = NUM_SAMPLES)
 
 mse = nn.MSELoss()
 
 for i, Mhat in enumerate(sampled_images):
   smallest_difference = 1
   for j, M in enumerate(data):
-    difference = mse(M, Mhat)
+    difference = mse(M.detach().cpu(), Mhat.detach().cpu())
     if (difference < smallest_difference):
         smallest_difference = difference
   print(f"image_{i} smallest_difference: {smallest_difference}")
