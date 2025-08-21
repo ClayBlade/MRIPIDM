@@ -7,7 +7,7 @@ def launch():
     args, unknown = parser.parse_known_args()
     args.run_name = "DDPM_Uncondtional"
     #for colab# args.path = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy"
-    args.path = "/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_0.npy"
+    args.path = "/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_24.npy"
     args.epochs = 30
     args.batch_size = 1
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
