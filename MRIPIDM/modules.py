@@ -394,10 +394,10 @@ def train(args, data):
             x_t, noise = diffusion.noise_images(images, t)
             predicted_noise = model(x_t, t)
 
-            print(f"images.shape: {images.shape}")
-            print(f"x_t.shape: {x_t.shape}")
-            print(f"noise.shape: {noise.shape}")
-            print(f"predicted_noise.shape: {predicted_noise.shape}")
+            #print(f"images.shape: {images.shape}")
+            #print(f"x_t.shape: {x_t.shape}")
+            #print(f"noise.shape: {noise.shape}")
+            #print(f"predicted_noise.shape: {predicted_noise.shape}")
 
             loss = mse(noise, predicted_noise)
             PSNR = 10 * torch.log10(torch.tensor(1 / loss.item())) #Max is 1 bc max value of M0
