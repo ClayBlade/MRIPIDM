@@ -377,7 +377,7 @@ def train(args, data):
     setup_logging(args.run_name)
     device = args.device
     #for main model# dataloader = get_data(args, data)
-    dataloader = get_data(args)
+    dataloader = get_data(args, data)
     model = UNet(data.shape[1], data.shape[2]).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
