@@ -218,10 +218,10 @@ class UNet(nn.Module):
     t = t.unsqueeze(-1).type(torch.float) #maybe another squeeze for 3D?
     t = self.pos_encoding(t, self.time_dim)
     #print(f"t.shape: {t.shape}")
-    #print(f"input x.shape: {x.shape}") #input x.shape: torch.Size([1, 3, 172, 144])
+    print(f"input x.shape: {x.shape}") #input x.shape: torch.Size([1, 3, 172, 144])
 
     x1 = self.inc(x)
-    #print(f"\n inc: {x1.shape} \n") # inc: torch.Size([1, 64, 172, 144])
+    print(f"\n inc: {x1.shape} \n") # inc: torch.Size([1, 64, 172, 144])
     x2 = self.down1(x1, t)
     #print(f"\n down1: {x2.shape} \n") # down1: torch.Size([1, 128, 86, 72])
     x2 = self.sa1(x2)
@@ -284,7 +284,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from torch import optim
-# for VM# from modules import *
+from modules import *
 import logging
 from torch.utils.tensorboard import SummaryWriter
 
@@ -319,6 +319,7 @@ def get_data(args, data):
     return dataloader
 
 
+
 def setup_logging(run_name):
     os.makedirs("models", exist_ok=True)
     os.makedirs("results", exist_ok=True)
@@ -345,7 +346,7 @@ class Diffusion:
         '''Fully noises from clean image in one function'''
         sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, None, None, None] #scaler for x based on t
         sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, None, None, None] #scaler for noise
-        Ɛ = torch.randn_like(x) # noise 
+        Ɛ = torch.randn_like(x) # noise
         return sqrt_alpha_hat * x + sqrt_one_minus_alpha_hat * Ɛ, Ɛ # returns noised image, noise
 
     def sample_timesteps(self, n):
@@ -375,7 +376,8 @@ class Diffusion:
 def train(args, data):
     setup_logging(args.run_name)
     device = args.device
-    dataloader = get_data(args, data)
+    #for main model# dataloader = get_data(args, data)
+    dataloader = get_data(args)
     model = UNet(data.shape[1], data.shape[2]).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     mse = nn.MSELoss()
@@ -386,29 +388,53 @@ def train(args, data):
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
-        for i, images in enumerate(pbar):
-            images = images.to(device) # (1, 3, 172, 144)
+        for i, (images) in enumerate(pbar): #unpack (images, _) when dealing with images
+            images = images.to(device) # (8, 3, 172, 144)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
-            #print(f" \n t.shape: {t.shape} ")   # t.shape: torch.Size([1])
-            #print(f"x_t shape: {x_t.shape} \n") # x_t shape: torch.Size([1, 3, 171, 141])
             predicted_noise = model(x_t, t)
-            #print(f"predicted_noise.shape: {predicted_noise.shape}") #predicted_noise.shape: torch.Size([1, 1, 171, 141, 3])
+
+            print(f"images.shape: {images.shape}")
+            print(f"x_t.shape: {x_t.shape}")
+            print(f"noise.shape: {noise.shape}")
+            print(f"predicted_noise.shape: {predicted_noise.shape}")
+
             loss = mse(noise, predicted_noise)
             PSNR = 10 * torch.log10(torch.tensor(1 / loss.item())) #Max is 1 bc max value of M0
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            if i > 20: #Validation set
+              model.eval()
 
+              logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
+              logger.add_scalar("PSNR", PSNR.item(), global_step=epoch * l + i)
+              pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
 
-            logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
-            logger.add_scalar("PSNR", PSNR.item(), global_step=epoch * l +i)
-            pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
+            else: #Training set
+              model.train()
+            
+              optimizer.zero_grad()
+              loss.backward()
+              optimizer.step()
 
-        if (epoch % 10 == 0):
-            sampled_images = diffusion.sample(model, n=images.shape[0])
-            print(f"sampled_images.shape: {sampled_images.shape}")
+              grads = [p.grad.abs().mean().item() for p in model.parameters() if p.grad is not None]
+
+              logger.add_scalar("debug/grad_mean", float(np.mean(grads)), global_step=epoch * l + i)
+              logger.add_scalar("debug/grad_median", float(np.median(grads)), global_step=epoch * l + i)
+              logger.add_scalar("debug/grad_min", float(np.min(grads)), global_step=epoch * l + i)
+              logger.add_scalar("debug/grad_max", float(np.max(grads)), global_step=epoch * l + i)
+
+              zero_count = sum(1 for p in model.parameters() if p.grad is None or torch.allclose(p.grad, torch.zeros_like(p.grad)))
+              logger.add_scalar("debug/zero_grad_param_count", zero_count, global_step=epoch * l + i)
+
+              logger.add_scalar("MSE validate", loss.item(), global_step=epoch * l + i)
+              logger.add_scalar("PSNR validate", PSNR.item(), global_step=epoch * l +i)
+              pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
+ 
+            
+
+        if (epoch % 10 == 9):
+            #sampled_images = diffusion.sample(model, n=images.shape[0])
+            #print(f"sampled_images.shape: {sampled_images.shape}")
             #print(f"sampled_images x: {sampled_images}")
             #print(f"sampled_images y: {sampled_images}")
             #print(f"sampled_images z: {sampled_images}")
