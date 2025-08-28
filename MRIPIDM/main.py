@@ -8,7 +8,7 @@ def launch():
     args.run_name = "DDPM_Uncondtional"
     #args.path# = r"/content/MRIPIDM/MRIPIDM/ParametricMaps/slice_24.npy"
     args.path = "/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_24.npy"
-    args.epochs = 60
+    args.epochs = 80
     args.batch_size = 8
     data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
     data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
