@@ -5,8 +5,8 @@ def launch(data, model_run_type):
     args, unknown = parser.parse_known_args()
     args.run_name = "DDPM_Uncondtional"
 
-    args.epochs = 80
-    args.batch_size = 2
+    args.epochs = 50
+    args.batch_size = 1
     
     height = data.shape[2]
     width = data.shape[3]
