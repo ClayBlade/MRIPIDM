@@ -192,8 +192,10 @@ class UNet(nn.Module):
     #self.sa4 = SelfAttention(128, (H/4, W/4))
     self.up2 = Up(256, 64)
     self.sa5 = SelfAttention(64, (H/2, W/2))
-    self.up3 = Up_no_scale(128, 32)
-    #self.sa6 = SelfAttention(32, (H, W))
+    #self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
+    #self.up3 = Up_no_scale(128, 32)
+    self.up3 = Up(128, 32)
+    self.sa6 = SelfAttention(32, (H, W))
     self.outc = nn.Conv2d(32, c_out, kernel_size=1)
 
 
@@ -249,12 +251,11 @@ class UNet(nn.Module):
     #print(f"\n up2: {x.shape} \n") # up2: torch.Size([1, 64, 86, 72])
     x = self.sa5(x)
     #print(f"\n sa5: {x.shape} \n") # sa5: torch.Size([1, 64, 86, 72])
-    upsample = nn.Upsample(scale_factor=2, mode="nearest")
-    x = upsample(x)
+    #x = self.upsample(x)
     #print(f"\n upsample: {x.shape} \n")
     x = self.up3(x, x1, t)
     #print(f"\n up3: {x.shape} \n") # up3: torch.Size([1, 32, 172, 144])
-    #x = self.sa6(x)
+    x = self.sa6(x)
     #print(f"\n sa6: {x.shape} \n")
 
     output = self.outc(x)
@@ -331,7 +332,8 @@ def setup_logging(run_name):
 
 
 class Diffusion:
-    def __init__(self, noise_steps=1000, beta_start=1e-4, beta_end=0.02, img_size=256, device="cuda"):
+    def __init__(self, noise_steps=1000, beta_start=1e-4, beta_end=0.02, img_size=256, device="cuda", model_run_type = "main"):
+        self.model_run_type = model_run_type
         self.noise_steps = noise_steps
         self.beta_start = beta_start
         self.beta_end = beta_end
@@ -359,7 +361,7 @@ class Diffusion:
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, 3, self.img_size[0], self.img_size[1])).to(self.device) #self.img_size is (H, W)
+            x = torch.randn((n, 3, self.img_size[0], self.img_size[1])).to(self.device) #since self.img_size is new collection, (1, 2) now (0, 1)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
@@ -372,15 +374,18 @@ class Diffusion:
                     noise = torch.zeros_like(x)
                 x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
         model.train()
+        if self.model_run_type != "main":
+          x = (x.clamp(-1, 1) + 1) / 2            
+          x = (x * 255).type(torch.uint8)         
         return x
 
 
 
-def train(args, data):
+def train(args, data, model_run_type = "main"):
     setup_logging(args.run_name)
     device = args.device
     dataloader = get_data(args, data)
-    #dataloader = get_data(args)
+    #dataloader = get_data(args) ################# for image testing
     model = UNet(data.shape[2], data.shape[3]).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     scheduler = cosine_warmup_scheduler(optimizer, warmup_epochs=5, total_epochs=args.epochs, base_lr=args.lr)
@@ -405,7 +410,13 @@ def train(args, data):
             #print(f"predicted_noise.shape: {predicted_noise.shape}")
 
             loss = mse(noise, predicted_noise)
-            PSNR = 10 * torch.log10(torch.tensor(1 / loss.item())) #Max is 1 bc max value of M0
+            
+            if model_run_type == "overfit":
+              PSNR = 10 * torch.log10(torch.tensor(255 / loss.item())) #Max is 255 bc max value of pixel intensity
+            if model_run_type == "main": 
+              PSNR = 10 * torch.log10(torch.tensor(1 / loss.item())) #Max is 1 bc max value of M0
+              PSNR_alt = 10 * torch.log10(data.detach().clone().max() / loss.item()) 
+            
 
             if i > 20: #Validation set
               model.eval()
@@ -414,13 +425,12 @@ def train(args, data):
               logger.add_scalar("PSNR validate", PSNR.item(), global_step=epoch * l + i)
               pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
 
-            else: #Training set
+            else:       #Training set
               model.train()
-
 
               optimizer.zero_grad()
               loss.backward()
-              optimizer.step()        
+              optimizer.step()
 
               grads = [p.grad.abs().mean().item() for p in model.parameters() if p.grad is not None]
 
@@ -434,23 +444,23 @@ def train(args, data):
 
               logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
               logger.add_scalar("PSNR", PSNR.item(), global_step=epoch * l + i)
+              logger.add_scalar("PSNR_alt", PSNR_alt.item(), global_step=epoch * l + i)
               pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
-        
+
         scheduler.step()
         print(f"  Epoch {epoch}: LR = {scheduler.get_last_lr()[0]:.6f}")
 
-
-        for name, param in model.named_parameters():
-          if param.grad is not None:
-            logger.add_histogram(f"grads/{name}_distr", param.grad, global_step = epoch)
-            param_norm = param.grad.detach().data.norm(2)
-            total_norm += param_norm.item() ** 2
-            total_norm = total_norm ** 0.5
-          logger.add_scalar(f"grads/{name}_grad_norm", total_norm, global_step = epoch )
+  
+        
 
 
 
         if (epoch % 10 == 9):
-            torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
-
-        
+          for name, param in model.named_parameters():
+            if param.grad is not None:
+              logger.add_histogram(f"grads/{name}_distr", param.grad, global_step = epoch)
+              param_norm = param.grad.detach().data.norm(2)
+              total_norm += param_norm.item() ** 2
+              total_norm = total_norm ** 0.5
+            logger.add_scalar(f"grads/{name}_grad_norm", total_norm, global_step = epoch )
+          torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
