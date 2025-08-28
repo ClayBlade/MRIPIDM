@@ -22,7 +22,7 @@ def launch():
     args.image_size = (height, width)
     args.device = "cuda"
     args.lr = 1e-3
-    args.dtype = torch.float16
+    args.dtype = torch.float32
     train(args, data)
 
 
