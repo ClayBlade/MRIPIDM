@@ -14,7 +14,7 @@ def launch():
     #data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
     #data = pad_to_even(data)
 
-    data = np.zeros((1, 3, 160, 160), dtype=np.float16)
+    data = torch.zeros((1, 3, 160, 160), dtype=torch.bfloat16)
 
 
     height = 160
