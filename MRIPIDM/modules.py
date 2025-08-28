@@ -440,8 +440,8 @@ def train(args, data):
         print(f"  Epoch {epoch}: LR = {scheduler.get_last_lr()[0]:.6f}")
 
 
-        if param.grad is not None:
-          for name, param in model.named_parameters():
+        for name, param in model.named_parameters():
+          if param.grad is not None:
             logger.add_histogram(f"grads/{name}_distr", param.grad, global_step = epoch)
             param_norm = param.grad.detach().data.norm(2)
             total_norm += param_norm.item() ** 2
