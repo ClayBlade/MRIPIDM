@@ -14,7 +14,7 @@ def launch():
     #data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
     #data = pad_to_even(data)
 
-    data = torch.zeros((1, 3, 160, 160), dtype=torch.bfloat16)
+    data = torch.zeros((1, 3, 160, 160), dtype=torch.float16)
 
 
     height = 160
@@ -22,7 +22,7 @@ def launch():
     args.image_size = (height, width)
     args.device = "cuda"
     args.lr = 1e-3
-    args.dtype = torch.bfloat16
+    args.dtype = torch.float16
     train(args, data)
 
 
