@@ -446,7 +446,7 @@ def train(args, data):
             param_norm = param.grad.detach().data.norm(2)
             total_norm += param_norm.item() ** 2
             total_norm = total_norm ** 0.5
-          logger.add_scalar(f"grads/{name}_grad_norm", param.grad, global_step = epoch )
+          logger.add_scalar(f"grads/{name}_grad_norm", total_norm, global_step = epoch )
 
 
 
