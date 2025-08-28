@@ -417,7 +417,7 @@ def train(args, data):
             else: #Training set
               model.train()
 
-              loss = torch.tensor(loss, dtype=torch.float16)
+              loss = torch.tensor(loss, dtype=torch.bfloat16)
 
               optimizer.zero_grad()
               loss.backward()
