@@ -1,28 +1,30 @@
-#loading model
-
+#main for intentional overfitting testing
 from modules import *
-import torch
 
-NUM_SAMPLES = 5
 
-path = r"/root/MRIPIDM/MRIPIDM/ParametricMaps/slice_24.npy"
+def launch():
+    import argparse
+    parser = argparse.ArgumentParser()
+    args, unknown = parser.parse_known_args()
+    args.run_name = "DDPM_Uncondtional"
+    args.dataset_path = "/root/MRIPIDM/MRIPIDM/test_dataset"
+    args.epochs = 500
+    args.batch_size = 3
+    #data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
+    #data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
+    #data = pad_to_even(data)
 
-data = torch.tensor(np.load(path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
-data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
-data = pad_to_even(data)
+    data = np.zeros((1, 3, 160, 160))
 
-model = UNet(data.shape[1], data.shape[2]).to(device)
 
-model.load_state_dict(torch.load(r"/root/MRIPIDM/MRIPIDM/models/content/models/DDPM_Uncondtional/ckpt.pt", map_location=torch.device("cpu")))
+    height = 160
+    width = 160
+    args.image_size = (height, width)
+    args.device = "cuda"
+    args.lr = 1e-3
+    args.dtype = torch.bfloat16
+    train(args, data)
 
-model.eval()
 
-height = data.shape[2]
-width = data.shape[3]
-image_size = (height, width)
-
-diffusion = Diffusion(img_size=image_size, device=device)
-
-sampled_images = diffusion.sample(model, n = NUM_SAMPLES)
-
-mse = nn.MSELoss()
+if __name__ == '__main__':
+    launch()

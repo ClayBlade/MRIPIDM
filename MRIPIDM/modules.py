@@ -218,10 +218,10 @@ class UNet(nn.Module):
     t = t.unsqueeze(-1).type(torch.float) #maybe another squeeze for 3D?
     t = self.pos_encoding(t, self.time_dim)
     #print(f"t.shape: {t.shape}")
-    print(f"input x.shape: {x.shape}") #input x.shape: torch.Size([1, 3, 172, 144])
+    #print(f"input x.shape: {x.shape}") #input x.shape: torch.Size([1, 3, 172, 144])
 
     x1 = self.inc(x)
-    print(f"\n inc: {x1.shape} \n") # inc: torch.Size([1, 64, 172, 144])
+    #print(f"\n inc: {x1.shape} \n") # inc: torch.Size([1, 64, 172, 144])
     x2 = self.down1(x1, t)
     #print(f"\n down1: {x2.shape} \n") # down1: torch.Size([1, 128, 86, 72])
     x2 = self.sa1(x2)
@@ -269,13 +269,6 @@ class UNet(nn.Module):
 
 
 
- #Sanity: identity denoise test passes (loss < small threshold).
- #Reproducible: same seed gives identical sample on tiny model.
- #Canary dataset: compute and log per-epoch PDE residual L2 and boundary errors on 5 canonical cases.
- #Guidnce sweep: run 3 guidance scales and log conditional accuracy / residual.
- #Memory/time: single-sample latency and peak GPU mem profiled.
-
-
 
 import os
 import torch
@@ -284,18 +277,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from torch import optim
-from modules import *
 import logging
 from torch.utils.tensorboard import SummaryWriter
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 
-
-import torch
+import math
 import torchvision
 from PIL import Image
-from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import LambdaLR
 import shutil
 os.makedirs("runs", exist_ok=True)
 shutil.rmtree('runs')
@@ -319,6 +310,18 @@ def get_data(args, data):
     return dataloader
 
 
+
+def cosine_warmup_scheduler(optimizer, warmup_epochs, total_epochs, base_lr, min_lr=1e-4):
+    def lr_lambda(epoch):
+        if epoch < warmup_epochs:
+            # Linear warmup
+            return float(epoch) / float(max(1, warmup_epochs))
+        else:
+            # Cosine decay
+            progress = (epoch - warmup_epochs) / float(max(1, total_epochs - warmup_epochs))
+            cosine = 0.5 * (1.0 + math.cos(math.pi * progress))
+            return min_lr / base_lr + (1 - min_lr / base_lr) * cosine
+    return LambdaLR(optimizer, lr_lambda)
 
 def setup_logging(run_name):
     os.makedirs("models", exist_ok=True)
@@ -356,7 +359,7 @@ class Diffusion:
         logging.info(f"Sampling {n} new images....")
         model.eval()
         with torch.no_grad():
-            x = torch.randn((n, 3, self.img_size[0], self.img_size[1])).to(self.device) #since self.img_size is new collection, (1, 2) now (0, 1)
+            x = torch.randn((n, 3, self.img_size[0], self.img_size[1])).to(self.device) #self.img_size is (H, W)
             for i in tqdm(reversed(range(1, self.noise_steps)), position=0):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t)
@@ -376,19 +379,21 @@ class Diffusion:
 def train(args, data):
     setup_logging(args.run_name)
     device = args.device
-    #for main model# dataloader = get_data(args, data)
     dataloader = get_data(args, data)
-    model = UNet(data.shape[1], data.shape[2]).to(device)
+    #dataloader = get_data(args)
+    model = UNet(data.shape[2], data.shape[3]).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
+    scheduler = cosine_warmup_scheduler(optimizer, warmup_epochs=5, total_epochs=args.epochs, base_lr=args.lr)
     mse = nn.MSELoss()
     diffusion = Diffusion(img_size=args.image_size, device=device)
     logger = SummaryWriter(os.path.join("runs", args.run_name))
     l = len(dataloader)
+    total_norm = 0
 
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
-        for i, (images) in enumerate(pbar): #unpack (images, _) when dealing with images
+        for i, images in enumerate(pbar): #unpack (images, _) when dealing with images
             images = images.to(device) # (8, 3, 172, 144)
             t = diffusion.sample_timesteps(images.shape[0]).to(device)
             x_t, noise = diffusion.noise_images(images, t)
@@ -405,16 +410,16 @@ def train(args, data):
             if i > 20: #Validation set
               model.eval()
 
-              logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
-              logger.add_scalar("PSNR", PSNR.item(), global_step=epoch * l + i)
+              logger.add_scalar("MSE validate", loss.item(), global_step=epoch * l + i)
+              logger.add_scalar("PSNR validate", PSNR.item(), global_step=epoch * l + i)
               pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
 
             else: #Training set
               model.train()
-            
+
               optimizer.zero_grad()
               loss.backward()
-              optimizer.step()
+              optimizer.step()        
 
               grads = [p.grad.abs().mean().item() for p in model.parameters() if p.grad is not None]
 
@@ -426,16 +431,25 @@ def train(args, data):
               zero_count = sum(1 for p in model.parameters() if p.grad is None or torch.allclose(p.grad, torch.zeros_like(p.grad)))
               logger.add_scalar("debug/zero_grad_param_count", zero_count, global_step=epoch * l + i)
 
-              logger.add_scalar("MSE validate", loss.item(), global_step=epoch * l + i)
-              logger.add_scalar("PSNR validate", PSNR.item(), global_step=epoch * l +i)
+              logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
+              logger.add_scalar("PSNR", PSNR.item(), global_step=epoch * l + i)
               pbar.set_postfix(PSNR=PSNR.item(), MSE=loss.item())
- 
-            
+        
+        scheduler.step()
+        print(f"  Epoch {epoch}: LR = {scheduler.get_last_lr()[0]:.6f}")
+
+
+        if param.grad is not None:
+          for name, param in model.named_parameters():
+            logger.add_histogram(f"grads/{name}_distr", param.grad, global_step = epoch)
+            param_norm = param.grad.detach().data.norm(2)
+            total_norm += param_norm.item() ** 2
+            total_norm = total_norm ** 0.5
+          logger.add_scalar(f"grads/{name}_grad_norm", param.grad, global_step = epoch )
+
+
 
         if (epoch % 10 == 9):
-            #sampled_images = diffusion.sample(model, n=images.shape[0])
-            #print(f"sampled_images.shape: {sampled_images.shape}")
-            #print(f"sampled_images x: {sampled_images}")
-            #print(f"sampled_images y: {sampled_images}")
-            #print(f"sampled_images z: {sampled_images}")
             torch.save(model.state_dict(), os.path.join("models", args.run_name, f"ckpt.pt"))
+
+        
