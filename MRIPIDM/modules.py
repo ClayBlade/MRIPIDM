@@ -177,25 +177,19 @@ class UNet(nn.Module):
     self.device = device
     self.time_dim = time_dim
     self.inc = DoubleConv(c_in, 64)
+
     self.down1 = Down(64, 128)
     self.sa1 = SelfAttention(128, (H//2, W//2))
     self.down2 = Down(128, 256)
-    self.sa2 = SelfAttention(256, (H//4, W//4))
-    #self.down3 = Down(256, 256)
-    #self.sa3 = SelfAttention(256, (H//8, W//8))  # Adjusted for 3D input
 
     self.bot1 = DoubleConv(256, 512)
     self.bot2 = DoubleConv(512, 256)
     self.bot3 = DoubleConv(256, 128)
 
-    #self.up1 = Up(512, 128)
-    #self.sa4 = SelfAttention(128, (H/4, W/4))
     self.up2 = Up(256, 64)
-    self.sa5 = SelfAttention(64, (H/2, W/2))
-    #self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
-    #self.up3 = Up_no_scale(128, 32)
     self.up3 = Up(128, 32)
     self.sa6 = SelfAttention(32, (H, W))
+
     self.outc = nn.Conv2d(32, c_out, kernel_size=1)
 
 
@@ -223,40 +217,21 @@ class UNet(nn.Module):
     #print(f"input x.shape: {x.shape}") #input x.shape: torch.Size([1, 3, 172, 144])
 
     x1 = self.inc(x)
-    #print(f"\n inc: {x1.shape} \n") # inc: torch.Size([1, 64, 172, 144])
+
     x2 = self.down1(x1, t)
-    #print(f"\n down1: {x2.shape} \n") # down1: torch.Size([1, 128, 86, 72])
     x2 = self.sa1(x2)
-    #print(f"\n sa1: {x2.shape} \n") # sa1: torch.Size([1, 128, 86, 72])
     x3 = self.down2(x2, t)
-    #print(f"\n down2: {x3.shape} \n") #  down2: torch.Size([1, 256, 43, 36])
     #x3 = self.sa2(x3)
-    #print(f"\n sa2: {x3.shape} \n") # sa2: torch.Size([1, 256, 43, 36])
-    #x4 = self.down3(x3, t)
-    #print(f"\n down3: {x2.shape} \n")
-    #x4 = self.sa3(x4)
-    #print(f"\n sa3: {x2.shape} \n")
+
 
     x4 = self.bot1(x3)
     x4 = self.bot2(x4)
     x4 = self.bot3(x4)
 
-    #print(f"\n bot3: {x4.shape} \n") # (1, 128, 43, 36)
-
-    #x = self.up1(x4, x3, t)
-    #print(f"\n up1: {x.shape} \n")
-    #x = self.sa4(x)
-    #print(f"\n sa4: {x.shape} \n")
     x = self.up2(x4, x2, t)
-    #print(f"\n up2: {x.shape} \n") # up2: torch.Size([1, 64, 86, 72])
     #x = self.sa5(x)
-    #print(f"\n sa5: {x.shape} \n") # sa5: torch.Size([1, 64, 86, 72])
-    #x = self.upsample(x)
-    #print(f"\n upsample: {x.shape} \n")
     x = self.up3(x, x1, t)
-    #print(f"\n up3: {x.shape} \n") # up3: torch.Size([1, 32, 172, 144])
     x = self.sa6(x)
-    #print(f"\n sa6: {x.shape} \n")
 
     output = self.outc(x)
     return output
