@@ -6,7 +6,7 @@ def launch(data, model_run_type):
     args.run_name = "DDPM_Uncondtional"
 
     args.epochs = 50
-    args.batch_size = 16
+    args.batch_size = 8
     
     height = data.shape[2]
     width = data.shape[3]
