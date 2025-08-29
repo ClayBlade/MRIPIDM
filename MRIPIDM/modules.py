@@ -179,8 +179,9 @@ class UNet(nn.Module):
     self.inc = DoubleConv(c_in, 64)
 
     self.down1 = Down(64, 128)
-    self.sa1 = SelfAttention(128, (H//2, W//2))
+    #self.sa1 = SelfAttention(128, (H//2, W//2))
     self.down2 = Down(128, 256)
+    self.sa2 = SelfAttention(256, (H//2, W//2))
 
     self.bot1 = DoubleConv(256, 512)
     self.bot2 = DoubleConv(512, 256)
@@ -188,7 +189,7 @@ class UNet(nn.Module):
 
     self.up2 = Up(256, 64)
     self.up3 = Up(128, 32)
-    self.sa6 = SelfAttention(32, (H, W))
+    #self.sa6 = SelfAttention(32, (H, W))
 
     self.outc = nn.Conv2d(32, c_out, kernel_size=1)
 
@@ -219,9 +220,9 @@ class UNet(nn.Module):
     x1 = self.inc(x)
 
     x2 = self.down1(x1, t)
-    x2 = self.sa1(x2)
+    #x2 = self.sa1(x2)
     x3 = self.down2(x2, t)
-    #x3 = self.sa2(x3)
+    x3 = self.sa2(x3)
 
 
     x4 = self.bot1(x3)
