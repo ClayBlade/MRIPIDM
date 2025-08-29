@@ -232,7 +232,7 @@ class UNet(nn.Module):
     x = self.up2(x4, x2, t)
     #x = self.sa5(x)
     x = self.up3(x, x1, t)
-    x = self.sa6(x)
+    #x = self.sa6(x)
 
     output = self.outc(x)
     return output
