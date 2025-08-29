@@ -10,9 +10,6 @@ def launch():
     args.dataset_path = "/root/MRIPIDM/MRIPIDM/test_dataset"
     args.epochs = 1000
     args.batch_size = 3
-    #data = torch.tensor(np.load(args.path)) # data.shape: torch.Size([171, 171, 141, 3]), store on CPU and then access each slice index on the GPU
-    #data = data.reshape(data.shape[0], data.shape[3], data.shape[1], data.shape[2])
-    #data = pad_to_even(data)
 
     data = torch.zeros((1, 3, 160, 160), dtype=torch.float32)
 

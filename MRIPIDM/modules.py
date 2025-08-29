@@ -395,6 +395,10 @@ def train(args, data, model_run_type = "main"):
     l = len(dataloader)
     total_norm = 0
 
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
+    model = model.to("cuda")
+
     for epoch in range(args.epochs):
         logging.info(f"Starting epoch {epoch}:")
         pbar = tqdm(dataloader)
