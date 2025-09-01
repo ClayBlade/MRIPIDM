@@ -462,9 +462,9 @@ def acquire_signal_batched_discretized(spins: BatchedSpinSystem, G_read, duratio
         Mxy_current = (Mx + 1j * My).to(torch.complex64)  # (Ny, Nspins) complex
         Mxy_updated = Mxy_current * phasor_step * decay_step_transverse  # (Ny, Nspins) complex64
 
-        decay_step_longitudinal = torch.exp(-d_t / T1).to(torch.complex64)  # (Ny, Nspins) complex64
-        Mz = spins.M[..., 2]
-        Mz_updated = spins.M0 + (Mz - spins.M0) * decay_step_longitudinal
+        decay_step_longitudinal = torch.exp(-d_t / T1)  # (Ny, Nspins) complex64
+        Mz_updated = spins.M[..., 2]
+        Mz_updated = spins.M0 + (Mz_updated - spins.M0) * decay_step_longitudinal
 
         spins.M[..., 0] = Mxy_updated.real
         spins.M[..., 1] = Mxy_updated.imag
@@ -481,7 +481,9 @@ def acquire_signal_batched_discretized(spins: BatchedSpinSystem, G_read, duratio
           Be_y,
           Be_z), dim=2)  # (Ny, Nspins, 3)
 
-        #print(f"calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, M0: {calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, spins.M0).mean():.15f}")
+        R = calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, spins.M0).mean()
+        print(f"R for idx_{j}: {R}")
+        R_history.append(R.item())
 
     return signals  # (Ny, n_samples) on GPU
 
