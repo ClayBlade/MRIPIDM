@@ -849,7 +849,7 @@ def simulateMultiSlice_batched(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3
         if run_location == "colab":
             np.save(f'/content/output/magnetizationVolume/slice_{slice_idx}.npy', M_slice.detach().cpu().numpy())
         else:
-            np.save(f'/root/output/magnetizationVolume/slice_{slice_idx}.npy', M_slice.detach().cpu().numpy())
+            np.save(f'/root/MRIPIDM/MRIPIDM/output/magnetizationVolume/slice_{slice_idx}.npy', M_slice.detach().cpu().numpy())
 
       # debug signals (center/quarter/edge)
 
