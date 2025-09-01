@@ -482,7 +482,7 @@ def acquire_signal_batched_discretized(spins: BatchedSpinSystem, G_read, duratio
           Be_z), dim=2)  # (Ny, Nspins, 3)
 
         R = calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, spins.M0).mean()
-        print(f"R for idx_{j}: {R}")
+        print(f"R for idx_{i}: {R}")
         R_history.append(R.item())
 
     return signals  # (Ny, n_samples) on GPU
