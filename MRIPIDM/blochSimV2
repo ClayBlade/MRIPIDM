@@ -1,302 +1,866 @@
+#Matrix parallelized MRI simulation
+
+#upload 5.npz
+
+import math
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 import os
+import logging
+from torch.utils.tensorboard import SummaryWriter
+
+logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
+logger = SummaryWriter(os.path.join("runs", "Simulation"))
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-dtype = torch.float32  
+dtype = torch.float32
+USE_AMP = True  # enable mixed precision to use tensor cores on A100
 
-# Constants
-data = np.load("/content/MRIPIDM/MRIPIDM/ParametricMaps/5.npz")
+
+#os.makedirs(f"/content/MRIPIDM/MRIPIDM/output/magnetizationVolume", exist_ok = True)
+os.makedirs(f"/content/output/magnetizationVolume", exist_ok = True) #faste
+
+
+#  Data loading
+#data = np.load(f"/content/MRIPIDM/MRIPIDM/ParametricMaps/ParameterMaps/{5}.npz")
+data = np.load(f"/content/{5}.npz") #faster
+
 Nx = int(data['xSize'])
 Ny = int(data['ySize'])
 Nz = int(data['zSize'])
+
+
 T1 = data['T1'][:Nz, :, :]
 T2 = data['T2'][:Nz, :, :]
-print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
 
-# Check T1/T2 values are reasonable
-print(f"T1 range: {T1.min():.3f} - {T1.max():.3f} seconds")
-print(f"T2 range: {T2.min():.3f} - {T2.max():.3f} seconds")
+R_history = []
 
-# Reshape T1/T2 to (Nx*Ny, Nz)
-T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, Nz)
-T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, Nz)
-T1_reshaped = torch.tensor(T1_reshaped, device=device, dtype=dtype)
-T2_reshaped = torch.tensor(T2_reshaped, device=device, dtype=dtype)
+def pad_data(Nx, Ny, T1, T2):
+  pad_x = Nx % 2
+  pad_y = Ny % 2
 
-gamma_rad = 42.577e6 * 2 * np.pi
-gamma = torch.tensor(gamma_rad, device=device, dtype=dtype)
+  Nx += pad_x
+  Ny += pad_y
 
-class SpinSystem:
-    def __init__(self, positions, T1, T2, M0=1.0):
-        self.positions = positions.to(device, dtype)
-        self.T1 = T1.to(device, dtype)
-        self.T2 = T2.to(device, dtype)
-        self.M0 = M0
-        self.M = torch.zeros((len(positions), 3), device=device, dtype=dtype)
-        self.M[:, 2] = M0
-        
-    def apply_rf_gradient(self, B1, G, t, rf_phase=0):
-        dt = t[1] - t[0] if len(t) > 1 else 1e-6
-        G_tensor = G.clone().detach().to(device=device, dtype=dtype) if isinstance(G, torch.Tensor) else torch.tensor(G, device=device, dtype=dtype)
-        
-        for i in range(len(t)):
-            # Effective field
-            B_eff = torch.zeros_like(self.positions)
-            B_eff[:, 0] = B1[i] * np.cos(rf_phase)
-            B_eff[:, 1] = B1[i] * np.sin(rf_phase)
-            B_eff[:, 2] = torch.matmul(self.positions, G_tensor[i])
-            
-            # Rotation using Rodrigues formula
-            norm_B = torch.linalg.norm(B_eff, dim=1, keepdim=True)
-            mask = norm_B.squeeze() > 1e-10
-            
-            rotation_angle = torch.zeros(len(self.positions), device=device, dtype=dtype)
-            rotation_angle[mask] = gamma * norm_B[mask].squeeze() * dt
-            
-            rotation_axis = torch.zeros_like(B_eff)
-            rotation_axis[mask] = B_eff[mask] / norm_B[mask]
-            
-            # Apply rotation
-            cos_theta = torch.cos(rotation_angle)
-            sin_theta = torch.sin(rotation_angle)
-            
-            # Cross product matrix
-            K = torch.zeros((len(self.positions), 3, 3), device=device, dtype=dtype)
-            K[:, 0, 1] = -rotation_axis[:, 2]
-            K[:, 0, 2] = rotation_axis[:, 1]
-            K[:, 1, 0] = rotation_axis[:, 2]
-            K[:, 1, 2] = -rotation_axis[:, 0]
-            K[:, 2, 0] = -rotation_axis[:, 1]
-            K[:, 2, 1] = rotation_axis[:, 0]
-            
-            I = torch.eye(3, device=device, dtype=dtype).unsqueeze(0).repeat(len(self.positions), 1, 1)
-            rotation_matrix = (I + 
-                             sin_theta.unsqueeze(-1).unsqueeze(-1) * K +
-                             (1 - cos_theta).unsqueeze(-1).unsqueeze(-1) * torch.bmm(K, K))
-            
-            self.M = torch.bmm(rotation_matrix, self.M.unsqueeze(-1)).squeeze(-1)
-            
-            # Relaxation
-            self.M[:, 0] *= torch.exp(-dt / self.T2)
-            self.M[:, 1] *= torch.exp(-dt / self.T2)
-            self.M[:, 2] = self.M0 + (self.M[:, 2] - self.M0) * torch.exp(-dt / self.T1)
-    
+  pad_kernal = (
+      (0, 0),      #Nz
+      (0, pad_y),  #Ny
+      (0, pad_x)   #Nx
+  )
+
+  T1 = np.pad(T1, pad_kernal, mode='constant', constant_values=1e-1)
+  T2 = np.pad(T2, pad_kernal, mode='constant', constant_values=1e-1)
+
+
+# --- Batched / phase-encode-aware SpinSystem ---
+class BatchedSpinSystem:
+    """
+    Magnetization shape: (Ny, Nspins, 3)
+    positions: (Nspins, 3)  -- will be expanded to (Ny, Nspins, 3)
+    T1: (Ny, Nspins)
+    T2: (Ny, Nspins)
+    """
+    def __init__(self, positions, T1_batched, T2_batched, M0=1.0, DISCRETIZE = False):
+        # positions: (Nspins,3) -> expand to (Ny, Nspins, 3)
+        self.Ny = T1_batched.shape[0]
+        self.Nspins = positions.shape[0]
+        self.positions = positions.to(device, dtype).unsqueeze(0).repeat(self.Ny, 1, 1)  # (Nz, Ny, Nspins, 3)
+        self.T1 = T1_batched.to(device, dtype)  # (Ny, Nspins)
+        self.T2 = T2_batched.to(device, dtype)  # (Ny, Nspins)
+        self.M0 = dtype.type(1.0) if hasattr(dtype, 'type') else 1.0
+        # Magnetization per batch: (Ny, Nspins, 3)
+        self.M = torch.zeros((self.Ny, self.Nspins, 3), device=device, dtype=dtype)
+        self.M[..., 2] = self.M0
+        self.M_history = None  # Will store (Ny, Nspins, 3) at each time point
+        self.phase = 0
+        self.DISCRETIZE = DISCRETIZE
+    def store_magnetization(self):
+        """Store current magnetization state in history"""
+        self.M_history = self.M.clone()
+    def apply_rf_gradient(self, B1, G, t, rf_phase=0.0):
+        B1 = torch.as_tensor(B1, device=device, dtype=dtype)
+        G = torch.as_tensor(G, device=device, dtype=dtype)
+        t = torch.as_tensor(t, device=device, dtype=dtype)
+
+        if t.numel() > 1:
+            dt = float((t[1] - t[0]).item())
+        else:
+            dt = 1e-6
+
+        pos = self.positions  # (Ny, Nspins, 3)
+        M = self.M            # (Ny, Nspins, 3)
+
+        # rf_phase might be scalar
+        cos_pf = float(np.cos(rf_phase))
+        sin_pf = float(np.sin(rf_phase))
+
+        with torch.amp.autocast("cuda", enabled=USE_AMP, dtype=torch.float16 if USE_AMP else torch.float32):
+          for i in range(len(t)):
+              # Effective
+              Be_x = B1[i] * np.cos(rf_phase)
+              Be_y = B1[i] * np.sin(rf_phase)
+              Be_z = torch.matmul(self.positions, G[i])
+
+              #print(f"positions.shape: {self.positions.shape}, G[i].shape: {G[i].shape}") #positions.shape: torch.Size([171, 24111, 3]), G[i].shape = [3]
+              #print(f"Be_x.shape: {Be_x.shape}, Be_y.shape: {Be_y.shape}, Be_z.shape: {Be_z.shape}") #Be_x.shape: torch.Size([]), Be_y.shape: torch.Size([]), Be_z.shape: torch.Size([24111])
+
+              #turn be_x, be_y into (Ny, Nspins) then stack along dimension 2 in order to make (Ny, Nspins, 3)
+              B_eff = torch.stack((
+                      torch.full_like(Be_z, Be_x),
+                      torch.full_like(Be_z, Be_y),
+                      Be_z), dim=2)  # (Ny, Nspins, 3)
+
+              #print(f"B_eff.shape: {B_eff.shape}") #B_eff.shape = torch.Size([171, 24111, 3])
+
+              # Rotation using Rodrigues formula
+              norm_B = torch.linalg.norm(B_eff, dim=2)
+              mask = norm_B > 1e-12
+
+              rotation_angle = gamma * norm_B * dt  # (Ny, Nspins)
+
+              #print(f"rotation_angle.shape: {rotation_angle.shape}, rotation_angle[mask].shape: {rotation_angle[mask].shape}, norm_B.shape {norm_B.shape}, norm_B[mask].shape: {norm_B[mask].shape}")
+
+              # Apply rotation
+              cos_t = torch.cos(rotation_angle)
+              sin_t = torch.sin(rotation_angle)
+              one_minus_cos = (1.0 - cos_t)
+
+              # Compute rotation axis k where norm_B nonzero
+              den = norm_B.unsqueeze(-1)                      # (Ny, Nspins, 1)
+              safe_div = B_eff / den                          # broadcast division
+              k = torch.where(den > 1e-12, safe_div, torch.zeros_like(B_eff))
+
+              # Apply Rodrigues: v_rot = v*cosθ + (k × v)*sinθ + k*(k·v)*(1-cosθ)
+              M_mask = M[mask]             # (n_mask, 3)
+              k_mask = k[mask].to(k.dtype)             # (n_mask, 3)
+              cos_t_mask = cos_t[mask]     # (n_mask,)
+              sin_t_mask = sin_t[mask]     # (n_mask,)
+              one_minus_cos_mask = one_minus_cos[mask]  # (n_mask,
+              k_cross_v = torch.cross(k_mask, M_mask, dim=1)  # (n_mask, 3)
+              k_dot_v = torch.sum(k_mask * M_mask, dim=1)     # (n_mask,
+              term1 = M_mask * cos_t_mask.unsqueeze(1)
+              term2 = k_cross_v * sin_t_mask.unsqueeze(1)
+              term3 = k_mask * (k_dot_v * one_minus_cos_mask).unsqueeze(1)
+              M_rot = term1 + term2 + term3
+              # write back rotated magnetization for masked elements
+              M_og = M.clone() # M shares container with self.M
+              M_og[mask] = M_rot
+
+              # Relaxation for dt (broadcast)
+              exp_T2 = torch.exp(-dt / self.T2)  # (Ny, Nspins)
+              exp_T1 = torch.exp(-dt / self.T1)  # (Ny, Nspins)
+
+              M[..., 0] = M_og[..., 0] * exp_T2
+              M[..., 1] = M_og[..., 1] * exp_T2
+              M[..., 2] = self.M0 + (M_og[..., 2] - self.M0) * exp_T1
+
+              if self.DISCRETIZE:
+                M_new = M.clone() 
+                T1 = self.T1.clone()
+                T2 = self.T2.clone()
+                R = calculate_residual(dt, M_new, M_og, B_eff, T1, T2, self.M0)
+                R_history.append(R.item())
+
+              # store back
+          self.M = M.to(dtype)
+
     def apply_gradient(self, G, duration):
-        """Apply gradient for a given duration with relaxation"""
+        """
+        G can be shape (3,) or (Ny,3). If (3,), the same gradient is applied for all batches.
+        duration: scalar
+        """
         if duration <= 0:
             return
-            
-        G_tensor = G.to(device, dtype) if isinstance(G, torch.Tensor) else torch.tensor(G, device=device, dtype=dtype)
-        
+
+        G = torch.as_tensor(G, device=device, dtype=dtype)
+        if G.dim() == 1:
+            G = G.unsqueeze(0).repeat(self.Ny, 1)  # (Ny, 3)
+
+        #print(f"G.shape {G.shape}") #G.shape = (3)
+
         # Phase accumulation
-        phase = gamma * duration * torch.matmul(self.positions, G_tensor)
-        
-        # Rotate transverse magnetization
+        phase = gamma * duration * torch.sum(self.positions * G.unsqueeze(1), dim=2)  # (Ny, Nspins)
+
         cos_phase = torch.cos(phase)
         sin_phase = torch.sin(phase)
-        
-        Mx_new = self.M[:, 0] * cos_phase - self.M[:, 1] * sin_phase
-        My_new = self.M[:, 0] * sin_phase + self.M[:, 1] * cos_phase
-        
-        # Apply relaxation
-        self.M[:, 0] = Mx_new * torch.exp(-duration / self.T2)
-        self.M[:, 1] = My_new * torch.exp(-duration / self.T2)
-        self.M[:, 2] = self.M0 + (self.M[:, 2] - self.M0) * torch.exp(-duration / self.T1)
 
-def design_sinc_rf(flip_angle, duration, n_lobes=4, time_bw_product=4):
+        Mx_new = self.M[:, :, 0] * cos_phase - self.M[:, :, 1] * sin_phase
+        My_new = self.M[:, :, 0] * sin_phase + self.M[:, :, 1] * cos_phase
+
+        # Apply relaxation
+        #print(f"Mx_new.shape: {Mx_new.shape}")
+        #print(f"My_new.shape: {My_new.shape}")
+
+        self.M = self.M.clone()
+        self.M[:, :, 0] = Mx_new * torch.exp(-duration / self.T2) #T2(Ny, Nspins, 2), Mx_new.shape: torch.Size([171, 24111])
+        self.M[:, :, 1] = My_new * torch.exp(-duration / self.T2)
+        self.M[:, :, 2] = self.M0 + (self.M[:, :, 2] - self.M0) * torch.exp(-duration / self.T1)
+
+
+    def apply_gradient_discretized(self, G, duration, d_t):
+        """
+        G can be shape (3,) or (Ny,3). If (3,), the same gradient is applied for all batches.
+        duration: scalar
+        """
+
+        if duration <= 0:
+            return
+
+        t = torch.linspace(0, duration, int(duration//d_t), device=device, dtype=dtype)  # [n_samples]
+
+        G = torch.as_tensor(G, device=device, dtype=dtype)
+        if G.dim() == 1:
+            G = G.unsqueeze(0).repeat(self.Ny, 1)  # (self.Ny, 3)
+
+        #print(f"G.shape {G.shape}") #G.shape = (3)
+
+
+
+        with torch.amp.autocast("cuda", enabled=USE_AMP, dtype=torch.float16 if USE_AMP else torch.float32):
+          for i in range(len(t)):
+            # Phase accumulation
+
+            delta_phase = gamma * d_t * torch.sum(self.positions * G.unsqueeze(1), dim=2)
+            self.phase += delta_phase
+
+            cos_phase = torch.cos(delta_phase)
+            sin_phase = torch.sin(delta_phase)
+
+            Mx_new = self.M[:, :, 0] * cos_phase - self.M[:, :, 1] * sin_phase
+            My_new = self.M[:, :, 0] * sin_phase + self.M[:, :, 1] * cos_phase
+
+            # Apply relaxation
+            M_og = self.M.clone()
+            self.M[:, :, 0] = Mx_new * torch.exp(-d_t / self.T2) #T2(Ny, Nspins, 2), Mx_new.shape: torch.Size([171, 24111])
+            self.M[:, :, 1] = My_new * torch.exp(-d_t / self.T2)
+            self.M[:, :, 2] = self.M0 + (M_og[:, :, 2] - self.M0) * torch.exp(-d_t / self.T1)
+
+            if self.DISCRETIZE:
+                M_new = self.M.clone()
+                T1 = self.T1.clone()
+                T2 = self.T2.clone()
+
+
+
+                #print(f"G.shape: {G.shape}") # G.shape: torch.Size([171, 3])
+                #print(f"self.positions: {self.positions.shape}") # self.positions: torch.Size([171, 24111, 3])
+
+                Be_z = torch.sum(self.positions * G.unsqueeze(1), dim=2) #Gradient is hard rectangular thus every timepoint is the same gradient unless its phase encode
+                Be_x = torch.zeros_like(Be_z)
+                Be_y = torch.zeros_like(Be_z)
+
+                B_eff = torch.stack((
+                      Be_x,
+                      Be_y,
+                      Be_z), dim=2)  # (Ny, Nspins, 3)
+
+                R = calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, self.M0)
+                R_history.append(R.item())
+
+
+
+# --- calculate_residual ---
+def calculate_residual(dt, M_new, M_og, B_eff, T1, T2, M0):
+    '''Calculates residuals for all XYZ of all spins for every phase encode line'''
+
+    # Rx
+    ##dM/dt
+    dM = M_new[:, :, 0] - M_og[:, :, 0]# dM.shape: torch.Size([171, 24111, 3])
+    dM_dt = dM / dt                    # dM_dt.shape: torch.Size([171, 24111, 3])
+
+    ##GAM_dot
+    MyBz = M_og[:, :, 1] * B_eff[:, :, 2]
+    MzBy = M_og[:, :, 2] * B_eff[:, :, 1]
+    subbed_dot = MyBz - MzBy
+    GAM_dot = gamma * subbed_dot
+
+    ##Relaxtion
+    Relaxation = M_og[:, :, 0] / T2
+
+    term_2 = (GAM_dot - Relaxation) # term_2.shape torch.Size([171, 24111])
+    Rx = dM_dt - term_2             #Rx.shape: torch.Size([171, 24111]), Rx.mean(): 0.0
+
+
+
+    # Ry
+    dM = M_new[:, :, 1] - M_og[:, :, 1]
+    dM_dt = dM / dt
+
+    MzBx = M_og[:, :, 2] * B_eff[:, :, 0]
+    MxBz = M_og[:, :, 0] * B_eff[:, :, 2]
+    subbed_dot = MzBx - MxBz
+    GAM_dot = gamma * subbed_dot
+
+    Relaxation = M_og[:, :, 1] / T2
+
+    term_2 = (GAM_dot - Relaxation)
+    Ry = dM_dt - term_2
+
+
+
+    # Rz
+    dM = M_new[:, :, 2] - M_og[:, :, 2]
+    dM_dt = dM / dt
+
+    MxBy = M_og[:, :, 0] * B_eff[:, :, 1]
+    MyBx = M_og[:, :, 1] * B_eff[:, :, 0]
+    subbed_dot = MxBy - MyBx
+    GAM_dot = gamma * subbed_dot
+
+    Relaxation = (M_og[:, :, 2] - M0) / T1
+
+    term_2 = (GAM_dot - Relaxation)
+    Rz = dM_dt - term_2
+
+    R = torch.stack((Rx, Ry, Rz), dim=2) # R.shape: torch.Size([171, 24111, 3])
+
+    # Calculate RMS
+    return torch.sqrt(torch.mean(torch.square(R))) / R.max()
+
+
+# --- B1 sinc pulse ---
+def design_sinc_rf(flip_angle, duration, n_lobes=4, time_bw_product=4, n_samples = Nx):
     """Design a sinc RF pulse with proper windowing"""
-    n_points = 256
-    t = torch.linspace(-duration/2, duration/2, n_points, device=device, dtype=dtype)
-    
+
+    t = torch.linspace(-duration/2, duration/2, n_samples, device=device, dtype=dtype)
+
     # Sinc envelope
     envelope = torch.sinc(time_bw_product * t / duration)
-    
+
     # Hamming window
-    window = 0.54 + 0.46 * torch.cos(2 * np.pi * torch.arange(n_points, device=device) / (n_points - 1))
+    window = 0.54 + 0.46 * torch.cos(2 * np.pi * torch.arange(n_samples, device=device) / (n_samples - 1))
     envelope *= window
-    
+
     # Scale for desired flip angle
-    dt = duration / n_points
+    dt = duration / n_samples
     integral = torch.sum(envelope) * dt
     B1_scale = flip_angle / (gamma * integral)
     B1 = B1_scale * envelope
-    
+
     return B1, t
 
-def simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV=0.2):
-    """Fixed spin echo sequence with proper timing"""
+# --- Vectorized acquisition over (Ny, Nspins) ---
+def acquire_signal_batched(spins: BatchedSpinSystem, G_read, duration, n_samples):
+    """
+    Returns signals: (Ny, n_samples) complex64 tensor on GPU
+    """
+    device_local = spins.M.device
+    dtype_real = spins.M.dtype
+
+    t_read = torch.linspace(0.0, float(duration), steps=n_samples, device=device_local, dtype=dtype_real)  # [n_samples]
+    M_initial = spins.M.clone()  # (Ny, Nspins, 3)
+    Mxy = M_initial[..., 0] + 1j * M_initial[..., 1]  # (Ny, Nspins) complex
+
+    x_pos = spins.positions[..., 0]  # (Ny, Nspins)
+    # G_read may be (3,) or (Ny,3)
+    if isinstance(G_read, torch.Tensor):
+        Gx = float(G_read[0].item()) if G_read.dim() == 1 else G_read[:, 0]  # scalar or (Ny,)
+    else:
+        Gx = float(G_read[0])
+
+    # allocate
+    signals = torch.zeros((spins.Ny, n_samples), dtype=torch.complex64, device=device_local)
+
+    # compute phases and decays across time loop but all batches at once
+    T2 = spins.T2  # (Ny, Nspins)
+    for i in range(n_samples):
+        t = t_read[i]
+        # phase: (Ny, Nspins) = gamma * Gx * x_pos * t
+        if isinstance(Gx, float):
+            phase = (gamma * Gx) * (x_pos * t)  # (Ny, Nspins)
+        else:
+            # Gx is (Ny,)
+            phase = gamma * (Gx.unsqueeze(1) * x_pos * t)
+
+        phasor = torch.exp(-1j * phase.to(dtype_real))  # complex64
+        decay = torch.exp(-t / T2).to(torch.complex64)  # (Ny, Nspins) complex
+        # sum over spins to get one complex number per Ny for this sample
+        signals[:, i] = torch.sum(Mxy * phasor * decay, dim=1)
+        spins.store_magnetization()
+
+    return signals  # (Ny, n_samples) on GPU
+
+
+
+def acquire_signal_batched_discretized(spins: BatchedSpinSystem, G_read, duration, n_samples, d_t):
+    """
+    Returns signals: (Ny, n_samples) complex64 tensor on GPU
+    """
+    device_local = spins.M.device
+    dtype_real = spins.M.dtype
+
+    t_read = torch.linspace(0.0, float(duration), steps = n_samples, device=device_local, dtype=dtype_real)  # [n_samples]
+    t_read_substeps = torch.linspace(0.0, float(duration), steps = int(duration//d_t), device=device, dtype=dtype)
+    t_read_freq = duration / d_t
+
+    M_initial = spins.M.clone()  # (Ny, Nspins, 3)
+    Mxy = M_initial[..., 0] + 1j * M_initial[..., 1]  # (Ny, Nspins) complex
+
+    x_pos = spins.positions[:, :, 0].clone()  # (Ny, Nspins)
+    positions = spins.positions.clone()
+
+    # G_read may be (3,) or (Ny,3)
+    if isinstance(G_read, torch.Tensor):
+        Gx = float(G_read[0].item()) if G_read.dim() == 1 else G_read[:, 0]  # scalar or (Ny,)
+    else:
+        Gx = float(G_read[0])
+
+    if G_read.dim() == 1:
+        G = G_read.unsqueeze(0).repeat(spins.Ny, 1)  # (self.Ny, 3)
+
+    # allocate
+    signals = torch.zeros((spins.Ny, n_samples), dtype=torch.complex64, device=device_local)
+
+    # compute phases and decays across time loop but all batches at once
+    T2 = spins.T2.clone()  # (Ny, Nspins)
+    T1 = spins.T1.clone()  # (Ny, Nspins)
+
+    current_t_read_idx = 0
+
+    for i in range(len(t_read_substeps)):
+        M_og = spins.M.clone()
+
+        '''Preserves the signal_aquisition except for when duration is non-divisible'''
+        if i % t_read_freq == 0 :
+            #print(f"checkpoint passed; i/t_read_freq: {i/t_read_freq}")
+            t = t_read[current_t_read_idx]
+
+            # phase: (Ny, Nspins) = gamma * Gx * x_pos * d_t
+            if isinstance(Gx, float):
+              phase = (gamma * Gx) * (x_pos * t)  # (Ny, Nspins)
+            else:
+              # Gx is (Ny,)
+              phase = gamma * (Gx.unsqueeze(1) * x_pos * t)
+
+            phasor = torch.exp(-1j * phase.to(dtype_real))  # complex64
+            decay = torch.exp(-t / T2).to(torch.complex64)  # (Ny, Nspins) complex
+
+            # sum over spins to get one complex number per Ny for this sample
+            signals[:, current_t_read_idx] = torch.sum(Mxy * phasor * decay, dim=1)
+            spins.store_magnetization()
+
+            current_t_read_idx += 1
+
+        delta_phase = gamma * d_t * torch.sum(positions * G.unsqueeze(1), dim=2)
+        phasor_step = torch.exp(-1j * delta_phase.to(dtype_real)).to(torch.complex64)  # (Ny, Nspins)
+        decay_step_transverse = torch.exp(-d_t / T2).to(torch.complex64)  # (Ny, Nspins) or broadcastable
+
+        Mx = spins.M[..., 0]
+        My = spins.M[..., 1]
+        Mxy_current = (Mx + 1j * My).to(torch.complex64)  # (Ny, Nspins) complex
+        Mxy_updated = Mxy_current * phasor_step * decay_step_transverse  # (Ny, Nspins) complex64
+
+        decay_step_longitudinal = torch.exp(-d_t / T1).to(torch.complex64)  # (Ny, Nspins) complex64
+        Mz = spins.M[..., 2]
+        Mz_updated = spins.M0 + (Mz - spins.M0) * decay_step_longitudinal
+
+        spins.M[..., 0] = Mxy_updated.real
+        spins.M[..., 1] = Mxy_updated.imag
+        spins.M[..., 2] = Mz_updated
+
+        M_new = spins.M.clone()
+
+        Be_z = torch.sum(positions * G.unsqueeze(1), dim=2) #Gradient is hard rectangular thus every timepoint is the same gradient unless its phase encode
+        Be_x = torch.zeros_like(Be_z)
+        Be_y = torch.zeros_like(Be_z)
+
+        B_eff = torch.stack((
+          Be_x,
+          Be_y,
+          Be_z), dim=2)  # (Ny, Nspins, 3)
+
+        #print(f"calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, M0: {calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, spins.M0).mean():.15f}")
+
+    return signals  # (Ny, n_samples) on GPU
+
+def acquire_signal_batched_discretized_incremental(spins, G_read, duration, n_samples, d_t):
+    """
+    Incremental per-substep acquisition:
+    - spins: BatchedSpinSystem with .M (Ny, Nspins, 3), .positions (Ny, Nspins, 3), .T1, .T2, .M0, .Ny, .store_magnetization()
+    - G_read: can be shape (3,), (Ny,3), (n_sub,3) or (n_sub,Ny,3)
+    - duration: total readout duration (scalar)
+    - n_samples: number of readout samples to produce
+    - d_t: substep duration (scalar)
+    Returns:
+      signals: (Ny, n_samples) complex64 on same device as spins.M
+    """
+    device_local = spins.M.device
+    dtype_real = spins.M.dtype
+
+    # read sample times
+    t_read = torch.linspace(0.0, float(duration), steps=n_samples, device=device_local, dtype=dtype_real)  # [n_samples]
+
+    # number of substeps and per-step dt (last step may be shorter)
+    n_sub = max(1, int(math.ceil(float(duration) / float(d_t))))
+    dt_array = torch.full((n_sub,), float(d_t), device=device_local, dtype=dtype_real)
+    last_dt = float(duration) - float(d_t) * (n_sub - 1)
+    if last_dt > 0 and last_dt < float(d_t):
+        dt_array[-1] = last_dt
+    # end times of substeps: time at end of each substep j (0-based).
+    t_sub_end = torch.cumsum(dt_array, dim=0)  # shape (n_sub,)
+
+    # prepare gradient waveform: support various shapes
+    G = torch.as_tensor(G_read, device=device_local, dtype=dtype_real)
+    # possible shapes: (3,), (Ny,3), (n_sub,3), (n_sub,Ny,3)
+    # we will select G_j appropriately in the loop
+
+    # allocate signals
+    signals = torch.zeros((spins.Ny, n_samples), dtype=torch.complex64, device=device_local)
+
+    # initial magnetization & convenience references
+    # NOTE: we'll update spins.M in-place across substeps (physical evolution)
+    # So make sure caller is OK with spins.M being advanced to end of readout.
+    # If you want to preserve the original M, clone it before calling this function.
+    # We'll still use M_initial to handle t=0 samples.
+    M_initial = spins.M.clone()  # (Ny, Nspins, 3)
+    Mxy = (M_initial[..., 0] + 1j * M_initial[..., 1]).to(torch.complex64)  # complex64 (Ny, Nspins)
+    positions = spins.positions  # (Ny, Nspins, 3) assumed on same device/dtype
+    x_pos = positions[..., 0]  # (Ny, Nspins)
+
+    # map each read time to the substep index that reaches or passes it
+    # special-case t==0 (we want the initial magnetization at t=0)
+    sample_idx = torch.searchsorted(t_sub_end, t_read, right=True)  # indices in 0..n_sub-1
+    zero_mask = (t_read == 0)
+    if zero_mask.any():
+        # assign signals at t=0 from initial magnetization (no decay, no phase)
+        cols0 = torch.nonzero(zero_mask, as_tuple=True)[0]
+        signals[:, cols0] = torch.sum(Mxy[:, :], dim=1).unsqueeze(1).repeat(1, cols0.numel())
+        # mark them so we don't write them again during the loop
+        sample_idx[zero_mask] = -1
+
+    if G.dim() == 1:
+      G = G.unsqueeze(0).repeat(spins.Ny, 1)  # (self.Ny, 3)
+
+    # prepare T1/T2 tensors (same device/dtype)
+    T1 = spins.T1  # (Ny, Nspins) or scalar/broadcastable
+    T2 = spins.T2
+
+    # loop substeps
+    for j in range(n_sub):
+        M_og = spins.M.clone()
+
+        dt_j = float(dt_array[j].item())  # scalar float
+        # choose gradient for this substep
+        # cases:
+        # (3,) -> global constant; (Ny,3) -> per-batch constant; (n_sub,3) -> per-substep global; (n_sub,Ny,3) -> per-substep per-batch
+        if G.dim() == 1 and G.numel() == 3:
+            G_j = G  # shape (3,)
+            G_exp = G_j.view(1, 1, 3)  # (1,1,3) -> broadcasts to (Ny,Nspins,3)
+        elif G.dim() == 2 and G.shape[0] == spins.Ny and G.shape[1] == 3:
+            # per-batch constant gradient
+            G_j = G  # (Ny,3)
+            G_exp = G_j.unsqueeze(1)  # (Ny,1,3)
+        elif G.dim() == 2 and G.shape[0] == n_sub and G.shape[1] == 3:
+            # per-substep global gradient waveform
+            G_j = G[j]  # (3,)
+            G_exp = G_j.view(1, 1, 3)
+        elif G.dim() == 3 and G.shape[0] == n_sub and G.shape[1] == spins.Ny and G.shape[2] == 3:
+            # per-substep per-batch gradients
+            G_j = G[j]  # (Ny,3)
+            G_exp = G_j.unsqueeze(1)  # (Ny,1,3)
+        else:
+            # fallback: if G is small (3,) but dtype shaped differently, try to broadcast
+            try:
+                G_exp = G.view(1, 1, 3)
+            except Exception as e:
+                raise ValueError(f"Unsupported G_read shape {tuple(G.shape)} for n_sub={n_sub} and Ny={spins.Ny}") from e
+
+        # compute incremental phase for this step: Δφ = γ * dt_j * (r · G_j)
+        # positions * G_exp -> (Ny, Nspins, 3); sum dim=2 -> (Ny, Nspins)
+        delta_phase = (gamma * dt_j) * torch.sum(positions * G_exp, dim=2)  # real tensor dtype_real
+
+        # update cumulative phase stored in spins (if you keep spins.phase)
+        # create spins.phase if not present
+        if not hasattr(spins, "phase"):
+            # initialize on same device/dtype as delta_phase
+            spins.phase = torch.zeros_like(delta_phase)
+        spins.phase = spins.phase + delta_phase  # (Ny, Nspins)
+
+        # apply rotation by incremental phasor and per-step T2 decay to transverse magnetization
+        # read current M (before update)
+        Mx = spins.M[..., 0]  # (Ny, Nspins)
+        My = spins.M[..., 1]
+        Mxy_current = (Mx + 1j * My).to(torch.complex64)  # complex64
+
+        # incremental phasor and decay (complex)
+        phasor_step = torch.exp(-1j * delta_phase.to(dtype_real)).to(torch.complex64)  # (Ny, Nspins)
+        decay_step = torch.exp(-dt_j / T2).to(torch.complex64)  # (Ny, Nspins) or broadcastable
+
+        Mxy_updated = Mxy_current * phasor_step * decay_step  # (Ny, Nspins) complex64
+
+        # apply T1 relaxation for longitudinal component
+        expT1 = torch.exp(-dt_j / T1)  # (Ny, Nspins) or broadcast
+        Mz_updated = spins.M[..., 2]  # current Mz
+        Mz_updated = spins.M0 + (Mz_updated - spins.M0) * expT1
+
+        # write back updated magnetization
+        spins.M = spins.M.clone()  # keep same tensor semantics as your code
+        spins.M[..., 0] = Mxy_updated.real
+        spins.M[..., 1] = Mxy_updated.imag
+        spins.M[..., 2] = Mz_updated
+
+
+        # after the substep update, fill signals for any read samples that fall at or before this substep end
+        cols = torch.nonzero(sample_idx == j, as_tuple=True)[0]  # indices into samples
+        if cols.numel() > 0:
+            # current Mxy (already decayed to this time) => measure directly
+            Mxy_now = (spins.M[..., 0] + 1j * spins.M[..., 1]).to(torch.complex64)  # (Ny, Nspins)
+            # sum over spins
+            summed = torch.sum(Mxy_now, dim=1)  # (Ny,)
+            # assign to all columns in cols
+            for col in cols.tolist():
+                signals[:, col] = summed
+
+        M_new = spins.M.clone()
+
+        Be_z = torch.sum(positions * G.unsqueeze(1), dim=2) #Gradient is hard rectangular thus every timepoint is the same gradient unless its phase encode
+        Be_x = torch.zeros_like(Be_z)
+        Be_y = torch.zeros_like(Be_z)
+
+        B_eff = torch.stack((
+          Be_x,
+          Be_y,
+          Be_z), dim=2)  # (Ny, Nspins, 3)
+
+        R = calculate_residual(d_t, M_new, M_og, B_eff, T1, T2, spins.M0).mean()
+        print(f"R for idx_{j}: {R}")
+        R_history.append(R.item())
+
+        # optional: let user observe/store magnetization each substep
+        # if spins has store_magnetization method and you want to call it each substep, uncomment:
+        # spins.store_magnetization()
+
+    return signals
+
+
+
+
+
+
+# --- Batched spin-echo simulation: runs sequence for ALL Ny in parallel ---
+def simulate_spin_echo_fixed_batched(spins: BatchedSpinSystem, Nx, TE, G_phase_batched, FOV=0.2):
+    """
+    G_phase_batched: (Ny, 3)
+    returns signals: (Ny, Nx) complex numpy (moved to CPU at end)
+    """
     rf90dur = 1e-3
     rf180dur = 2e-3
     slice_thickness = 5e-3  # 5mm
-    
+
     # Calculate slice select gradient
     time_bw = 4000  # Hz
-    G_slice_amp = 2 * np.pi * time_bw / (gamma.item() * slice_thickness)
-    
+    G_slice_amp = time_bw / (gamma.item() * slice_thickness)
+
     # 90-degree excitation + slice select gradient
     B1_90, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
     G_slice = torch.zeros((len(t_rf), 3), device=device, dtype=dtype)
     G_slice[:, 2] = G_slice_amp
+    #print(f"G_slice.shape: {G_slice.shape}") # [171, 3]
     spins.apply_rf_gradient(B1_90, G_slice, t_rf)
-    
-    # Slice rephasing
+
     rephase_duration = rf90dur / 2
     spins.apply_gradient(torch.tensor([0, 0, -G_slice_amp], device=device), rephase_duration)
-    
-    # Phase encoding
+
     phase_duration = 1e-3
-    spins.apply_gradient(G_phase, phase_duration)
-    
-    # Calculate timing for TE/2
-    time_to_180 = TE/2 - rf90dur/2 - phase_duration - rephase_duration
-    if time_to_180 > 0:
-        spins.apply_gradient(torch.zeros(3, device=device), time_to_180)
-    
+    spins.apply_gradient(G_phase_batched, phase_duration)
+
+    time_to_180_start = TE/2 - rf90dur/2 - phase_duration - rephase_duration - rf180dur/2
+    if time_to_180_start > 0:
+        spins.apply_gradient(torch.zeros(3, device=device), time_to_180_start)
+
     # 180-degree refocusing
     B1_180, t_rf_180 = design_sinc_rf(torch.tensor(np.pi, device=device, dtype=dtype), rf180dur)
     G_slice_180 = torch.zeros((len(t_rf_180), 3), device=device, dtype=dtype)
     G_slice_180[:, 2] = G_slice_amp
     spins.apply_rf_gradient(B1_180, G_slice_180, t_rf_180, rf_phase=np.pi/2)
-    
-    # Readout parameters
+
+    # Readout
     readout_duration = 5e-3
     readout_samples = Nx
-    
-    # Calculate readout gradient for proper FOV
-    BW = readout_samples / readout_duration  # Bandwidth
-    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV) #stripey if 0.9 from 0.42
-    G_read = torch.tensor([G_read_amp, 0, 0], device=device, dtype=dtype)
-    prephase_duration = readout_duration / 2    
-    
-    # Time from 180° center to echo center (should be TE/2)
-    # Echo should occur at readout center
+    BW = readout_samples / readout_duration
+    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV)
+    G_read = torch.tensor([G_read_amp, 0.0, 0.0], device=device, dtype=dtype)
+    prephase_duration = readout_duration / 2
+
+    # align to echo center
     time_after_180 = TE/2 - rf180dur/2
     time_to_readout_start = time_after_180 - readout_duration/2 - prephase_duration
-    
-    if time_to_readout_start > 0: #
-        spins.apply_gradient(torch.zeros(3, device=device), time_to_readout_start)
-    
-    # Acquire signal
-    spins.apply_gradient(-G_read, prephase_duration) #prephase before readout, otherwise phase won't line up?
-    signal = acquire_signal_proper(spins, G_read, readout_duration, readout_samples)
-    
-    return signal
+    if time_to_readout_start > 0:
+        spins.apply_gradient(torch.zeros(3, device=device, dtype=dtype), time_to_readout_start)
 
-def acquire_signal_proper(spins, G_read, duration, n_samples):
-    """Proper signal acquisition with echo at center"""
-    dt = duration / n_samples
-    t_read = np.linspace(0, duration, n_samples)
-    signal = np.zeros(n_samples, dtype=np.complex64)
-    
-    # Initial magnetization state
-    M_initial = spins.M.clone()
-    
-    for i in range(n_samples):
-        # Current time point
-        t = t_read[i]
-        
-        # Phase from readout gradient (from -kmax to +kmax)
-        k_position = -0.5 + (i / n_samples)  # Normalized k-space position
-        phase = gamma.item() * G_read[0].item() * spins.positions[:, 0].cpu().numpy() * t
-        
-        # Get transverse magnetization
-        Mxy = M_initial[:, 0].cpu().numpy() + 1j * M_initial[:, 1].cpu().numpy()
-        
-        # Apply phase evolution
-        Mxy_phased = Mxy * np.exp(-1j * phase)
-        
-        # T2 decay during readout
-        decay = np.exp(-t / spins.T2.cpu().numpy())
-        
-        # Sum signal
-        signal[i] = np.sum(Mxy_phased * decay)
-        
-    return signal
+    # prephase
+    spins.apply_gradient(-G_read, prephase_duration)
 
-def simulateMultiSlice(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3):
-    """Simulate all slices with proper k-space encoding"""
-    FOV = 0.2  # 20 cm
+    # Acquire signal in batched fashion: returns (Ny, Nx) on GPU
+    signals_gpu = acquire_signal_batched(spins, G_read, readout_duration, readout_samples)
+    # Move to CPU numpy before returning (k-space array expects numpy)
+    return signals_gpu.detach().cpu().numpy()
+
+
+
+
+
+def simulate_spin_echo_fixed_batched_discretized(spins: BatchedSpinSystem, Nx, TE, G_phase_batched, FOV=0.2):
+    """
+    G_phase_batched: (Ny, 3)
+    returns signals: (Ny, Nx) complex numpy (moved to CPU at end)
+    """
+    d_t = 1e-3/Nx # ~7e-6
+
+    rf90dur = 1e-3
+    rf180dur = 2e-3
+    slice_thickness = 5e-3  # 5mm
+
+
+
+    # Calculate slice select gradient
+    time_bw = 4000  # Hz
+    G_slice_amp = time_bw / (gamma.item() * slice_thickness)
+
+    # 90-degree excitation + slice select gradient
+    B1_90, t_rf = design_sinc_rf(torch.tensor(np.pi/2, device=device, dtype=dtype), rf90dur)
+    G_slice = torch.zeros((len(t_rf), 3), device=device, dtype=dtype)
+    G_slice[:, 2] = G_slice_amp
+    #print(f"G_slice.shape: {G_slice.shape}") # [171, 3]
+    spins.apply_rf_gradient(B1_90, G_slice, t_rf, d_t)
+
+    rephase_duration = rf90dur / 2
+    if rephase_duration >= 1:
+      spins.apply_gradient_discretized(torch.tensor([0, 0, -G_slice_amp], device=device), rephase_duration, d_t)
+
     phase_duration = 1e-3
-    
-    # Calculate phase encoding gradients
-    delta_ky = 1 / FOV
-    ky_max = Ny / (2 * FOV)
-    ky_values = np.linspace(-ky_max, ky_max, Ny)
-    G_phase_amplitudes = ky_values / (gamma.item() * phase_duration) # Goes back to stripes if G_phase = 0.05 from 0.013
-    
-    k_space = np.zeros((Ny, Nz, Nx), dtype=np.complex64)
-    
-    print("Starting multi-slice simulation...")
-    start_time = time.time()
-    
-    # Store example signals
-    debug_signals = {
-        'center' : [],
-        'quarter' : [],
-        'edge' : [],
-    }
-    
-    # Simulate ALL slices
-    for slice_idx in range(Nz):
-        print(f"Simulating slice {slice_idx+1}/{Nz}")
-        
-        # Create positions for this slice
-        x = torch.linspace(-FOV/2, FOV/2, Nx, device=device, dtype=dtype)
-        y = torch.linspace(-FOV/2, FOV/2, Ny, device=device, dtype=dtype)
-        z_pos = 0 #slice_idx * 5e-3  # 5mm slice spacing # possibly maybe solved the issue
-        z = torch.tensor([z_pos], device=device, dtype=dtype)
-        
-        X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
-        positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
-        
-        # Initialize spins for this slice
-        spins = SpinSystem(positions, T1_data[:, slice_idx], T2_data[:, slice_idx])
-        
-        # Acquire all phase encoding steps
-        for pe_idx in range(Ny):
-            # Phase encoding gradient
-            G_phase = torch.tensor([0, G_phase_amplitudes[pe_idx], 0], device=device, dtype=dtype)
-            
-            # Run sequence
-            signal = simulate_spin_echo_fixed(spins, Nx, TE, G_phase, FOV)
-            k_space[pe_idx, slice_idx, :] = signal
-            
-            # Save debug signals from middle slice
-            if pe_idx == Ny // 2:
-                debug_signals['center'].append(signal)
-            elif pe_idx == Ny // 4:
-                debug_signals['quarter'].append(signal)
-            elif pe_idx == 0:
-                debug_signals['edge'].append(signal)
-            
-            # TR period - let magnetization recover
-            remaining_TR = TR - TE
-            if remaining_TR > 0:
-                spins.apply_gradient(torch.zeros(3, device=device), remaining_TR)
-            
-            # Spoil transverse magnetization
-            spins.M[:, 0] = 0
-            spins.M[:, 1] = 0
+    spins.apply_gradient_discretized(G_phase_batched, phase_duration, d_t)
+
+    time_to_180_start = TE/2 - rf90dur/2 - phase_duration - rephase_duration #- rf180dur/2
+    if time_to_180_start > 0:
+        spins.apply_gradient_discretized(torch.zeros(3, device=device), time_to_180_start, d_t)
+
+    # 180-degree refocusing
+    B1_180, t_rf_180 = design_sinc_rf(torch.tensor(np.pi, device=device, dtype=dtype), rf180dur)
+    G_slice_180 = torch.zeros((len(t_rf_180), 3), device=device, dtype=dtype)
+    G_slice_180[:, 2] = G_slice_amp
+    spins.apply_rf_gradient(B1_180, G_slice_180, t_rf_180, rf_phase=np.pi/2)
+
+    # Readout
+    readout_duration = 5e-3
+    readout_samples = Nx
+    BW = readout_samples / readout_duration
+    G_read_amp = 2 * np.pi * BW / (gamma.item() * FOV)
+    G_read = torch.tensor([G_read_amp, 0.0, 0.0], device=device, dtype=dtype)
+    prephase_duration = readout_duration / 2
+
+    # align to echo center
+    time_after_180 = TE/2 - rf180dur/2
+    time_to_readout_start = time_after_180 - readout_duration/2 - prephase_duration
+    if time_to_readout_start > 0:
+        spins.apply_gradient_discretized(torch.zeros(3, device=device, dtype=dtype), time_to_readout_start, d_t)
+
+    # prephase
+    spins.apply_gradient_discretized(-G_read, prephase_duration, d_t)
+
+    # Acquire signal in batched fashion: returns (Ny, Nx) on GPU
+    if spins.DISCRETIZE:
+      signals_gpu = acquire_signal_batched_discretized_incremental(spins, G_read, readout_duration, readout_samples, d_t)
+    else:
+      signals_gpu = acquire_signal_batched(spins, G_read, readout_duration, readout_samples)
+
+    # Move to CPU numpy before returning (k-space array expects numpy)
+    return signals_gpu.detach().cpu().numpy()
 
 
-        reconstruct_and_display(k_space, debug_signals, slice_idx)
 
-    
-    elapsed = time.time() - start_time
-    print(f"Simulation completed in {elapsed:.1f} seconds")
-    
-    return k_space, debug_signals
+
+
+
+
+# --- Main multi-slice using batched PE simulation ---
+def simulateMultiSlice_batched(Nx, Ny, Nz, T1_data, T2_data, TE=30e-3, TR=500e-3, DISCRETIZE = False):
+  """Simulate all slices with proper k-space encoding"""
+  FOV = 0.2  # 20 cm
+  phase_duration = 1e-3
+
+  ky_max = Ny / (2 * FOV)
+  ky_values = np.linspace(-ky_max, ky_max, Ny)
+  G_phase_amplitudes = ky_values / (gamma.item() * phase_duration)
+
+  k_space = np.zeros((Ny, Nz, Nx), dtype=np.complex64)
+
+  print("Starting multi-slice simulation...")
+  start_time = time.time()
+
+  # Store example signals
+  debug_signals = {
+    'center' : [],
+    'quarter' : [],
+    'edge' : [],
+  }
+
+  x = torch.linspace(-FOV/2, FOV/2, Nx, device=device, dtype=dtype)
+  y = torch.linspace(-FOV/2, FOV/2, Ny, device=device, dtype=dtype)
+  z = torch.tensor([0], device=device, dtype=dtype)
+
+  X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
+  positions = torch.stack([X.flatten(), Y.flatten(), Z.flatten()], dim=1)
+
+  G_phase = torch.tensor([0, 0, 0], device = device, dtype = dtype)
+  G_phase = G_phase.repeat(Ny, 1, 1)
+  G_phase[:, 0, 1] = torch.tensor(G_phase_amplitudes, dtype = dtype)
+  G_phase = G_phase.squeeze(1)
+
+
+  #print(f"G_phase.val: {G_phase[0]}")           #G_phase.val: tensor([ 0.0000, -0.0016,  0.0000], device='cuda:0')
+  #print(f"G_phase.shape: {G_phase.shape}")      #G_phase.shape: torch.Size([171, 3])
+  #print(f"Positions.shape: {positions.shape}")  #Positions.shape: torch.Size([24111, 3])
+
+  for slice_idx in range(0, 1):
+      print(f"Simulating slice {slice_idx+1}/{Nz}")
+
+      T1_slice = T1_data[:, slice_idx].to(device, dtype)  # (Nspins,)
+      T2_slice = T2_data[:, slice_idx].to(device, dtype)
+
+      T1_batched = T1_slice.unsqueeze(0).repeat(Ny, 1)
+      T2_batched = T2_slice.unsqueeze(0).repeat(Ny, 1)
+
+      spins = BatchedSpinSystem(positions, T1_batched.to(device, dtype), T2_batched.to(device, dtype), DISCRETIZE = DISCRETIZE)
+
+      if DISCRETIZE:
+        signal = simulate_spin_echo_fixed_batched_discretized(spins, Nx, TE, G_phase, FOV=FOV)
+      else:
+        signal = simulate_spin_echo_fixed_batched(spins, Nx, TE, G_phase, FOV=FOV)
+
+
+      k_space[:, slice_idx, :] = signal
+
+      if spins.M_history is not None:
+        M_slice = spins.M_history.reshape(Ny, Ny, Nx, 3)
+        #np.save(f"/content/MRIPIDM/MRIPIDM/output/magnetizationVolume/slice_{slice_idx}.npy", M_slice.detach().cpu().numpy())
+        np.save(f'/content/output/magnetizationVolume/slice_{slice_idx}.npy', M_slice.detach().cpu().numpy())
+
+      # debug signals (center/quarter/edge)
+
+      debug_signals['center'].append(signal[Ny // 2])
+
+      debug_signals['quarter'].append(signal[Ny // 4])
+
+      debug_signals['edge'].append(signal[0])
+
+      reconstruct_and_display(k_space, debug_signals, slice_idx)
+
+  elapsed = time.time() - start_time
+  print(f"Simulation completed in {elapsed:.1f} seconds")
+
+  return k_space, debug_signals
+
 
 def reconstruct_and_display(k_space, debug_signals, slice_idx):
     """Reconstruct images and create display"""
     fig = plt.figure(figsize=(16, 12))
-    
+
     # Display middle slice
     k_slice = k_space[:, slice_idx, :]
-    
+
     # Row 1: k-space
     ax1 = plt.subplot(3, 3, 1)
     k_mag = np.log(np.abs(k_slice) + 1e-10)
@@ -305,7 +869,7 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
     ax1.set_xlabel('kx (readout)')
     ax1.set_ylabel('ky (phase)')
     plt.colorbar(im1, ax=ax1, fraction=0.046)
-    
+
     ax2 = plt.subplot(3, 3, 2)
     k_phase = np.angle(k_slice)
     im2 = ax2.imshow(k_phase, cmap='hsv', aspect='auto')
@@ -313,56 +877,103 @@ def reconstruct_and_display(k_space, debug_signals, slice_idx):
     ax2.set_xlabel('kx (readout)')
     ax2.set_ylabel('ky (phase)')
     plt.colorbar(im2, ax=ax2, fraction=0.046)
-    
+
     # Reconstruct image
     image = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(k_slice)))
     image_mag = np.abs(image)
-    
+
     ax3 = plt.subplot(3, 3, 3)
     im3 = ax3.imshow(image_mag, cmap='gray')
     ax3.set_title('Reconstructed Image')
     ax3.set_xlabel('x (pixels)')
     ax3.set_ylabel('y (pixels)')
     plt.colorbar(im3, ax=ax3, fraction=0.046)
-    
-    # Row 2: Signals
-    time_ms = np.linspace(0, 5, len(debug_signals['center'][slice_idx]))
-    
-    ax4 = plt.subplot(3, 3, 4)
-    ax4.plot(time_ms, np.abs(debug_signals['center'][slice_idx]))
-    ax4.set_title('Signal at center phase')
-    ax4.set_xlabel('Time (ms)')
-    ax4.set_ylabel('Signal magnitude')
-    ax4.grid(True, alpha=0.3)
-    
-    ax5 = plt.subplot(3, 3, 5)
-    ax5.plot(time_ms, np.abs(debug_signals['quarter'][slice_idx]))
-    ax5.set_title('Signal at ky=Ny/4')
-    ax5.set_xlabel('Time (ms)')
-    ax5.set_ylabel('Signal magnitude')
-    ax5.grid(True, alpha=0.3)
-    
-    ax6 = plt.subplot(3, 3, 6)
-    ax6.plot(time_ms, np.abs(debug_signals['edge'][slice_idx]))
-    ax6.set_title('Signal at ky edge')
-    ax6.set_xlabel('Time (ms)')
-    ax6.set_ylabel('Signal magnitude')
-    ax6.grid(True, alpha=0.3)
-    
-    
+
+    try:
+      # Row 2: Signals
+      time_ms = np.linspace(0, 5, len(debug_signals['center'][slice_idx]))
+
+      ax4 = plt.subplot(3, 3, 4)
+      ax4.plot(time_ms, np.abs(debug_signals['center'][slice_idx]))
+      ax4.set_title('Signal at center phase')
+      ax4.set_xlabel('Time (ms)')
+      ax4.set_ylabel('Signal magnitude')
+      ax4.grid(True, alpha=0.3)
+
+      ax5 = plt.subplot(3, 3, 5)
+      ax5.plot(time_ms, np.abs(debug_signals['quarter'][slice_idx]))
+      ax5.set_title('Signal at ky=Ny/4')
+      ax5.set_xlabel('Time (ms)')
+      ax5.set_ylabel('Signal magnitude')
+      ax5.grid(True, alpha=0.3)
+
+      ax6 = plt.subplot(3, 3, 6)
+      ax6.plot(time_ms, np.abs(debug_signals['edge'][slice_idx]))
+      ax6.set_title('Signal at ky edge')
+      ax6.set_xlabel('Time (ms)')
+      ax6.set_ylabel('Signal magnitude')
+      ax6.grid(True, alpha=0.3)
+    except:
+      print("Cannot be bothered to fix")
+
+    # Row 3: Parametric Mapping
+    ax7 = plt.subplot(3, 3, 7)
+    rotated_img = np.rot90(T1[slice_idx, :, :])
+    ax7.imshow(rotated_img, cmap = "gray")
+    ax7.set_title(f"T1 Mapping at index {slice_idx}")
+
+    ax8 = plt.subplot(3, 3, 8)
+    RMS = R_history
+    ax8.plot(range(len(RMS)), RMS)
+
+    ax9 = plt.subplot(3, 3, 9)
+    rotated_img = np.rot90(T2[slice_idx, :, :])
+    ax9.imshow(rotated_img, cmap = "gray")
+    ax9.set_title(f"T2 Mapping at index {slice_idx}")
+
     plt.tight_layout()
-    plt.savefig(f'/content/MRIPIDM/MRIPIDM/output/result{slice_idx}.png', dpi=300)
+    #os.makedirs("MRIPIDM/MRIPIDM/output", exist_ok = True)
+    os.makedirs("/output", exist_ok = True) #faster
+    #plt.savefig(f'/content/MRIPIDM/MRIPIDM/output/result{slice_idx}.png', dpi=300)
+    plt.savefig(f'/output/result{slice_idx}.png', dpi=300) #faster
     plt.show()
-    
+
     # Print diagnostics
     print(f"\nDiagnostics:")
     print(f"k-space shape: {k_space.shape}")
     print(f"k-space magnitude range: [{np.abs(k_space).min():.3e}, {np.abs(k_space).max():.3e}]")
     print(f"Image magnitude range: [{image_mag.min():.3f}, {image_mag.max():.3f}]")
-    print(f"Peak signal position in readout: {np.argmax(np.abs(debug_signals['center']))} / {len(debug_signals['center'][slice_idx])}")
+    #print(f"Peak signal position in readout: {np.argmax(np.abs(debug_signals['center']))} / {len(debug_signals['center'][slice_idx])}")
 
+
+
+
+
+
+
+
+
+
+
+# Use the batched version in main
 if __name__ == "__main__":
-    # Run the complete simulation
-    k_space, debug_signals = simulateMultiSlice(Nx, Ny, Nz, T1_reshaped, T2_reshaped, TE=30e-3, TR=500e-3)
+    DISCRETIZE = True #for now, always do simulate_spin_echo_batched_discretized route; discretize is to control whether to discretize aquire_signals
+    PAD = False
+
+    if PAD:
+      pad_data(Nx, Ny, T1, T2)
 
 
+    print(f"Loaded data with shape: T1={T1.shape}, T2={T2.shape}, Nx={Nx}, Ny={Ny}, Nz={Nz}")
+
+    T1_reshaped = T1.transpose(1, 2, 0).reshape(-1, Nz)  # (Nspins, Nz)
+    T2_reshaped = T2.transpose(1, 2, 0).reshape(-1, Nz)
+    T1_reshaped = torch.tensor(T1_reshaped, device=device, dtype=dtype)
+    T2_reshaped = torch.tensor(T2_reshaped, device=device, dtype=dtype)
+
+    gamma_rad = 42.577e6 * 2 * np.pi
+    gamma = torch.tensor(gamma_rad, device=device, dtype=dtype)
+
+
+
+    k_space, debug_signals = simulateMultiSlice_batched(Nx, Ny, Nz, T1_reshaped, T2_reshaped, TE=30e-3, TR=500e-3, DISCRETIZE = DISCRETIZE)
