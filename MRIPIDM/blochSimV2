@@ -772,7 +772,7 @@ def simulate_spin_echo_fixed_batched_discretized(spins: BatchedSpinSystem, Nx, T
 
     # Acquire signal in batched fashion: returns (Ny, Nx) on GPU
     if spins.DISCRETIZE:
-      signals_gpu = acquire_signal_batched_discretized_incremental(spins, G_read, readout_duration, readout_samples, d_t)
+      signals_gpu = acquire_signal_batched_discretized(spins, G_read, readout_duration, readout_samples, d_t)
     else:
       signals_gpu = acquire_signal_batched(spins, G_read, readout_duration, readout_samples)
 
