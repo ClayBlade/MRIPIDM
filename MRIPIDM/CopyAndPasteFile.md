@@ -51,7 +51,7 @@ Test change:
 
 cd /root
 rm -r MRIPIDM
-git clone -b master https://github.com/ClayBlade/MRIPIDM
+git clone --depth=1 -b master https://github.com/ClayBlade/MRIPIDM
 cd MRIPIDM/MRIPIDM
 
 nvcc -I/opt/intel/oneapi/ipp/2022.2/include/ipp DoScanAtGPU.cu helperFuncs.cpp -o Bloch -L/opt/intel/oneapi/ipp/latest/lib/intel64 -lipps -lippcore -Xcompiler -fopenmp
@@ -66,7 +66,7 @@ python3 -m venv venv
 
 source venv/bin/activate
 
-pip install torch --index-url https://download.pytorch.org/whl/cu124
-pip install torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-pip install numpy matplotlib scipy tqdm tensorboard shutil
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+pip install torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install numpy matplotlib scipy tqdm tensorboard
 

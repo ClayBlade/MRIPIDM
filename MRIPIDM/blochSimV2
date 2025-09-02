@@ -406,7 +406,6 @@ def acquire_signal_batched_discretized(spins: BatchedSpinSystem, G_read, duratio
     t_read_freq = duration / d_t
 
     M_initial = spins.M.clone()  # (Ny, Nspins, 3)
-    Mxy = M_initial[..., 0] + 1j * M_initial[..., 1]  # (Ny, Nspins) complex
 
     x_pos = spins.positions[:, :, 0].clone()  # (Ny, Nspins)
     positions = spins.positions.clone()
@@ -432,27 +431,6 @@ def acquire_signal_batched_discretized(spins: BatchedSpinSystem, G_read, duratio
     for i in range(len(t_read_substeps)):
         M_og = spins.M.clone()
 
-        '''Preserves the signal_aquisition except for when duration is non-divisible'''
-        if i % t_read_freq == 0 :
-            #print(f"checkpoint passed; i/t_read_freq: {i/t_read_freq}")
-            t = t_read[current_t_read_idx]
-
-            # phase: (Ny, Nspins) = gamma * Gx * x_pos * d_t
-            if isinstance(Gx, float):
-              phase = (gamma * Gx) * (x_pos * t)  # (Ny, Nspins)
-            else:
-              # Gx is (Ny,)
-              phase = gamma * (Gx.unsqueeze(1) * x_pos * t)
-
-            phasor = torch.exp(-1j * phase.to(dtype_real))  # complex64
-            decay = torch.exp(-t / T2).to(torch.complex64)  # (Ny, Nspins) complex
-
-            # sum over spins to get one complex number per Ny for this sample
-            signals[:, current_t_read_idx] = torch.sum(Mxy * phasor * decay, dim=1)
-            spins.store_magnetization()
-
-            current_t_read_idx += 1
-
         delta_phase = gamma * d_t * torch.sum(positions * G.unsqueeze(1), dim=2)
         phasor_step = torch.exp(-1j * delta_phase.to(dtype_real)).to(torch.complex64)  # (Ny, Nspins)
         decay_step_transverse = torch.exp(-d_t / T2).to(torch.complex64)  # (Ny, Nspins) or broadcastable
@@ -469,6 +447,30 @@ def acquire_signal_batched_discretized(spins: BatchedSpinSystem, G_read, duratio
         spins.M[..., 0] = Mxy_updated.real
         spins.M[..., 1] = Mxy_updated.imag
         spins.M[..., 2] = Mz_updated
+
+        if i % t_read_freq == 0 :
+            #print(f"checkpoint passed; i/t_read_freq: {i/t_read_freq}")
+            t = t_read[current_t_read_idx]
+
+            # phase: (Ny, Nspins) = gamma * Gx * x_pos * d_t
+            if isinstance(Gx, float):
+              phase = (gamma * Gx) * (x_pos * t)  # (Ny, Nspins)
+            else:
+              # Gx is (Ny,)
+              phase = gamma * (Gx.unsqueeze(1) * x_pos * t)
+
+            phasor = torch.exp(-1j * phase.to(dtype_real))  # complex64
+            decay = torch.exp(-t / T2).to(torch.complex64)  # (Ny, Nspins) complex
+
+            Mxy = spins.M[..., 0] + 1j * spins.M[..., 1]  # (Ny, Nspins) complex
+
+            # sum over spins to get one complex number per Ny for this sample
+            signals[:, current_t_read_idx] = torch.sum(Mxy * phasor * decay, dim=1)
+            spins.store_magnetization()
+
+            current_t_read_idx += 1
+
+
 
         M_new = spins.M.clone()
 
